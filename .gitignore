@@ -6,3 +6,8 @@
 *.dvi
 *.blg
 *.pdf
+*~
+all.bib
+medium.bib
+short.bib
+*_aux
