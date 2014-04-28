@@ -11,3 +11,9 @@ all.bib
 medium.bib
 short.bib
 *_aux
+*.out
+*.agdai
+llncs.dem
+llncs.doc
+llncs.ind
+vers1/readme.txt
