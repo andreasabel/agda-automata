@@ -1,3 +1,5 @@
+-- {-# OPTIONS --show-implicit #-}
+
 module _ where
 
 open import Size
@@ -7,6 +9,8 @@ open import Data.Nat.Base
 open import Data.Sum
 
 open import Relation.Binary.PropositionalEquality
+
+open Deprecated-inspect renaming (inspect to d-inspect)
 
 -- Monads
 ----------------------------------------------------------------------
@@ -41,6 +45,11 @@ module _ where
 
   _∷_ : ∀{i X E} (x : X) (xs : BC i X E) → BC (↑ i) X E
   BC.force (x ∷ xs) = x ∷' xs
+
+  -- Cons in BC'
+
+  _∷''_ : ∀{i X E} (x : X) (xs : BC' i X E) → BC' (↑ i) X E
+  x ∷'' xs =  x ∷' delay xs
 
 -- Burroni colists form a monad.
 
@@ -83,22 +92,22 @@ module _ {X E : Set} (P : X → Set) (PE : E → Set) where
 
   mutual
 
-    record All i (s : BC i X E) : Set where
+    record All i (s : BC ∞ X E) : Set where
       coinductive
       constructor delay
       field force : ∀{j : Size< i} → All' j (BC.force s)
 
-    data All' i : (s : BC' i X E) → Set where
+    data All' i : (s : BC' ∞ X E) → Set where
       endᵃ  :  ∀{e}     (p : PE e)                 →  All' i (end e)
       _∷'_  :  ∀{x xs}  (p : P x) (ps : All i xs)  →  All' i (x ∷' xs)
 
 module _ {X E : Set} {P : X → Set} {PE : E → Set} where
 
     _∷ᵃ_  :  ∀{i x xs}  (p : P x) (ps : All P PE i xs)  →  All P PE (↑ i) (x ∷ xs)
-    All.force (p ∷ᵃ ps) = p ∷' {!ps!}
+    All.force (p ∷ᵃ ps) = p ∷' ps
 
-    -- _∷ᵃ'_  :  ∀{i x xs}  (p : P x) (ps : All' P PE i xs)  →  All' P PE (↑ i) (x ∷ xs)
-    -- _∷ᵃ'_  =  {!!}
+    _∷ᵃ'_  :  ∀{i x xs}  (p : P x) (ps : All' P PE i xs)  →  All' P PE (↑ i) (x ∷'' xs)
+    p ∷ᵃ' ps = p ∷' (All.delay ps)
 
 -- IO Processes
 ----------------------------------------------------------------------
@@ -167,17 +176,19 @@ module IO-ops {I O : Set} where
 
   runIO     : ∀{i A E}              (p : IO  i A)      (s : BC  ∞ I E) → BC  i O (E ⊎ A)
   runIO'    : ∀{i A E}{j : Size< i} (p : IO' j A)      (s : BC  ∞ I E) → BC' j O (E ⊎ A)
-  runIO-get : ∀{i A E}{j : Size< i} (f : I → IO' j A)  (s : BC' ∞ I E) → BC' j O (E ⊎ A)
+  runIO-get' : ∀{i A E}{j : Size< i} (f : I → IO' j A)  (s : BC' ∞ I E) → BC' j O (E ⊎ A)
 
   BC.force (runIO p s) = runIO' (force p) s
 
   runIO' (ret' v)    s = end (inj₂ v)
   runIO' (put' o p)  s = o ∷' runIO p s
-  runIO' (get' f)    s = runIO-get f (BC.force s)
+  runIO' (get' f)    s = runIO-get' f (BC.force s)
 
-  runIO-get f (end e)  = end (inj₁ e)
-  runIO-get f (x ∷' xs) = runIO' (f x) xs
+  runIO-get' f (end e)  = end (inj₁ e)
+  runIO-get' f (x ∷' xs) = runIO' (f x) xs
 
+  runIO-get : ∀{j A E} (f : I → IO' j A)  (s : BC' ∞ I E) → BC (↑ j) O (E ⊎ A)
+  BC.force (runIO-get f s) = runIO-get' f s
 
 -- TODO:
 
@@ -225,12 +236,30 @@ module Scanl {A : Set} (_*_ : A → A → A) (zero? : A → Bool) where
   zero-free1' : ∀{i E} (PE : E → Set) a s z (r : Reveal zero? · a is z) →
     All' NotZero [ PE , IsZero ] i (runIO' (proc1' a z) s)
 
+  zero-free1-get : ∀{i E} (PE : E → Set) a (s : BC ∞ A E) →
+    All NotZero [ PE , IsZero ] i (runIO (get (λ b → proc1 (a * b))) s)
+
   zero-free-get : ∀{i E} (PE : E → Set) a s →
-    All' NotZero [ PE , IsZero ] i (runIO-get (λ b → force (proc1 (a * b))) s)
+    All NotZero [ PE , IsZero ] i (runIO-get (λ b → force (proc1 (a * b))) s)
+
+  -- zero-free-get' : ∀{i E} (PE : E → Set) a s →
+  --   All' NotZero [ PE , IsZero ] i (runIO-get' (λ b → force (proc1 (a * b))) s)
 
   All.force (zero-free1 PE a s) {j} = zero-free1' PE a s (zero? a) (inspect zero? a)
   zero-free1' PE a s true  [ iz ] = endᵃ iz
-  zero-free1' PE a s false [ nz ] = {! nz ∷ᵃ {! All.delay (zero-free-get PE a (BC.force s)) !}!}
+  zero-free1' PE a s false [ nz ] = nz ∷' zero-free1-get PE a s
+
+  All.force (zero-free1-get PE a s) with BC.force s {∞}
+  All.force (zero-free1-get PE a s) | end e = endᵃ {!!}
+  All.force (zero-free1-get PE a s) | x ∷' xs = All.force (zero-free1 PE (a * x) xs)
+
+   --zero-free1' PE (a * x) xs (zero? (a * x)) (inspect zero? (a * x))
+  -- All.force (zero-free1-get PE a s) with d-inspect (BC.force s)
+  -- All.force (zero-free1-get PE a s) | y with-≡ eq = {!eq!}
+  -- zero-free1-get PE a s with d-inspect (BC.force s)
+  -- zero-free1-get PE a s | end e     with-≡ eq = {!!}
+  -- zero-free1-get PE a s | (x ∷' xs) with-≡ eq = {!!}
+
   zero-free-get PE a s = {!!}
 
 {-
