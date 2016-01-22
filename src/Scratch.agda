@@ -199,13 +199,10 @@ module Scanl {A : Set} (_*_ : A → A → A) (zero? : A → Bool) where
 
   -- Process, given an initial A, reading As, writing As, returning an A
 
-  mutual
-    proc1 : ∀{i} (a : A) → IO A A i A
-    force (proc1 a) = proc1' a (zero? a)
-
-    proc1' : ∀{i} (a : A) {j : Size< i} (z : Bool) → IO' A A j A
-    proc1' a true  = ret' a
-    proc1' a false = put' a (get λ b → proc1 (a * b))
+  proc1 : ∀{i} (a : A) → IO A A i A
+  force (proc1 a) with zero? a
+  ... | true  = ret' a
+  ... | false = put' a (get λ b → proc1 (a * b))
 
   proc : ∀{i} → IO A A i A
   force proc = get' λ a → force (proc1 a)
@@ -221,10 +218,11 @@ module Scanl {A : Set} (_*_ : A → A → A) (zero? : A → Bool) where
   module _ {E : Set} where
 
     private
+      P  : ∀ i → BC ∞ A (E ⊎ A) → Set
       P  = All NotZero [ (λ (e : E) → ⊤) , IsZero ]
 
     zero-free1     : ∀{i} a s → P i (runIO (proc1 a) s)
-    zero-free1-get : ∀{i} a s → P i (runIO (get (λ b → proc1 (a * b))) s)
+    zero-free1-get : ∀{i} a s → P i (runIO (get λ b → proc1 (a * b)) s)
 
     All.force (zero-free1 a s)      with zero? a | inspect zero? a
     ... | true  | [ iz ] = endᵃ iz
