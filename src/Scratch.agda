@@ -1,7 +1,12 @@
 module _ where
 
 open import Size
+
+open import Data.Bool.Base
+open import Data.Nat.Base
 open import Data.Sum
+
+open import Relation.Binary.PropositionalEquality
 
 -- Monads
 ----------------------------------------------------------------------
@@ -27,7 +32,7 @@ mutual
     field force : ∀{j : Size< i} → BC' j X E
 
   data BC' i X E : Set where
-    eof : (e : E)                  → BC' i X E
+    end : (e : E)                  → BC' i X E
     _∷_ : (x : X) (xs : BC i X E)  → BC' i X E
 
 -- Burroni colists form a monad.
@@ -35,7 +40,7 @@ mutual
 -- Return.
 
   returnBC : ∀{i X E} (e : E) → BC i X E
-  BC.force (returnBC e) = eof e
+  BC.force (returnBC e) = end e
 
 -- Bind.
 
@@ -53,7 +58,7 @@ mutual
            → (k : D → BC i X E)
            → BC' j X E
 
-  eof e    >>=BC' k = BC.force (k e)
+  end e    >>=BC' k = BC.force (k e)
   (x ∷ xs) >>=BC' k = x ∷ (xs >>=BC k)
 
 -- Monad instance.
@@ -64,6 +69,20 @@ instance
   <_>return  monadBC v    = returnBC v
   <_>bind    monadBC m k  = m >>=BC k
 
+
+-- Property holding everywhere on a Stream
+
+module _ {X E : Set} (P : X → Set) (PE : E → Set) where
+
+  mutual
+
+    record All i (s : BC i X E) : Set where
+      coinductive
+      field force : ∀{j : Size< i} → All' j (BC.force s)
+
+    data All' i : (s : BC' i X E) → Set where
+      endᵃ  :  ∀{e}     (p : PE e)                 →  All' i (end e)
+      _∷ᵃ_  :  ∀{x xs}  (p : P x) (ps : All i xs)  →  All' i (x ∷ xs)
 
 -- IO Processes
 ----------------------------------------------------------------------
@@ -116,11 +135,19 @@ module IO-ops {I O : Set} where
     < monadIO >return v = returnIO v
     < monadIO >bind m k = m >>=IO k
 
+  -- Operations in IO.
+
+  get : ∀{j A} (f : (i : I) → IO j A) → IO j A
+  force (get f) = get' λ i → force (f i)
+
+  put : ∀{j A} (o : O) (p : IO j A) → IO j A
+  force (put o p) = put' o p
+
   -- Running an IO process.
 
   -- We might output an infinite stream,
   -- or a stream terminated by the process result,
-  -- or a stream terminated by the eof of the input stream.
+  -- or a stream terminated by the end of the input stream.
 
   runIO  : ∀{i A E}              (p : IO  i A) (s : BC ∞ I E) → BC  i O (E ⊎ A)
   runIO' : ∀{i A E}{j : Size< i} (p : IO' j A) (s : BC ∞ I E) → BC' j O (E ⊎ A)
@@ -128,17 +155,79 @@ module IO-ops {I O : Set} where
   BC.force (runIO p s)          = runIO' (force p) s
 
   runIO' (get' f)    s with BC.force s
-  runIO' (get' f)    s | eof e  = eof (inj₁ e)
+  runIO' (get' f)    s | end e  = end (inj₁ e)
   runIO' (get' f)    s | x ∷ xs = runIO' (f x) xs
   runIO' (put' o p)  s          = o ∷ runIO p s
-  runIO' (ret' v)    s          = eof (inj₂ v)
+  runIO' (ret' v)    s          = end (inj₂ v)
 
 
 -- TODO:
 
 -- process that multiplies a stream
 -- terminates early on 0
--- terminates on eof
+-- terminates on end
+
+open IO-type
+open IO-ops
+
+module Scanl {A : Set} (_*_ : A → A → A) (zero? : A → Bool) where
+
+  -- Process, given an initial A, reading As, writing As, returning an A
+
+  mutual
+    proc1 : ∀{i} (a : A) → IO A A i A
+    force (proc1 a) = proc1' a (zero? a)
+
+    proc1' : ∀{i} (a : A) {j : Size< i} (z : Bool) → IO' A A j A
+    proc1' a true  = ret' a
+    proc1' a false = put' a (get λ b → proc1 (a * b))
+
+  proc : ∀{i} → IO A A i A
+  force proc = get' λ a → force (proc1 a)
+
+  -- Proof: output is zero-free, result (if any) is zero.
+
+  IsZero : (a : A) → Set
+  IsZero a = zero? a ≡ true
+
+  NotZero : (a : A) → Set
+  NotZero a = zero? a ≡ false
+
+{-
+  zero-free1 : ∀{i E} (PE : E → Set) a s →
+    All NotZero [ PE , IsZero ] i (runIO (proc1 a) s)
+
+  All.force (zero-free1 PE a s) {j} with zero? a
+  ... | w = {!!}
+-}
+
+  zero-free1 : ∀{i E} (PE : E → Set) a s →
+    All NotZero [ PE , IsZero ] i (runIO (proc1 a) s)
+
+  zero-free1' : ∀{i E} (PE : E → Set) a s z (r : Reveal zero? · a is z) →
+    All' NotZero [ PE , IsZero ] i (runIO' (proc1' a z) s)
+
+  zero-free-get : ∀{i E} (PE : E → Set) a s →
+    All NotZero [ PE , IsZero ] i (runIO (get λ b → proc1 (a * b)) s)
+
+  All.force (zero-free1 PE a s) {j} = zero-free1' PE a s (zero? a) (inspect zero? a)
+  zero-free1' PE a s true  [ iz ] = endᵃ iz
+  zero-free1' PE a s false [ nz ] = nz ∷ᵃ zero-free-get PE a s
+  zero-free-get PE a s = {!!}
+
+{-
+  zero-free1' PE a s false [ nz ] with BC.force s {∞}
+  zero-free1' PE a s false [ nz ] | end e = nz ∷ᵃ {!!}
+  zero-free1' PE a s false [ nz ] | x ∷ xs = nz ∷ᵃ {!!}
+-}
+
+{-
+  zero-free1 : ∀{i E} (PE : E → Set) a s →
+    All NotZero [ PE , IsZero ] i (runIO (proc1 a) s)
+
+  All.force (zero-free1 PE a s) {j} with (BC.force s {∞})
+  All.force (zero-free1 PE a s) {j} | w = {!!}
+-}
 
 -- abstraction, does the same on the parity
 -- show simulation
