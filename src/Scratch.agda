@@ -177,19 +177,14 @@ module IO-ops {I O : Set} where
 
   runIO     : ∀{i A E}              (p : IO  i A)      (s : BC  ∞ I E) → BC  i O (E ⊎ A)
   runIO'    : ∀{i A E}{j : Size< i} (p : IO' j A)      (s : BC  ∞ I E) → BC' j O (E ⊎ A)
-  runIO-get' : ∀{i A E}{j : Size< i} (f : I → IO' j A)  (s : BC' ∞ I E) → BC' j O (E ⊎ A)
 
   BC.force (runIO p s) = runIO' (force p) s
 
-  runIO' (ret' v)    s = end (inj₂ v)
-  runIO' (put' o p)  s = o ∷' runIO p s
-  runIO' (get' f)    s = runIO-get' f (BC.force s)
-
-  runIO-get' f (end e)  = end (inj₁ e)
-  runIO-get' f (x ∷' xs) = runIO' (f x) xs
-
-  runIO-get : ∀{j A E} (f : I → IO' j A)  (s : BC' ∞ I E) → BC (↑ j) O (E ⊎ A)
-  BC.force (runIO-get f s) = runIO-get' f s
+  runIO' (get' f)    s with BC.force s
+  runIO' (get' f)    s | end e   = end (inj₁ e)
+  runIO' (get' f)    s | x ∷' xs = runIO' (f x) xs
+  runIO' (put' o p)  s           = o ∷' runIO p s
+  runIO' (ret' v)    s           = end (inj₂ v)
 
 -- TODO:
 
