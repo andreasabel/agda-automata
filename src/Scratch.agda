@@ -4,6 +4,7 @@ module _ where
 
 open import Size
 
+open import Data.Unit using (⊤)
 open import Data.Bool.Base
 open import Data.Nat.Base
 open import Data.Sum
@@ -222,59 +223,33 @@ module Scanl {A : Set} (_*_ : A → A → A) (zero? : A → Bool) where
   NotZero : (a : A) → Set
   NotZero a = zero? a ≡ false
 
-{-
-  zero-free1 : ∀{i E} (PE : E → Set) a s →
-    All NotZero [ PE , IsZero ] i (runIO (proc1 a) s)
+  Triv : {A : Set} (a : A) → Set
+  Triv a = ⊤
 
-  All.force (zero-free1 PE a s) {j} with zero? a
-  ... | w = {!!}
--}
+  RetZero : (E : Set) → E ⊎ A → Set
+  RetZero E = [ Triv , IsZero ]
 
-  zero-free1 : ∀{i E} (PE : E → Set) a s →
-    All NotZero [ PE , IsZero ] i (runIO (proc1 a) s)
+  module _ {E : Set} where
+    private
+      P  = All  NotZero (RetZero E)
+      P' = All' NotZero (RetZero E)
 
-  zero-free1' : ∀{i E} (PE : E → Set) a s z (r : Reveal zero? · a is z) →
-    All' NotZero [ PE , IsZero ] i (runIO' (proc1' a z) s)
+    mutual
 
-  zero-free1-get : ∀{i E} (PE : E → Set) a (s : BC ∞ A E) →
-    All NotZero [ PE , IsZero ] i (runIO (get (λ b → proc1 (a * b))) s)
+      zero-free1 : ∀{i} a s → P i (runIO (proc1 a) s)
+      All.force (zero-free1 a s) {j} = zero-free1' a s (zero? a) (inspect zero? a)
 
-  zero-free-get : ∀{i E} (PE : E → Set) a s →
-    All NotZero [ PE , IsZero ] i (runIO-get (λ b → force (proc1 (a * b))) s)
+      zero-free1' : ∀{i}  a s z (r : Reveal zero? · a is z) →
+        P' i (runIO' (proc1' a z) s)
+      zero-free1' a s true  [ iz ] = endᵃ iz
+      zero-free1' a s false [ nz ] = nz ∷' zero-free1-get a s
 
-  -- zero-free-get' : ∀{i E} (PE : E → Set) a s →
-  --   All' NotZero [ PE , IsZero ] i (runIO-get' (λ b → force (proc1 (a * b))) s)
+      zero-free1-get : ∀{i}  a (s : BC ∞ A E) →
+        P i (runIO (get (λ b → proc1 (a * b))) s)
+      All.force (zero-free1-get a s) with BC.force s {∞}
+      All.force (zero-free1-get a s) | end e = endᵃ _
+      All.force (zero-free1-get a s) | x ∷' xs = All.force (zero-free1 (a * x) xs)
 
-  All.force (zero-free1 PE a s) {j} = zero-free1' PE a s (zero? a) (inspect zero? a)
-  zero-free1' PE a s true  [ iz ] = endᵃ iz
-  zero-free1' PE a s false [ nz ] = nz ∷' zero-free1-get PE a s
-
-  All.force (zero-free1-get PE a s) with BC.force s {∞}
-  All.force (zero-free1-get PE a s) | end e = endᵃ {!!}
-  All.force (zero-free1-get PE a s) | x ∷' xs = All.force (zero-free1 PE (a * x) xs)
-
-   --zero-free1' PE (a * x) xs (zero? (a * x)) (inspect zero? (a * x))
-  -- All.force (zero-free1-get PE a s) with d-inspect (BC.force s)
-  -- All.force (zero-free1-get PE a s) | y with-≡ eq = {!eq!}
-  -- zero-free1-get PE a s with d-inspect (BC.force s)
-  -- zero-free1-get PE a s | end e     with-≡ eq = {!!}
-  -- zero-free1-get PE a s | (x ∷' xs) with-≡ eq = {!!}
-
-  zero-free-get PE a s = {!!}
-
-{-
-  zero-free1' PE a s false [ nz ] with BC.force s {∞}
-  zero-free1' PE a s false [ nz ] | end e = nz ∷ᵃ {!!}
-  zero-free1' PE a s false [ nz ] | x ∷ xs = nz ∷ᵃ {!!}
--}
-
-{-
-  zero-free1 : ∀{i E} (PE : E → Set) a s →
-    All NotZero [ PE , IsZero ] i (runIO (proc1 a) s)
-
-  All.force (zero-free1 PE a s) {j} with (BC.force s {∞})
-  All.force (zero-free1 PE a s) {j} | w = {!!}
--}
 
 -- abstraction, does the same on the parity
 -- show simulation
