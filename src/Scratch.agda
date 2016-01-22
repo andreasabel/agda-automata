@@ -223,28 +223,21 @@ module Scanl {A : Set} (_*_ : A → A → A) (zero? : A → Bool) where
   NotZero : (a : A) → Set
   NotZero a = zero? a ≡ false
 
-  Triv : {A : Set} (a : A) → Set
-  Triv a = ⊤
-
-  RetZero : (E : Set) → E ⊎ A → Set
-  RetZero E = [ Triv , IsZero ]
-
   module _ {E : Set} where
+
     private
-      P  = All  NotZero (RetZero E)
-      P' = All' NotZero (RetZero E)
+      P  = All NotZero [ (λ (e : E) → ⊤) , IsZero ]
 
-    mutual
+    zero-free1     : ∀{i} a s → P i (runIO (proc1 a) s)
+    zero-free1-get : ∀{i} a s → P i (runIO (get (λ b → proc1 (a * b))) s)
 
-      zero-free1     : ∀{i} a s → P i (runIO (proc1 a) s)
-      All.force (zero-free1 a s) with zero? a | inspect zero? a
-      ... | true  | [ iz ] = endᵃ iz
-      ... | false | [ nz ] = nz ∷' zero-free1-get a s
+    All.force (zero-free1 a s)      with zero? a | inspect zero? a
+    ... | true  | [ iz ] = endᵃ iz
+    ... | false | [ nz ] = nz ∷' zero-free1-get a s
 
-      zero-free1-get : ∀{i} a s → P i (runIO (get (λ b → proc1 (a * b))) s)
-      All.force (zero-free1-get a s) with BC.force s {∞}
-      ... | end e   = endᵃ _
-      ... | x ∷' xs = All.force (zero-free1 (a * x) xs)
+    All.force (zero-free1-get a s)  with BC.force s {∞}
+    ... | end e          = endᵃ _
+    ... | x ∷' xs        = All.force (zero-free1 (a * x) xs)
 
 
 -- abstraction, does the same on the parity
