@@ -209,17 +209,19 @@ module Scanl {A : Set} (_*_ : A → A → A) (zero? : A → Bool) where
 
   -- Proof: output is zero-free, result (if any) is zero.
 
-  IsZero : (a : A) → Set
-  IsZero a = zero? a ≡ true
+  -- IsZero : (a : A) → Set
+  -- IsZero a = zero? a ≡ true
 
-  NotZero : (a : A) → Set
-  NotZero a = zero? a ≡ false
+  -- NotZero : (a : A) → Set
+  -- NotZero a = zero? a ≡ false
 
   module _ {E : Set} where
 
     private
       P  : ∀ i → BC ∞ A (E ⊎ A) → Set
-      P  = All NotZero [ (λ (e : E) → ⊤) , IsZero ]
+      P  = All (λ a → zero? a ≡ false)
+             [ (λ e → ⊤)
+             , (λ a → zero? a ≡ true) ]
 
     zero-free1     : ∀{i} a s → P i (runIO (proc1 a) s)
     zero-free1-get : ∀{i} a s → P i (runIO (get λ b → proc1 (a * b)) s)
