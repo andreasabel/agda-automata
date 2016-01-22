@@ -236,19 +236,15 @@ module Scanl {A : Set} (_*_ : A → A → A) (zero? : A → Bool) where
 
     mutual
 
-      zero-free1 : ∀{i} a s → P i (runIO (proc1 a) s)
-      All.force (zero-free1 a s) {j} = zero-free1' a s (zero? a) (inspect zero? a)
+      zero-free1     : ∀{i} a s → P i (runIO (proc1 a) s)
+      All.force (zero-free1 a s) with zero? a | inspect zero? a
+      ... | true  | [ iz ] = endᵃ iz
+      ... | false | [ nz ] = nz ∷' zero-free1-get a s
 
-      zero-free1' : ∀{i}  a s z (r : Reveal zero? · a is z) →
-        P' i (runIO' (proc1' a z) s)
-      zero-free1' a s true  [ iz ] = endᵃ iz
-      zero-free1' a s false [ nz ] = nz ∷' zero-free1-get a s
-
-      zero-free1-get : ∀{i}  a (s : BC ∞ A E) →
-        P i (runIO (get (λ b → proc1 (a * b))) s)
+      zero-free1-get : ∀{i} a s → P i (runIO (get (λ b → proc1 (a * b))) s)
       All.force (zero-free1-get a s) with BC.force s {∞}
-      All.force (zero-free1-get a s) | end e = endᵃ _
-      All.force (zero-free1-get a s) | x ∷' xs = All.force (zero-free1 (a * x) xs)
+      ... | end e   = endᵃ _
+      ... | x ∷' xs = All.force (zero-free1 (a * x) xs)
 
 
 -- abstraction, does the same on the parity
