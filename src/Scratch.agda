@@ -223,6 +223,8 @@ module Scanl {A : Set} (_*_ : A → A → A) (zero? : A → Bool) where
              [ (λ e → ⊤)
              , (λ a → zero? a ≡ true) ]
 
+    -- Lemma for proc1.
+
     zero-free1     : ∀{i} a s → P i (runIO (proc1 a) s)
     zero-free1-get : ∀{i} a s → P i (runIO (get λ b → proc1 (a * b)) s)
 
@@ -233,6 +235,13 @@ module Scanl {A : Set} (_*_ : A → A → A) (zero? : A → Bool) where
     All.force (zero-free1-get a s)  with BC.force s {∞}
     ... | end e          = endᵃ _
     ... | x ∷' xs        = All.force (zero-free1 (a * x) xs)
+
+    -- Theorem for proc.
+
+    zero-free : ∀{i} s → P i (runIO proc s)
+    All.force (zero-free s) with BC.force s {∞}
+    All.force (zero-free s) | end e = endᵃ _
+    All.force (zero-free s) | x ∷' xs = All.force (zero-free1 x xs)
 
 
 -- abstraction, does the same on the parity
