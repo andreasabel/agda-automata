@@ -33,7 +33,14 @@ mutual
 
   data BC' i X E : Set where
     end : (e : E)                  → BC' i X E
-    _∷_ : (x : X) (xs : BC i X E)  → BC' i X E
+    _∷'_ : (x : X) (xs : BC i X E)  → BC' i X E
+
+module _ where
+
+  -- Cons in BC.
+
+  _∷_ : ∀{i X E} (x : X) (xs : BC i X E) → BC (↑ i) X E
+  BC.force (x ∷ xs) = x ∷' xs
 
 -- Burroni colists form a monad.
 
@@ -59,7 +66,7 @@ mutual
            → BC' j X E
 
   end e    >>=BC' k = BC.force (k e)
-  (x ∷ xs) >>=BC' k = x ∷ (xs >>=BC k)
+  (x ∷' xs) >>=BC' k = x ∷' (xs >>=BC k)
 
 -- Monad instance.
 
@@ -78,11 +85,20 @@ module _ {X E : Set} (P : X → Set) (PE : E → Set) where
 
     record All i (s : BC i X E) : Set where
       coinductive
+      constructor delay
       field force : ∀{j : Size< i} → All' j (BC.force s)
 
     data All' i : (s : BC' i X E) → Set where
       endᵃ  :  ∀{e}     (p : PE e)                 →  All' i (end e)
-      _∷ᵃ_  :  ∀{x xs}  (p : P x) (ps : All i xs)  →  All' i (x ∷ xs)
+      _∷'_  :  ∀{x xs}  (p : P x) (ps : All i xs)  →  All' i (x ∷' xs)
+
+module _ {X E : Set} {P : X → Set} {PE : E → Set} where
+
+    _∷ᵃ_  :  ∀{i x xs}  (p : P x) (ps : All P PE i xs)  →  All P PE (↑ i) (x ∷ xs)
+    All.force (p ∷ᵃ ps) = p ∷' {!ps!}
+
+    -- _∷ᵃ'_  :  ∀{i x xs}  (p : P x) (ps : All' P PE i xs)  →  All' P PE (↑ i) (x ∷ xs)
+    -- _∷ᵃ'_  =  {!!}
 
 -- IO Processes
 ----------------------------------------------------------------------
@@ -149,16 +165,18 @@ module IO-ops {I O : Set} where
   -- or a stream terminated by the process result,
   -- or a stream terminated by the end of the input stream.
 
-  runIO  : ∀{i A E}              (p : IO  i A) (s : BC ∞ I E) → BC  i O (E ⊎ A)
-  runIO' : ∀{i A E}{j : Size< i} (p : IO' j A) (s : BC ∞ I E) → BC' j O (E ⊎ A)
+  runIO     : ∀{i A E}              (p : IO  i A)      (s : BC  ∞ I E) → BC  i O (E ⊎ A)
+  runIO'    : ∀{i A E}{j : Size< i} (p : IO' j A)      (s : BC  ∞ I E) → BC' j O (E ⊎ A)
+  runIO-get : ∀{i A E}{j : Size< i} (f : I → IO' j A)  (s : BC' ∞ I E) → BC' j O (E ⊎ A)
 
-  BC.force (runIO p s)          = runIO' (force p) s
+  BC.force (runIO p s) = runIO' (force p) s
 
-  runIO' (get' f)    s with BC.force s
-  runIO' (get' f)    s | end e  = end (inj₁ e)
-  runIO' (get' f)    s | x ∷ xs = runIO' (f x) xs
-  runIO' (put' o p)  s          = o ∷ runIO p s
-  runIO' (ret' v)    s          = end (inj₂ v)
+  runIO' (ret' v)    s = end (inj₂ v)
+  runIO' (put' o p)  s = o ∷' runIO p s
+  runIO' (get' f)    s = runIO-get f (BC.force s)
+
+  runIO-get f (end e)  = end (inj₁ e)
+  runIO-get f (x ∷' xs) = runIO' (f x) xs
 
 
 -- TODO:
@@ -208,11 +226,11 @@ module Scanl {A : Set} (_*_ : A → A → A) (zero? : A → Bool) where
     All' NotZero [ PE , IsZero ] i (runIO' (proc1' a z) s)
 
   zero-free-get : ∀{i E} (PE : E → Set) a s →
-    All NotZero [ PE , IsZero ] i (runIO (get λ b → proc1 (a * b)) s)
+    All' NotZero [ PE , IsZero ] i (runIO-get (λ b → force (proc1 (a * b))) s)
 
   All.force (zero-free1 PE a s) {j} = zero-free1' PE a s (zero? a) (inspect zero? a)
   zero-free1' PE a s true  [ iz ] = endᵃ iz
-  zero-free1' PE a s false [ nz ] = nz ∷ᵃ zero-free-get PE a s
+  zero-free1' PE a s false [ nz ] = {! nz ∷ᵃ {! All.delay (zero-free-get PE a (BC.force s)) !}!}
   zero-free-get PE a s = {!!}
 
 {-
