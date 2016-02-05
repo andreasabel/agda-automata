@@ -33,8 +33,13 @@ n+suc : ∀ n {m} → (n + suc m) ≡ suc (n + m)
 n+suc zero    = refl
 n+suc (suc n) = cong suc (n+suc n)
 
++assoc : ∀ n {m l} → ((n + m) + l) ≡ (n + (m + l))
++assoc zero = refl
++assoc (suc n) = cong suc (+assoc n)
+
 {-# REWRITE n+0 #-}
 {-# REWRITE n+suc #-}
+{-# REWRITE +assoc #-}
 
 data Var : (n : ℕ) → Set where
   vz : ∀{n} → Var (suc n)
@@ -75,8 +80,8 @@ open BT'
 var : ∀{i n} (x : Var n) → BT i n
 var x = Λ 0 x []
 
-abs : ∀{i n} (t : BT i (1 + n)) → BT i n
-abs (Λ n x ts) = Λ (1 + n) x ts
+abs : ∀{i n} k (t : BT i (k + n)) → BT i n
+abs k (Λ n x ts) = Λ (n + k) x ts
 
 -- data Ren : (n m : ℕ) → Set where
 --   weak : ∀{n} k → Ren (k + n) n
@@ -114,3 +119,47 @@ mutual
 -- ren {i} ρ₀ (Λ n x ts) = Λ n (renVar ρ x) $ for ts \ t → delay
 --    \{ {size j} → ren {j} ρ $ force t {size j} }
 --   where ρ = lifts n ρ₀
+
+weakT : ∀{i n} (t : BT i n) → BT i (1 + n)
+weakT = ren (weak id)
+
+data Sub (i : Size) : (n m : ℕ) → Set where
+  rn   : ∀{n m} (ρ : Ope n m) → Sub i n m
+  _,_  : ∀{n m} (σ : Sub i n m) (t : BT i n) → Sub i n (1 + m)
+  -- lift : ∀{n m} (σ : Sub n m) → Sub (1 + n) (1 + m)
+  -- weak : ∀{n m} (σ : Sub n m) → Sub (1 + n) m
+
+weakS : ∀{i n m} (σ : Sub i n m) → Sub i (1 + n) m
+weakS (rn ρ) = rn (weak ρ)
+weakS (s , t) = weakS s , weakT t
+
+liftS : ∀{i n m} (σ : Sub i n m) → Sub i (1 + n) (1 + m)
+liftS σ = weakS σ , var vz
+
+liftsS : ∀{i n m} k (σ : Sub i n m) → Sub i (k + n) (k + m)
+liftsS zero σ = σ
+liftsS (suc k) σ = liftS (liftsS k σ)
+
+sgS : ∀{i n} (t : BT i n) → Sub i n (1 + n)
+sgS t = rn id , t
+
+subVar : ∀{i n m} (σ : Sub i n m) (x : Var m) → BT i n
+subVar (rn ρ)  x      = var (renVar ρ x)
+subVar (σ , t) vz     = t
+subVar (σ , t) (vs x) = subVar σ x
+
+mutual
+  sub'  : ∀{i n m} (σ : Sub i n m) (t : BT' i m) → BT' i n
+  force (sub' σ t) {size _} = sub σ (force t {size _})
+
+  sub  : ∀{i n m} (σ : Sub i n m) (t : BT i m) → BT i n
+  sub σ t = apps t σ []
+
+  apply : ∀{i n} (t : BT i n) (us : List (BT i n)) → BT i n
+  apply t us = apps t (rn id) us
+
+  apps : ∀{i n m} (t : BT i m) (σ : Sub i n m) (us : List (BT i n)) → BT i n
+  apps (Λ zero x ts) σ us = {!apps (subVar σ x) (map (sub' σ) ts ++ us)!}
+  apps (Λ (suc k) x ts) σ (u ∷ us) = apps (Λ k x ts) (σ , u) us
+  apps (Λ (suc k) x ts) σ [] = {!abs k $ apply (subVar σ' x) (map!}
+    where σ' = liftsS k σ
