@@ -186,14 +186,51 @@ module IO-ops {I O : Set} where
   runIO' (put' o p)  s           = o ∷' runIO p s
   runIO' (ret' v)    s           = end (inj₂ v)
 
--- TODO:
-
--- process that multiplies a stream
--- terminates early on 0
--- terminates on end
-
 open IO-type
 open IO-ops
+
+-- Composing IO processes.
+
+-- Variant 1: we give the second process priority,
+-- let it put and/or return, only if it wants to read,
+-- we force the first process.
+
+module PutFirst where
+
+  compIO       : ∀{i A B C R S} (p : IO  A B ∞ R) (q : IO  B C i S)      → IO  A C i (R ⊎ S)
+  compIO'      : ∀{j A B C R S} (p : IO  A B ∞ R) (q : IO' B C j S)      → IO' A C j (R ⊎ S)
+  compIO_`get_ : ∀{j A B C R S} (p : IO' A B ∞ R) (g : B → IO' B C j S)  → IO' A C j (R ⊎ S)
+
+  IO.force (compIO p q) = compIO' p (IO.force q)
+
+  compIO' p (ret' v)   = ret' (inj₂ v)
+  compIO' p (put' c q) = put' c (compIO p q)
+  compIO' p (get' g)   = compIO (IO.force p) `get g
+
+  compIO (ret' v)   `get g = ret' (inj₁ v)
+  compIO (put' b p) `get g = compIO' p (g b)
+  compIO (get' f)   `get g = get' λ a → compIO (f a) `get g
+
+-- Variant 2: we give the first process priority,
+-- only when it puts, we force the second process
+-- until it reads what was put.
+
+module GetFirst where
+
+  compIO     : ∀{i A B C R S}         (p : IO  A B ∞ R) (q : IO  B C i S) → IO  A C i (R ⊎ S)
+  compIO'    : ∀{j A B C R S}         (p : IO' A B ∞ R) (q : IO' B C j S) → IO' A C j (R ⊎ S)
+  compIO-put : ∀{j A B C R S} (b : B) (p : IO  A B ∞ R) (q : IO' B C j S) → IO' A C j (R ⊎ S)
+
+  IO.force (compIO p q) = compIO' (IO.force p) (IO.force q)
+
+  compIO' (ret' v)   q = ret' (inj₁ v)
+  compIO' (get' f)   q = get' λ a → compIO' (f a) q
+  compIO' (put' b p) q = compIO-put b p q
+
+  compIO-put b p (ret' v)   = ret' (inj₂ v)
+  compIO-put b p (get' f)   = compIO' (IO.force p) (f b)
+  compIO-put b p (put' c q) = put' c (compIO p q)
+
 
 module Scanl {A : Set} (_*_ : A → A → A) (zero? : A → Bool) where
 
