@@ -81,7 +81,8 @@ open BT'
 var : ∀{i j n} (x : Var n) → BT i (↑ j) n
 var x = Λ 0 x []
 
-abs : ∀{i j n} k (t : BT i j (k + n)) → BT i j n
+-- abs : ∀{i j n} k (t : BT i j (k + n)) → BT i j n
+abs : ∀{i n} k (t : BT i ∞ (k + n)) → BT i ∞ n
 abs k (Λ n x ts) = Λ (n + k) x ts
 abs k (rep t)    = rep (delay \{ {size _} → abs k $ force t {size _} })
 
@@ -164,8 +165,13 @@ mutual
 
   apps : ∀{i n m} (t : BT i ∞ m) (σ : Sub i n m) (us : List (BT i ∞ n)) → BT i ∞ n
   apps (Λ (suc k) x ts) σ (u ∷ us) = apps (Λ k x ts) (σ , u) us
-  apps (Λ zero    x ts) σ us = rep (delay \{ {size _} → apply (subVar σ x) (map (sub σ) ts ++ us) })
-  apps (Λ (suc k) x ts) σ [] = rep (delay \{ {size _} → abs (suc k) $ apply (subVar σ' x) (map (sub σ') ts)})
+  apps (Λ zero    x ts) σ us = rep (delay \{ {size _} →
+                               apply (subVar σ x) (map (sub σ) ts ++ us) })
+  -- Should work, but insufficiency in constraint solver
+  -- apps (Λ (suc k) x ts) σ [] = abs (suc k) $ (rep (delay \{ {size _} →
+  --                              apply (subVar σ' x) (map (sub σ') ts)}))
+  apps (Λ (suc k) x ts) σ [] = (rep (delay \{ {size _} →
+                               abs (suc k) $ apply (subVar σ' x) (map (sub σ') ts)}))
     where σ' = liftsS (suc k) σ
   apps (rep t) σ us = rep (delay \{ {size _} → apps (force t {size _}) σ us})
 
