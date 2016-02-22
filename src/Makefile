@@ -22,7 +22,7 @@ stylefile=agda.sty
 
 allfiles=cmcs16.tex $(files)
 files=postprocess.sed Makefile \
-  macros.tex
+  macros.tex $(bibliography)
 
 
 default : cmcs16.pdf
