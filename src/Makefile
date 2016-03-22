@@ -15,7 +15,7 @@ bibtool=bibtool -- 'preserve.key.case = ON' \
 #	  -- 'delete.field = { editor }'
 #	  -- 'delete.field = { doi }'
 
-bibliography=medium.bib
+bibliography=all.bib
 sedfile=postprocess.sed
 stylefile=agda.sty
 #stdlib=$(HOME)/agda-master/std-lib/src
@@ -26,6 +26,11 @@ files=postprocess.sed Makefile \
 
 
 default : cmcs16.pdf
+
+pack : cmcs16.zip
+
+cmcs16.zip : cmcs16.tex llncs.cls splncsnat.bst macros.tex auto-cmcs16.bib
+	zip $@ $^
 
 # cmcs16
 ##################################################################
