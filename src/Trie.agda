@@ -62,9 +62,9 @@ lang : ∀{i} (mem : List A → Bool) → Lang i
 
 -- trivial language (containing every word)
 
-⊤ : ∀{i} → Lang i
-ν ⊤ = true
-δ ⊤ x = ⊤
+all : ∀{i} → Lang i
+ν all = true
+δ all x = all
 
 -- language consisting of the empty word
 
@@ -170,11 +170,11 @@ Setoid.isEquivalence (Bis i) = ≅isEquivalence i
 
 -- Complement laws
 
-compl-empty : ∀{i} → ¬ ∅ ≅⟨ i ⟩≅ ⊤
+compl-empty : ∀{i} → ¬ ∅ ≅⟨ i ⟩≅ all
 ≅ν compl-empty = refl
 ≅δ compl-empty a = compl-empty
 
-compl-top : ∀{i} → ¬ ⊤ ≅⟨ i ⟩≅ ∅
+compl-top : ∀{i} → ¬ all ≅⟨ i ⟩≅ ∅
 ≅ν compl-top = refl
 ≅δ compl-top a = compl-top
 
@@ -200,7 +200,7 @@ inter-empty : ∀{i} {l : Lang ∞} → ∅ ∩ l ≅⟨ i ⟩≅ ∅
 ≅ν inter-empty   = refl
 ≅δ inter-empty a = inter-empty
 
-inter-top : ∀{i} {l : Lang ∞} → ⊤ ∩ l ≅⟨ i ⟩≅ l
+inter-top : ∀{i} {l : Lang ∞} → all ∩ l ≅⟨ i ⟩≅ l
 ≅ν inter-top = refl
 ≅δ inter-top a = inter-top
 
@@ -230,7 +230,7 @@ union-empty : ∀{i} {l : Lang ∞} → ∅ ∪ l ≅⟨ i ⟩≅ l
 ≅ν union-empty   = refl
 ≅δ union-empty a = union-empty
 
-union-top : ∀{i} {l : Lang ∞} → ⊤ ∪ l ≅⟨ i ⟩≅ ⊤
+union-top : ∀{i} {l : Lang ∞} → all ∪ l ≅⟨ i ⟩≅ all
 ≅ν union-top   = refl
 ≅δ union-top a = union-top
 
