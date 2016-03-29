@@ -6,16 +6,21 @@ open import Data.List.Base using (List; []; _∷_)
 open import Data.Nat.Base using (ℕ; zero; suc)
 open import Data.Product using (_,_; proj₁; proj₂)
 
+open import Data.Fin using (zero; suc)
+open import Data.Vec using ([]; _∷_)
+
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Binary
 open import Relation.Binary.PropositionalEquality
 import Relation.Binary.EqReasoning as EqR
 
 open import Data.Bool.Properties using (isBooleanAlgebra)
+open import Algebra using (IdempotentCommutativeMonoid)
 open import Algebra.Structures using (module IsBooleanAlgebra; module IsDistributiveLattice; module IsLattice)
 open IsBooleanAlgebra isBooleanAlgebra using (∧-comm; ∧-assoc; ∨-comm; ∨-assoc; ∨-∧-distribʳ; isDistributiveLattice; isLattice)
 
 open import Algebra.Properties.DistributiveLattice (record { isDistributiveLattice = isDistributiveLattice })
+import Algebra.IdempotentCommutativeMonoidSolver as ICMSolver
 
 module _
   (decA : DecSetoid lzero lzero)
@@ -180,12 +185,15 @@ open _≅⟨_⟩≅_
 
 -- Setoid
 
+≅isEquivalence : (i : Size) → IsEquivalence (λ l l' → l ≅⟨ i ⟩≅ l')
+IsEquivalence.refl  (≅isEquivalence i) = ≅refl
+IsEquivalence.sym   (≅isEquivalence i) = ≅sym
+IsEquivalence.trans (≅isEquivalence i) = ≅trans
+
 Bis : ∀(i : Size) → Setoid lzero lzero
 Setoid.Carrier       (Bis i) = Lang ∞
 Setoid._≈_           (Bis i) = λ l k → l ≅⟨ i ⟩≅ k
-IsEquivalence.refl  (Setoid.isEquivalence (Bis i)) = ≅refl
-IsEquivalence.sym   (Setoid.isEquivalence (Bis i)) = ≅sym
-IsEquivalence.trans (Setoid.isEquivalence (Bis i)) = ≅trans
+Setoid.isEquivalence (Bis i) = ≅isEquivalence i
 
 -- Complement laws
 
@@ -261,62 +269,173 @@ union-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m ∪ l �
 ≅ν (union-congʳ p) rewrite ≅ν p = refl
 ≅δ (union-congʳ p) a = union-congʳ (≅δ p a)
 
--- Distibutivity laws
+union-cong : ∀{i}{k k' l l' : Lang ∞} (p : k ≅⟨ i ⟩≅ k') (q : l ≅⟨ i ⟩≅ l') → k ∪ l ≅⟨ i ⟩≅ k' ∪ l'
+≅ν (union-cong p q) rewrite ≅ν p | ≅ν q = refl
+≅δ (union-cong p q) a = union-cong (≅δ p a) (≅δ q a)
+
+-- Language union forms an idempotent commutative monoid.
+
+union-icm : (i : Size) → IdempotentCommutativeMonoid _ _
+union-icm i = record
+  { Carrier = Lang ∞
+  ; _≈_ = λ l l' → l ≅⟨ i ⟩≅ l'
+  ; _∙_ = _∪_
+  ; ε = ∅
+  ; isIdempotentCommutativeMonoid = record
+    { isCommutativeMonoid = record
+      { isSemigroup = record
+        { isEquivalence = ≅isEquivalence i
+        ; assoc = λ x y z → union-assoc x
+        ; ∙-cong = union-cong
+        }
+      ; identityˡ = λ l → union-empty
+      ; comm = union-comm
+      }
+    ; idem = λ l → union-idem
+    }
+  }
+
+-- Specialized laws for union
+
+union-swap23 : ∀{i} (k {l m} : Lang ∞) →
+  (k ∪ l) ∪ m ≅⟨ i ⟩≅ (k ∪ m) ∪ l
+union-swap23 {i} k {l} {m} = prove 3 ((x ⊕ y) ⊕ z) ((x ⊕ z) ⊕ y) (k ∷ l ∷ m ∷ [])
+  where
+  open ICMSolver (union-icm i)
+  x = var zero
+  y = var (suc zero)
+  z = var (suc (suc zero))
+
+union-swap24 : ∀{i} {k l m n : Lang ∞} →
+  (k ∪ l) ∪ (m ∪ n) ≅⟨ i ⟩≅ (k ∪ m) ∪ (l ∪ n)
+union-swap24 {i} {k} {l} {m} {n} = prove 4 ((x ⊕ y) ⊕ (z ⊕ u)) ((x ⊕ z) ⊕ (y ⊕ u)) (k ∷ l ∷ m ∷ n ∷ [])
+  where
+  open ICMSolver (union-icm i)
+  x = var zero
+  y = var (suc zero)
+  z = var (suc (suc zero))
+  u = var (suc (suc (suc zero)))
 
 union-union-distr : ∀{i} (k {l m} : Lang ∞) →
   (k ∪ l) ∪ m ≅⟨ i ⟩≅ (k ∪ m) ∪ (l ∪ m)
-union-union-distr k {l} {m} = begin
-    (k ∪ l) ∪ m
-  ≈⟨ {!!} ⟩
-    (k ∪ l) ∪ (m ∪ m)
-  ≈⟨ {!!} ⟩
-    ((k ∪ l) ∪ m) ∪ m
-  ≈⟨ {!!} ⟩
-    (k ∪ (l ∪ m)) ∪ m
-  ≈⟨ {!!} ⟩
-    (k ∪ (m ∪ l)) ∪ m
-  ≈⟨ {!!} ⟩
-    ((k ∪ m) ∪ l) ∪ m
-  ≈⟨ {!!} ⟩
-    (k ∪ m) ∪ (l ∪ m)
-  ∎
-  where open EqR (Bis _)
+union-union-distr {i} k {l} {m} = prove 3 ((x ⊕ y) ⊕ z) ((x ⊕ z) ⊕ (y ⊕ z)) (k ∷ l ∷ m ∷ [])
+  where
+  open ICMSolver (union-icm i)
+  x = var zero
+  y = var (suc zero)
+  z = var (suc (suc zero))
+
+-- Long manual proof:
+
+-- union-union-distr : ∀{i} (k {l m} : Lang ∞) →
+--   (k ∪ l) ∪ m ≅⟨ i ⟩≅ (k ∪ m) ∪ (l ∪ m)
+-- union-union-distr k {l} {m} = begin
+--     (k ∪ l) ∪ m
+--   ≈⟨ {!!} ⟩
+--     (k ∪ l) ∪ (m ∪ m)
+--   ≈⟨ {!!} ⟩
+--     ((k ∪ l) ∪ m) ∪ m
+--   ≈⟨ {!!} ⟩
+--     (k ∪ (l ∪ m)) ∪ m
+--   ≈⟨ {!!} ⟩
+--     (k ∪ (m ∪ l)) ∪ m
+--   ≈⟨ {!!} ⟩
+--     ((k ∪ m) ∪ l) ∪ m
+--   ≈⟨ {!!} ⟩
+--     (k ∪ m) ∪ (l ∪ m)
+--   ∎
+--   where open EqR (Bis _)
 
 -- Concatenation laws
 
-concat-union : ∀{i} (k {l m} : Lang ∞) → (k ∪ l) · m ≅⟨ i ⟩≅ (k · m) ∪ (l · m)
-≅ν (concat-union k) = ∧-∨-distribʳ _ (ν k) _
-≅δ (concat-union k {l} {m}) a with ν k | ν l
+-- Concatenation distributes over union
+
+concat-union-distribˡ : ∀{i} (k {l m} : Lang ∞) → (k ∪ l) · m ≅⟨ i ⟩≅ (k · m) ∪ (l · m)
+≅ν (concat-union-distribˡ k) = ∧-∨-distribʳ _ (ν k) _
+≅δ (concat-union-distribˡ k {l} {m}) a with ν k | ν l
 
 ... | true | true = begin
 
     (δ k a ∪ δ l a) · m ∪ δ m a
-  ≈⟨ union-congˡ (concat-union (δ k a)) ⟩
+  ≈⟨ union-congˡ (concat-union-distribˡ (δ k a)) ⟩
     (δ k a · m ∪ δ l a · m) ∪ δ m a
   ≈⟨ union-union-distr _ ⟩
     (δ k a · m ∪ δ m a) ∪ (δ l a · m ∪ δ m a)
   ∎
   where open EqR (Bis _)
+
 ... | true | false = begin
+
     (δ k a ∪ δ l a) · m ∪ δ m a
-  ≈⟨ union-congˡ (concat-union (δ k a)) ⟩
+  ≈⟨ union-congˡ (concat-union-distribˡ (δ k a)) ⟩
     (δ k a · m ∪ δ l a · m) ∪ δ m a
-  ≈⟨ {!!} ⟩
+  ≈⟨ union-swap23 _ ⟩
     δ k a · m ∪ δ m a ∪ δ l a · m
   ∎
   where open EqR (Bis _)
-... | false | true = {!!}
-... | false | false = {!!}
+
+... | false | true =  begin
+
+    (δ k a ∪ δ l a) · m ∪ δ m a
+  ≈⟨ union-congˡ (concat-union-distribˡ (δ k a)) ⟩
+    (δ k a · m ∪ δ l a · m) ∪ δ m a
+  ≈⟨ union-assoc _ ⟩
+    δ k a · m ∪ (δ l a · m ∪ δ m a)
+  ∎
+  where open EqR (Bis _)
+
+... | false | false = concat-union-distribˡ (δ k a)
+
+
+concat-union-distribʳ : ∀{i} (k {l m} : Lang ∞) → k · (l ∪ m) ≅⟨ i ⟩≅ (k · l) ∪ (k · m)
+≅ν (concat-union-distribʳ k) = ∧-∨-distribˡ (ν k) _ _
+≅δ (concat-union-distribʳ k) a with ν k
+≅δ (concat-union-distribʳ k {l} {m}) a | true = begin
+    δ k a · (l ∪ m) ∪ (δ l a ∪ δ m a)
+  ≈⟨ union-congˡ (concat-union-distribʳ (δ k a)) ⟩
+    (δ k a · l ∪ δ k a · m) ∪ (δ l a ∪ δ m a)
+  ≈⟨ union-swap24 ⟩
+    (δ k a · l ∪ δ l a) ∪ (δ k a · m ∪ δ m a)
+  ∎
+  where open EqR (Bis _)
+
+≅δ (concat-union-distribʳ k) a | false = concat-union-distribʳ (δ k a)
+
+
+-- Associativity of concatenation
+--
+-- uses concat-union-distribˡ
 
 concat-assoc : ∀{i} (k {l m} : Lang ∞) → (k · l) · m ≅⟨ i ⟩≅ k · (l · m)
 ≅ν (concat-assoc k)   = ∧-assoc (ν k) _ _
 ≅δ (concat-assoc k) a with ν k
 ≅δ (concat-assoc k    ) a | false = concat-assoc (δ k a)
-≅δ (concat-assoc k {l}) a | true with ν l
-... | true  = {!!}
-... | false = {!!}
+≅δ (concat-assoc k {l} {m}) a | true with ν l
+... | true  = begin
+
+    (δ k a · l ∪ δ l a) · m ∪ δ m a
+  ≈⟨ union-congˡ (concat-union-distribˡ _) ⟩
+    ((δ k a · l) · m ∪ δ l a · m) ∪ δ m a
+  ≈⟨  union-assoc _ ⟩
+    (δ k a · l) · m ∪ (δ l a · m ∪ δ m a)
+  ≈⟨ union-congˡ (concat-assoc (δ k a)) ⟩
+    δ k a · (l · m) ∪ (δ l a · m ∪ δ m a)
+  ∎
+  where open EqR (Bis _)
+
+... | false = begin
+
+    (δ k a · l ∪ δ l a) · m
+  ≈⟨ concat-union-distribˡ _ ⟩
+    (δ k a · l) · m ∪ δ l a · m
+  ≈⟨ union-congˡ (concat-assoc (δ k a)) ⟩
+    δ k a · (l · m) ∪ δ l a · m
+  ∎
+  where open EqR (Bis _)
 
 -- Laws of the Kleene star
+
+-- Recursion equation for the Kleene star
 
 star-rec : ∀{i} (l : Lang ∞) → l * ≅⟨ i ⟩≅ ε ∪ (l · l *)
 ≅ν (star-rec l) = refl
