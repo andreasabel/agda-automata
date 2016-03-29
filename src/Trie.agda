@@ -1,35 +1,8 @@
-open import Level renaming (zero to lzero; suc to lsuc)
-open import Size
-
-open import Data.Bool.Base using (Bool; true; false; if_then_else_; not; _∧_; _∨_)
-open import Data.List.Base using (List; []; _∷_)
-open import Data.Nat.Base using (ℕ; zero; suc)
-open import Data.Product using (_,_; proj₁; proj₂)
-
-open import Data.Fin using (zero; suc)
-open import Data.Vec using ([]; _∷_)
-
-open import Relation.Nullary using (Dec; yes; no)
-open import Relation.Binary
-open import Relation.Binary.PropositionalEquality
-import Relation.Binary.EqReasoning as EqR
-
-open import Data.Bool.Properties using (isBooleanAlgebra)
-open import Algebra using (IdempotentCommutativeMonoid)
-open import Algebra.Structures using (module IsBooleanAlgebra; module IsDistributiveLattice; module IsLattice)
-open IsBooleanAlgebra isBooleanAlgebra using (∧-comm; ∧-assoc; ∨-comm; ∨-assoc; ∨-∧-distribʳ; isDistributiveLattice; isLattice)
-
-open import Algebra.Properties.DistributiveLattice (record { isDistributiveLattice = isDistributiveLattice })
-import Algebra.IdempotentCommutativeMonoidSolver as ICMSolver
+open import Library
 
 module _
   (decA : DecSetoid lzero lzero)
   (open DecSetoid decA using (_≟_) renaming (Carrier to A)) where
-
--- These names are not exported from Algebra.Properties.DistributiveLattice
-∨-∧-distribˡ = proj₁ ∨-∧-distrib
-∧-∨-distribˡ = proj₁ ∧-∨-distrib
-∧-∨-distribʳ = proj₂ ∧-∨-distrib
 
 infix   1 _≅⟨_⟩≅_
 infix   2 _∈_
