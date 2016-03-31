@@ -18,6 +18,15 @@ record DAut (S : Set) : Set where
     ν : (s : S) → Bool
     δ : (s : S) (a : A) → S
 
+  -- Lifting to lists
+  νs : (ss : List S) → Bool
+  νs ss = List.any ν ss
+
+  δs : (ss : List S) (a : A) → List S
+  δs ss a = List.map (λ s → δ s a) ss
+
+open DAut public using (νs; δs)
+
 -- Language accepted by an automaton
 
 module _ {S} (da : DAut S) (open DAut da) where
@@ -100,15 +109,15 @@ DAut.δ (da₁ ⊕ da₂) (s₁ , s₂) a = DAut.δ da₁ s₁ a , DAut.δ da₂
 -- Abstract automaton composition
 
 acomposeA : ∀{S₁ S₂} (da₁ : DAut S₁) (f : S₂ → S₂) (da₂ : DAut S₂) → DAut (S₁ × S₂)
-DAut.ν (acomposeA da₁ f da₂) (s₁ , s₂)   = DAut.ν da₁ s₁ ∨ DAut.ν da₂ s₂
-DAut.δ (acomposeA da₁ f da₂) (s₁ , s₂) a = DAut.δ da₁ s₁ a , (if DAut.ν da₁ s₁ then f s₂' else s₂')
-  where s₂' = DAut.δ da₂ s₂ a
+DAut.ν (acomposeA da₁ f da₂) (s₁ , s₂)   = DAut.ν da₁ s₁ ∧ DAut.ν da₂ (f s₂) ∨ DAut.ν da₂ s₂
+DAut.δ (acomposeA da₁ f da₂) (s₁ , s₂) a = DAut.δ da₁ s₁ a , DAut.δ da₂ s₂' a
+  where s₂' = if DAut.ν da₁ s₁ then f s₂ else s₂
 
 -- Finite powerset automaton with lists (alt: finite sets).
 
 powA : ∀{S} (da : DAut S) → DAut (List S)
-DAut.ν (powA da) ss   = List.any (DAut.ν da) ss
-DAut.δ (powA da) ss a = List.map (λ s → DAut.δ da s a) ss
+DAut.ν (powA da) ss   = DAut.νs da ss
+DAut.δ (powA da) ss a = DAut.δs da ss a
 
 -- Automaton composition
 -- We need an initial state of the second automaton to glue them together.
@@ -118,9 +127,9 @@ composeA : ∀{S₁ S₂} (da₁ : DAut S₁) (s₀ : S₂) (da₂ : DAut S₂) 
 composeA da₁ s₀ da₂ = acomposeA da₁ (_∷_ s₀) (powA da₂)
 
 composeA' : ∀{S₁ S₂} (da₁ : DAut S₁) (s₀ : S₂) (da₂ : DAut S₂) → DAut (S₁ × List S₂)
-DAut.ν (composeA' da₁ s₀ da₂) (s₁ , s₂)   = DAut.ν da₁ s₁ ∨ List.any (DAut.ν da₂) s₂
-DAut.δ (composeA' da₁ s₀ da₂) (s₁ , s₂) a = DAut.δ da₁ s₁ a , (if DAut.ν da₁ s₁ then s₀ ∷ ss else ss)
-  where ss = List.map (λ s → DAut.δ da₂ s a) s₂
+DAut.ν (composeA' da₁ s₀ da₂) (s₁ , ss₂)   = (DAut.ν da₁ s₁ ∧ DAut.ν da₂ s₀) ∨ DAut.νs da₂ ss₂
+DAut.δ (composeA' da₁ s₀ da₂) (s₁ , ss₂) a = DAut.δ da₁ s₁ a , DAut.δs da₂ (if DAut.ν da₁ s₁ then s₀ ∷ ss₂ else ss₂) a
+
 
 -- WRONG:
 -- composeA' : ∀{S₁ S₂} (da₁ : DAut S₁) (s₀ : S₂) (da₂ : DAut S₂) → DAut (S₁ ⊎ (S₁ × S₂))
@@ -139,3 +148,104 @@ DFAut n = DAut (Fin n)
 powDFA : ∀{n} (dfa : DFAut n) → DAut (Vec Bool n)
 DAut.ν (powDFA dfa) s = Vec.any (Vec.zipWith _∧_ s (Vec.tabulate (DAut.ν dfa)))
 DAut.δ (powDFA dfa) s a = Vec.∨-permute s (λ i → DAut.δ dfa i a)
+
+------------------------------------------------------------------------
+-- Proofs
+------------------------------------------------------------------------
+
+-- Automaton for empty language is correct
+
+∅A-correct : ∀{i} → acclang ∅A _ ≅⟨ i ⟩≅ ∅
+≅ν ∅A-correct = refl
+≅δ ∅A-correct a = ∅A-correct
+
+-- Automaton for single character language is correct
+
+charA-err-correct : ∀{i a} → acclang (charA a) err ≅⟨ i ⟩≅ ∅
+≅ν charA-err-correct = refl
+≅δ charA-err-correct _ = charA-err-correct
+
+charA-acc-correct : ∀{i a} → acclang (charA a) acc ≅⟨ i ⟩≅ ε
+≅ν charA-acc-correct = refl
+≅δ charA-acc-correct _ = charA-err-correct
+
+charA-correct : ∀{i} (a : A) → acclang (charA a) init ≅⟨ i ⟩≅ char a
+≅ν (charA-correct a) = refl
+≅δ (charA-correct a) a₁ with a ≟ a₁
+≅δ (charA-correct a) a₁ | yes p = charA-acc-correct
+≅δ (charA-correct a) a₁ | no ¬p = charA-err-correct
+
+-- Union automaton is correct
+
+unionA-correct : ∀{i S₁ S₂} (da₁ : DAut S₁) (da₂ : DAut S₂) (s₁ : S₁) (s₂ : S₂) →
+  acclang da₁ s₁ ∪ acclang da₂ s₂ ≅⟨ i ⟩≅ acclang (da₁ ⊕ da₂) (s₁ , s₂)
+≅ν (unionA-correct da₁ da₂ s₁ s₂) = refl
+≅δ (unionA-correct da₁ da₂ s₁ s₂) a = unionA-correct da₁ da₂ (DAut.δ da₁ s₁ a) (DAut.δ da₂ s₂ a)
+
+-- Power construction preserves semantics
+
+powA-nil : ∀{i S} (da : DAut S) → acclang (powA da) [] ≅⟨ i ⟩≅ ∅
+≅ν (powA-nil da)   = refl
+≅δ (powA-nil da) a = powA-nil da
+
+powA-cons : ∀{i S} (da : DAut S) {s : S} {ss : List S} →
+  acclang (powA da) (s ∷ ss) ≅⟨ i ⟩≅ acclang da s ∪ acclang (powA da) ss
+≅ν (powA-cons da) = refl
+≅δ (powA-cons da) a = powA-cons da -- (DAut.δ da s a) (DAut.δ (powA da) ss a)
+
+powA-correct : ∀{i S} (da : DAut S) (s : S) → acclang (powA da) (s ∷ []) ≅⟨ i ⟩≅ acclang da s
+≅ν (powA-correct da s) with DAut.ν da s
+... | true = refl
+... | false = refl
+≅δ (powA-correct da s) a = powA-correct da (DAut.δ da s a)
+
+fact : ∀ a {b c} → (a ∧ (b ∨ c)) ∨ c ≡ (a ∧ b) ∨ c
+fact a {b} {c} = begin
+  (a ∧ (b ∨ c)) ∨ c       ≡⟨ ∨-∧-distribʳ c a _ ⟩
+  (a ∨ c) ∧ ((b ∨ c) ∨ c) ≡⟨ ∧-cong (refl {x = (a ∨ c)}) (∨-assoc b c c) ⟩
+  (a ∨ c) ∧ (b ∨ (c ∨ c)) ≡⟨ ∧-cong (refl {x = a ∨ c}) (∨-cong (refl {x = b}) (∨-idem c)) ⟩
+  (a ∨ c) ∧ (b ∨ c)       ≡⟨ sym (∨-∧-distribʳ c a b) ⟩
+  (a ∧ b) ∨ c
+  ∎ where open ≡-Reasoning
+
+composeA-gen : ∀{i S₁ S₂} (da₁ : DAut S₁) (da₂ : DAut S₂) (s₁ : S₁) (s₂ : S₂) (ss : List S₂) →
+  acclang (composeA da₁ s₂ da₂) (s₁ , ss) ≅⟨ i ⟩≅ acclang da₁ s₁ · acclang da₂ s₂ ∪ acclang (powA da₂) ss
+≅ν (composeA-gen da₁ da₂ s₁ s₂ ss) = fact (DAut.ν da₁ s₁)
+≅δ (composeA-gen da₁ da₂ s₁ s₂ ss) a with DAut.ν da₁ s₁
+
+... | true  = begin
+
+    acclang (acomposeA da₁ (_∷_ s₂) (powA da₂))
+      (DAut.δ da₁ s₁ a , DAut.δ da₂ s₂ a ∷ DAut.δs da₂ ss a)
+
+  ≈⟨  composeA-gen da₁ da₂ (DAut.δ da₁ s₁ a) s₂ (DAut.δs da₂ (s₂ ∷ ss) a) ⟩
+
+    acclang da₁ (DAut.δ da₁ s₁ a) · acclang da₂ s₂ ∪
+      acclang (powA da₂) (δs da₂ (s₂ ∷ ss) a)
+
+  ≈⟨  union-congʳ (powA-cons da₂) ⟩
+
+     acclang da₁ (DAut.δ da₁ s₁ a) · acclang da₂ s₂ ∪
+      (acclang da₂ (DAut.δ da₂ s₂ a) ∪ acclang (powA da₂) (DAut.δs da₂ ss a))
+
+  ≈⟨  ≅sym (union-assoc _) ⟩
+
+     acclang da₁ (DAut.δ da₁ s₁ a) · acclang da₂ s₂ ∪
+      acclang da₂ (DAut.δ da₂ s₂ a) ∪ acclang (powA da₂) (DAut.δs da₂ ss a)
+
+  ∎ where open EqR (Bis _)
+
+... | false = composeA-gen da₁ da₂ (DAut.δ da₁ s₁ a) s₂ (DAut.δs da₂ ss a)
+
+
+composeA-correct : ∀{i S₁ S₂} (da₁ : DAut S₁) (da₂ : DAut S₂) (s₁ : S₁) (s₂ : S₂) →
+
+  acclang (composeA da₁ s₂ da₂) (s₁ , []) ≅⟨ i ⟩≅ acclang da₁ s₁ · acclang da₂ s₂
+
+composeA-correct da₁ da₂ s₁ s₂ = begin
+  acclang (composeA da₁ s₂ da₂) (s₁ , [])                 ≈⟨  composeA-gen da₁ da₂ s₁ s₂ [] ⟩
+  acclang da₁ s₁ · acclang da₂ s₂ ∪ acclang (powA da₂) [] ≈⟨ union-congʳ (powA-nil da₂) ⟩
+  acclang da₁ s₁ · acclang da₂ s₂ ∪ ∅                     ≈⟨ union-comm _ _ ⟩
+  ∅ ∪ acclang da₁ s₁ · acclang da₂ s₂                     ≈⟨ union-empty ⟩
+  acclang da₁ s₁ · acclang da₂ s₂
+  ∎ where open EqR (Bis _)

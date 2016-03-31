@@ -25,7 +25,9 @@ module EqR = Relation.Binary.EqReasoning
 open import Data.Bool.Properties public using (isBooleanAlgebra)
 open import Algebra public using (IdempotentCommutativeMonoid)
 open import Algebra.Structures public using (module IsBooleanAlgebra; module IsDistributiveLattice; module IsLattice)
-open IsBooleanAlgebra isBooleanAlgebra public using (∧-comm; ∧-assoc; ∨-comm; ∨-assoc; ∨-∧-distribʳ; isDistributiveLattice; isLattice)
+open IsBooleanAlgebra isBooleanAlgebra public using (∧-cong; ∧-comm; ∧-assoc; ∨-cong; ∨-comm; ∨-assoc; ∨-∧-distribʳ; isDistributiveLattice; isLattice) -- renaming (∨-idempotent to ∨-idem)
+
+open import Algebra.Properties.Lattice (record { isLattice = isLattice }) public using () renaming (∨-idempotent to ∨-idem)
 
 open import Algebra.Properties.DistributiveLattice (record { isDistributiveLattice = isDistributiveLattice }) public
 import Algebra.IdempotentCommutativeMonoidSolver

@@ -133,7 +133,7 @@ record _≅⟨_⟩≅_ (l : Lang ∞) i (k : Lang ∞) : Set where
   field
     ≅ν : ν l ≡ ν k
     ≅δ : ∀{j : Size< i} (a : A) → δ l a ≅⟨ j ⟩≅ δ k a
-open _≅⟨_⟩≅_
+open _≅⟨_⟩≅_ public
 
 -- Equivalence relation laws
 
@@ -238,7 +238,7 @@ union-congˡ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → l ∪ m �
 ≅ν (union-congˡ p) rewrite ≅ν p = refl
 ≅δ (union-congˡ p) a = union-congˡ (≅δ p a)
 
-union-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m ∪ l ≅⟨ i ⟩≅ m ∪ l
+union-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m ∪ l ≅⟨ i ⟩≅ m ∪ k
 ≅ν (union-congʳ p) rewrite ≅ν p = refl
 ≅δ (union-congʳ p) a = union-congʳ (≅δ p a)
 
