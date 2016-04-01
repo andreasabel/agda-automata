@@ -18,7 +18,7 @@ open import Data.Vec public using (Vec; []; _∷_)
 open import Relation.Nullary public using (Dec; yes; no)
 open import Relation.Nullary.Decidable public using (⌊_⌋)
 open import Relation.Binary public
-open import Relation.Binary.PropositionalEquality public
+open import Relation.Binary.PropositionalEquality public using (_≡_; refl; sym; trans)
 import Relation.Binary.EqReasoning
 module EqR = Relation.Binary.EqReasoning
 
