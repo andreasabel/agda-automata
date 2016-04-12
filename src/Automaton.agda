@@ -38,7 +38,7 @@ module _ {S} (da : DAut S) (open DAut da) where
   accept s (a ∷ as) = accept (δ s a) as
 
   -- Language accepted by a state.
-  -- The terminal morphism.
+  -- The terminal morphism aka coiteration.
 
   acclang : ∀{i} (s : S) → Lang i
   Lang.ν (acclang s) = ν s
@@ -249,3 +249,24 @@ composeA-correct da₁ da₂ s₁ s₂ = begin
   ∅ ∪ acclang da₁ s₁ · acclang da₂ s₂                     ≈⟨ union-empty ⟩
   acclang da₁ s₁ · acclang da₂ s₂
   ∎ where open EqR (Bis _)
+
+-- Conversion
+------------------------------------------------------------------------
+
+-- We can convert the state set to an isomorphic one.
+
+convA : ∀{S S'} (iso : S ↔ S') (da : DAut S) → DAut S'
+DAut.ν (convA iso da) s' = DAut.ν da (Inverse.from iso Π.⟨$⟩ s' )
+DAut.δ (convA iso da) s' a = Inverse.to iso Π.⟨$⟩ (DAut.δ da) (Inverse.from iso Π.⟨$⟩ s') a
+
+-- Conversion does not change the semantics.
+
+-- The recognized language from each state is still the same
+-- (when starting from the corresponding state).
+
+convA-correct : ∀{i S S'} (iso : S ↔ S') (da : DAut S) (let da' = convA iso da) (s : S)
+  → acclang da s ≅⟨ i ⟩≅ acclang da' (Inverse.to iso Π.⟨$⟩ s)
+≅ν (convA-correct iso da s)   rewrite _InverseOf_.left-inverse-of (Inverse.inverse-of iso) s
+  = refl
+≅δ (convA-correct iso da s) a rewrite _InverseOf_.left-inverse-of (Inverse.inverse-of iso) s
+  = convA-correct iso da (DAut.δ da s a)
