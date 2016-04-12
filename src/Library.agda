@@ -62,28 +62,19 @@ module Vec where
   any : ∀{n} → Vec Bool n → Bool
   any = foldr (λ _ → Bool) _∨_ false
 
-  -- downFrom : ∀ n → Vec (Fin n) n
-  -- downFrom 0 = []
-  -- downFrom (suc n) = toFin n ∷ downFrom n
-
-  -- -- alternative implementation of allFin which is
-  -- upTo : ∀ n → Vec (Fin n) n
-  -- upTo
-
-  -- tr1 : ∀{n} → (Fin n → Bool) → Vec (Fin n × Bool) n
-  -- tr1 f = tabulate λ i → f i , i
-
-  -- tr2 : ∀{n} → Vec (Fin n × Bool) n → List (Fin n)
-  -- tr2 v = List.gfilter (λ{ (i , b) → if b then just i else nothing}) (toList v)
-
   -- Get all indices which map to true.  l = [ i | v[i] = true ]
-  trues : ∀{n} → Vec Bool n → List (Fin n)
-  trues v = List.map proj₂ (List.filter proj₁ (toList (zip v (allFin _))))
 
-  trues' : ∀{n} → Vec Bool n → List (Fin n)
-  trues' [] = []
-  trues' (b ∷ v) = let l = List.map suc (trues' v) in
+  trues : ∀{n} → Vec Bool n → List (Fin n)
+  trues [] = []
+  trues (b ∷ v) = let l = List.map suc (trues v) in
     if b then zero ∷ l else l
+
+  -- Original, Haskell-like implementation.
+
+  trues-Haskellish : ∀{n} → Vec Bool n → List (Fin n)
+  trues-Haskellish v = List.map proj₂ (List.filter proj₁ (toList (zip v (allFin _))))
+
+  -- Set multiple elements of an array.
 
   setTo : ∀ {A : Set} (a : A) {n} (v : Vec A n) (l : List (Fin n)) → Vec A n
   setTo a = List.foldl (λ w i → w [ i ]≔ a)
@@ -93,44 +84,39 @@ module Vec where
   elemSet : ∀{n} → List (Fin n) → Vec Bool n
   elemSet = setTo true (replicate false)
 
+  -- Apply a state transition to a set of states.
+
   ∨-permute : ∀{n} → Vec Bool n → (Fin n → Fin n) → Vec Bool n
   ∨-permute v f = elemSet (List.map f (trues v))
 
-  elemSet-trues : ∀ {n} (v : Vec Bool n) → elemSet (trues v) ≡ v
-  elemSet-trues [] = refl
-  elemSet-trues (true ∷ v) = {!elemSet-trues v!}
-  elemSet-trues (false ∷ v) = {!!}
+  -- Properties
 
-  tail[zero] : ∀{A : Set}{n} (v : Vec A (suc n)) {w : Vec A n} {a : A} →
-    (p : tail v ≡ w) → tail (v [ zero ]≔ a) ≡ w
-  tail[zero] (_ ∷ _) p = p
-
-  [map] : ∀{A : Set} {n m} {a b : A} {w : Vec A n} (f : Fin m → Fin n) (l : List (Fin m)) →
-      List.foldl (λ v i → v [ i ]≔ b) w (List.map f l)
-    ≡ List.foldl (λ v i → v [ f i ]≔ b) w l
-  [map] = {!!}
+  -- Lemmata for: elemSet ∘ trues ≡ id
 
   [suc] : ∀{A : Set} {n} {a b : A} {w : Vec A n} (l : List (Fin n)) →
-      List.foldl (λ v i → v [ suc i ]≔ b) (a ∷ w) l
-    ≡ a ∷ List.foldl (λ v i → v [ i ]≔ b) w l
+
+          List.foldl (λ v i → v [ suc i ]≔ b) (a ∷ w) l
+    ≡ a ∷ List.foldl (λ v i → v [ i     ]≔ b) w       l
+
   [suc] [] = refl
   [suc] (x ∷ l) = [suc] l
 
-  [suc'] : ∀{A : Set} {n} {a b : A} {w : Vec A n} (l : List (Fin n)) →
-      tail (List.foldl (λ v i → v [ i ]≔ b) (a ∷ w) (List.map suc l))
-    ≡ List.foldl (λ v i → v [ i ]≔ b) w l
-  [suc'] [] = refl
-  [suc'] (i ∷ is) = {!!}
+  [suc]' : ∀{A : Set} {n} (a b : A) (w : Vec A n) (l : List (Fin n)) →
 
-  elemSet-trues' : ∀ {n} (v : Vec Bool n) → elemSet (trues' v) ≡ v
-  elemSet-trues' [] = refl
-  elemSet-trues' (false ∷ v)
-    rewrite List.foldl-map {f = λ w i → w [ i ]≔ true} {g = suc} {a = replicate false} (trues' v)
-         | [suc] {a = false} {b = true} {w = replicate false} (trues' v)
-         | elemSet-trues' v = refl
-  elemSet-trues' (true ∷ v)
-    rewrite List.foldl-map {f = λ w i → w [ i ]≔ true} {g = suc} {a = true ∷ replicate false} (trues' v)
-         | [suc] {a = true} {b = true} {w = replicate false} (trues' v)
-         | elemSet-trues' v = refl
-    -- vcong {!!}
-    -- {! (tail[zero] (List.foldr _ _ (List.map suc (trues' v))) {!elemSet-trues' v!}) !}
+          List.foldl (λ v i → v [ i ]≔ b) (a ∷ w) (List.map suc l)
+    ≡ a ∷ List.foldl (λ v i → v [ i ]≔ b) w       l
+
+  [suc]' a b w l = trans (List.foldl-map l) ([suc] l)
+
+  -- Theorem: elemSet ∘ trues ≡ id
+
+  elemSet-trues : ∀ {n} (v : Vec Bool n) → elemSet (trues v) ≡ v
+  elemSet-trues [] = refl
+  elemSet-trues (false ∷ v)
+    rewrite [suc]' false true (replicate false) (trues v)
+          | elemSet-trues v
+          = refl
+  elemSet-trues (true ∷ v)
+    rewrite [suc]' true true (replicate false) (trues v)
+          | elemSet-trues v
+          = refl
