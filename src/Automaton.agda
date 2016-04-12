@@ -270,3 +270,11 @@ convA-correct : ∀{i S S'} (iso : S ↔ S') (da : DAut S) (let da' = convA iso 
   = refl
 ≅δ (convA-correct iso da s) a rewrite _InverseOf_.left-inverse-of (Inverse.inverse-of iso) s
   = convA-correct iso da (DAut.δ da s a)
+
+
+-- Finite automata
+
+powDFA-correct : ∀{i n} (da : DFAut n) (ss : List (Fin n)) →
+  acclang (powDFA da) (Vec.elemSet ss) ≅⟨ i ⟩≅ acclang (powA da) ss
+≅ν (powDFA-correct da ss) = {!!}
+≅δ (powDFA-correct da ss) a = {!!}
