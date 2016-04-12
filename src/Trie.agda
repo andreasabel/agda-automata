@@ -41,13 +41,13 @@ open Lang
 -- Word membership
 
 _∈_ : List A → Lang ∞ → Bool
-[] ∈ l = ν l
+[]     ∈ l = ν l
 a ∷ as ∈ l = as ∈ δ l a
 
 -- Language from word membership
 
 lang : ∀{i} (mem : List A → Bool) → Lang i
-ν (lang mem) = mem []
+ν (lang mem)   = mem []
 δ (lang mem) a = lang λ as → mem (a ∷ as)
 
 -- This makes Lang isomophic to (List A → Bool)
@@ -57,19 +57,19 @@ lang : ∀{i} (mem : List A → Bool) → Lang i
 -- empty language
 
 ∅ : ∀{i} → Lang i
-ν ∅ = false
+ν ∅   = false
 δ ∅ x = ∅
 
 -- trivial language (containing every word)
 
 all : ∀{i} → Lang i
-ν all = true
+ν all   = true
 δ all x = all
 
 -- language consisting of the empty word
 
 ε : ∀{i} → Lang i
-ν ε = true
+ν ε   = true
 δ ε x = ∅
 
 -- language consisting of a single single-character word
@@ -83,25 +83,25 @@ char : ∀{i} (a : A) → Lang i
 -- language complement
 
 ¬_ : ∀{i} (l : Lang i) → Lang i
-ν (¬ l) = not (ν l)
+ν (¬ l)   = not (ν l)
 δ (¬ l) x = ¬ δ l x
 
 -- intersection of languages
 
 _∩_ : ∀{i} (k l : Lang i) → Lang i
-ν (k ∩ l) = ν k ∧ ν l
+ν (k ∩ l)   = ν k ∧ ν l
 δ (k ∩ l) x = δ k x ∩ δ l x
 
 -- union of languages
 
 _∪_ : ∀{i} (k l : Lang i) → Lang i
-ν (k ∪ l) = ν k ∨ ν l
+ν (k ∪ l)   = ν k ∨ ν l
 δ (k ∪ l) x = δ k x ∪ δ l x
 
 -- concatenation of languages
 
 _·_ : ∀{i} (k l : Lang i) → Lang i
-ν (k · l) = ν k ∧ ν l
+ν (k · l)   = ν k ∧ ν l
 δ (k · l) x = let k'l = δ k x · l in
   if ν k then k'l ∪ δ l x else k'l
 -- δ (k · l) x = if ν k then k'l ∪ δ l x else k'l
@@ -111,13 +111,13 @@ _·_ : ∀{i} (k l : Lang i) → Lang i
 -- Kleene star
 
 _* : ∀{i} (l : Lang i) → Lang i
-ν (l *) = true
+ν (l *)   = true
 δ (l *) x = δ l x · (l *)
 
 -- Exponentiation
 
 _^_ : ∀{i} (l : Lang i) (n : ℕ) → Lang i
-l ^ zero = ε
+l ^ zero  = ε
 l ^ suc n = l · l ^ n
 
 -- Examples
@@ -138,15 +138,15 @@ open _≅⟨_⟩≅_ public
 -- Equivalence relation laws
 
 ≅refl : ∀{i} {l : Lang ∞} → l ≅⟨ i ⟩≅ l
-≅ν ≅refl = refl
+≅ν ≅refl   = refl
 ≅δ ≅refl a = ≅refl
 
 ≅sym : ∀{i} {k l : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → k ≅⟨ i ⟩≅ l
-≅ν (≅sym p) = sym (≅ν p)
+≅ν (≅sym p)   = sym (≅ν p)
 ≅δ (≅sym p) a = ≅sym (≅δ p a)
 
 ≅trans : ∀{i} {k l m : Lang ∞} (p : k ≅⟨ i ⟩≅ l) (q : l ≅⟨ i ⟩≅ m) → k ≅⟨ i ⟩≅ m
-≅ν (≅trans p q) = trans (≅ν p) (≅ν q)
+≅ν (≅trans p q)   = trans (≅ν p) (≅ν q)
 ≅δ (≅trans p q) a = ≅trans (≅δ p a) (≅δ q a)
 
 -- Congruence law (UNPROVABLE)
@@ -171,11 +171,11 @@ Setoid.isEquivalence (Bis i) = ≅isEquivalence i
 -- Complement laws
 
 compl-empty : ∀{i} → ¬ ∅ ≅⟨ i ⟩≅ all
-≅ν compl-empty = refl
+≅ν compl-empty   = refl
 ≅δ compl-empty a = compl-empty
 
 compl-top : ∀{i} → ¬ all ≅⟨ i ⟩≅ ∅
-≅ν compl-top = refl
+≅ν compl-top   = refl
 ≅δ compl-top a = compl-top
 
 compl-cong : ∀{i}{l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → ¬ l ≅⟨ i ⟩≅ ¬ k
@@ -185,15 +185,15 @@ compl-cong : ∀{i}{l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → ¬ l ≅⟨ i 
 -- Intersection laws
 
 inter-assoc : ∀{i} (k {l m} : Lang ∞) → (k ∩ l) ∩ m ≅⟨ i ⟩≅ k ∩ (l ∩ m)
-≅ν (inter-assoc k) =  ∧-assoc (ν k) _ _
+≅ν (inter-assoc k)   =  ∧-assoc (ν k) _ _
 ≅δ (inter-assoc k) a = inter-assoc _
 
 inter-comm : ∀{i} (l {k} : Lang ∞) → l ∩ k ≅⟨ i ⟩≅ k ∩ l
-≅ν (inter-comm l) = ∧-comm (ν l) _
+≅ν (inter-comm l)   = ∧-comm (ν l) _
 ≅δ (inter-comm l) a = inter-comm (δ l a)
 
 inter-idem : ∀{i} (l : Lang ∞) → l ∩ l ≅⟨ i ⟩≅ l
-≅ν (inter-idem l) = ∧-idempotent (ν l)
+≅ν (inter-idem l)   = ∧-idempotent (ν l)
 ≅δ (inter-idem l) a = inter-idem (δ l a)
 
 inter-empty : ∀{i} {l : Lang ∞} → ∅ ∩ l ≅⟨ i ⟩≅ ∅
@@ -201,7 +201,7 @@ inter-empty : ∀{i} {l : Lang ∞} → ∅ ∩ l ≅⟨ i ⟩≅ ∅
 ≅δ inter-empty a = inter-empty
 
 inter-top : ∀{i} {l : Lang ∞} → all ∩ l ≅⟨ i ⟩≅ l
-≅ν inter-top = refl
+≅ν inter-top   = refl
 ≅δ inter-top a = inter-top
 
 inter-congˡ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → l ∩ m ≅⟨ i ⟩≅ k ∩ m
@@ -215,15 +215,15 @@ inter-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m ∩ l �
 -- Union laws
 
 union-assoc : ∀{i} (k {l m} : Lang ∞) → (k ∪ l) ∪ m ≅⟨ i ⟩≅ k ∪ (l ∪ m)
-≅ν (union-assoc k) = ∨-assoc (ν k) _ _
+≅ν (union-assoc k)   = ∨-assoc (ν k) _ _
 ≅δ (union-assoc k) a = union-assoc _
 
 union-comm : ∀{i} (l k : Lang ∞) → l ∪ k ≅⟨ i ⟩≅ k ∪ l
-≅ν (union-comm l k) = ∨-comm (ν l) _
+≅ν (union-comm l k)   = ∨-comm (ν l) _
 ≅δ (union-comm l k) a = union-comm (δ l a) (δ k a)
 
 union-idem : ∀{i} {l : Lang ∞} → l ∪ l ≅⟨ i ⟩≅ l
-≅ν union-idem = ∨-idempotent _
+≅ν union-idem   = ∨-idempotent _
 ≅δ union-idem a = union-idem
 
 union-empty : ∀{i} {l : Lang ∞} → ∅ ∪ l ≅⟨ i ⟩≅ l
