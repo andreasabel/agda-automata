@@ -24,6 +24,15 @@ allfiles=cmcs16.tex $(files)
 files=postprocess.sed Makefile \
   macros.tex $(bibliography)
 
+talkCMCS : talkCMCS16.pdf
+	cp -pr $< $(destdir)/cmcs16
+	touch $@
+
+talkCMCS16.pdf : talkCMCS16.tex
+	pdflatex $<
+
+talkCMCS16.zip : Library.agda LangUnsized.agda Lang.agda
+	zip $@ $^
 
 default : cmcs16.pdf
 
