@@ -88,3 +88,11 @@ plus-correct (r *ʳ) (chʳ a)      = ≅refl
 plus-correct (r *ʳ) (s +ʳ s₁)    = ≅refl
 plus-correct (r *ʳ) (s ∙ʳ s₁)    = ≅refl
 plus-correct (r *ʳ) (s *ʳ)       = ≅refl
+
+star-correct : ∀{i} r → ⟦ r *ˢ ⟧ ≅⟨ i ⟩≅ ⟦ r *ʳ ⟧
+star-correct 0ʳ        = ≅sym star-empty
+star-correct 1ʳ        = ≅sym star-unit
+star-correct (chʳ a)   = ≅refl
+star-correct (r +ʳ r₁) = ≅refl
+star-correct (r ∙ʳ r₁) = ≅refl
+star-correct (r *ʳ)    = ≅sym (star-idem _)

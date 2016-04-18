@@ -415,6 +415,26 @@ concat-union-distribʳ : ∀{i} (k {l m} : Lang ∞) → k · (l ∪ m) ≅⟨ i
 
 ≅δ (concat-union-distribʳ k) a | false = concat-union-distribʳ (δ k a)
 
+-- Concatenation is congruence
+
+concat-congˡ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → l · m ≅⟨ i ⟩≅ k · m
+≅ν (concat-congˡ p) rewrite ≅ν p = refl
+≅δ (concat-congˡ {l = l}{k = k} p) a with ν l | ν k | ≅ν p
+≅δ (concat-congˡ p) a | false | false | refl = concat-congˡ (≅δ p a)
+≅δ (concat-congˡ p) a | true  | true  | refl = union-congˡ (concat-congˡ (≅δ p a)) --
+≅δ (concat-congˡ p) a | false | true  | ()
+≅δ (concat-congˡ p) a | true  | false | ()
+
+concat-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m · l ≅⟨ i ⟩≅ m · k
+≅ν (concat-congʳ p) rewrite ≅ν p = refl
+≅δ (concat-congʳ {m = m} p) a with ν m
+≅δ (concat-congʳ p) a | false = concat-congʳ p
+≅δ (concat-congʳ p) a | true  = union-cong (concat-congʳ p) (≅δ p a)
+
+-- TODO
+-- concat-cong : ∀{i}{k k' l l' : Lang ∞} (p : k ≅⟨ i ⟩≅ k') (q : l ≅⟨ i ⟩≅ l') → k · l ≅⟨ i ⟩≅ k' · l'
+-- ≅ν (concat-cong p q) rewrite ≅ν p | ≅ν q = refl
+-- ≅δ (concat-cong p q) a = {!TODO!} -- concat-cong (≅δ p a) (≅δ q a)
 
 -- Associativity of concatenation
 --
@@ -447,7 +467,42 @@ concat-assoc : ∀{i} (k {l m} : Lang ∞) → (k · l) · m ≅⟨ i ⟩≅ k �
   ∎
   where open EqR (Bis _)
 
+concat-emptyˡ : ∀{i} l → ∅ · l ≅⟨ i ⟩≅ ∅
+≅ν (concat-emptyˡ l) = refl
+≅δ (concat-emptyˡ l) a = concat-emptyˡ l
+
 -- Laws of the Kleene star
+
+star-empty : ∀{i} → ∅ * ≅⟨ i ⟩≅ ε
+≅ν star-empty = refl
+≅δ star-empty a = concat-emptyˡ _
+
+star-unit : ∀{i} → ε * ≅⟨ i ⟩≅ ε
+≅ν star-unit = refl
+≅δ star-unit a = concat-emptyˡ _
+
+star-concat-idem : ∀{i} (l : Lang ∞) → l * · l * ≅⟨ i ⟩≅ l *
+≅ν (star-concat-idem l) = refl
+≅δ (star-concat-idem l) a = begin
+    δ l a · l * · l * ∪ δ l a · l *
+  ≈⟨ union-congˡ (concat-assoc _) ⟩
+    δ l a · (l * · l *) ∪ δ l a · l *
+  ≈⟨ union-congˡ (concat-congʳ (star-concat-idem _)) ⟩
+    δ l a · l * ∪ δ l a · l *
+  ≈⟨ union-idem ⟩
+    δ l a · l *
+  ∎
+  where open EqR (Bis _)
+
+star-idem : ∀{i} (l : Lang ∞) → (l *) * ≅⟨ i ⟩≅ l *
+≅ν (star-idem l) = refl
+≅δ (star-idem l) a = begin
+  δ l a · l * · (l *) *  ≈⟨ concat-congʳ (star-idem l) ⟩
+  δ l a · l * · l *      ≈⟨ concat-assoc (δ l a) ⟩
+  δ l a · (l * · l *)    ≈⟨ concat-congʳ (star-concat-idem l) ⟩
+  δ l a · l *
+  ∎
+  where open EqR (Bis _)
 
 -- Recursion equation for the Kleene star
 
