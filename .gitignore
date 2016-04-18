@@ -5,6 +5,8 @@
 *.zip
 *.dvi
 *.blg
+*.nav
+*.snm
 *.pdf
 *~
 all.bib
@@ -13,7 +15,21 @@ short.bib
 *_aux
 *.out
 *.agdai
+Bug*.agda
 llncs.dem
 llncs.doc
 llncs.ind
 vers1/readme.txt
+/cmcs16/llncs
+/cmcs16/html
+/jfp15/jfp2egui.tex
+/vers1/splncs.bst
+/vers1/splncs03.bst
+/vers1/splncs_srt.bst
+/vers1/sprmindx.sty
+/vers1/aliascnt.sty
+/vers1/llncsdoc.sty
+/vers1/remreset.sty
+/cmcs16/talkCMCS
+/jfp15/Cambridge_Journals_APC_price_list_3.1.xlsx
+/jfp15/JFP-2014-0017 - Decision on Manuscript.eml
