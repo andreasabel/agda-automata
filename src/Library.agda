@@ -5,7 +5,7 @@ open import Size  public
 
 open import Data.Bool.Base public using (Bool; true; false; if_then_else_; not; _∧_; _∨_)
 open import Data.Empty public using (⊥; ⊥-elim)
-open import Data.List.Base public using (List; []; _∷_) -- hiding (module List)
+open import Data.List.Base public using (List; []; _∷_) hiding (module List)
 
 open import Data.Maybe public using (Maybe; nothing; just)
 open import Data.Nat.Base public using (ℕ; zero; suc; _+_)
@@ -14,7 +14,7 @@ open import Data.Sum public using (_⊎_; inj₁; inj₂)
 open import Data.Unit public using (⊤)
 
 open import Data.Fin public using (Fin; zero; suc)
-open import Data.Vec public using (Vec; []; _∷_)
+open import Data.Vec public using (Vec; []; _∷_) hiding (module Vec)
 
 open import Function public using (case_of_)
 
