@@ -17,6 +17,8 @@ open import Data.Fin public using (Fin; zero; suc)
 open import Data.Vec public using (Vec; []; _∷_)
 
 open import Relation.Nullary public using (Dec; yes; no)
+
+open import Relation.Nullary public using (¬_; Dec; yes; no)
 open import Relation.Nullary.Decidable public using (⌊_⌋)
 open import Relation.Binary public
 open import Relation.Binary.PropositionalEquality public

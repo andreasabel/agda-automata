@@ -6,7 +6,6 @@ module _
 
 infix   1 _≅⟨_⟩≅_
 infix   2 _∈_
-infixr 10 ¬_
 infixl  4 _∪_
 infixl  5 _∩_
 infixl  6 _·_
@@ -82,9 +81,9 @@ char : ∀{i} (a : A) → Lang i
 
 -- language complement
 
-¬_ : ∀{i} (l : Lang i) → Lang i
-ν (¬ l)   = not (ν l)
-δ (¬ l) x = ¬ δ l x
+compl_ : ∀{i} (l : Lang i) → Lang i
+ν (compl l)   = not (ν l)
+δ (compl l) x = compl δ l x
 
 -- intersection of languages
 
@@ -170,15 +169,15 @@ Setoid.isEquivalence (Bis i) = ≅isEquivalence i
 
 -- Complement laws
 
-compl-empty : ∀{i} → ¬ ∅ ≅⟨ i ⟩≅ all
+compl-empty : ∀{i} → compl ∅ ≅⟨ i ⟩≅ all
 ≅ν compl-empty   = refl
 ≅δ compl-empty a = compl-empty
 
-compl-top : ∀{i} → ¬ all ≅⟨ i ⟩≅ ∅
+compl-top : ∀{i} → compl all ≅⟨ i ⟩≅ ∅
 ≅ν compl-top   = refl
 ≅δ compl-top a = compl-top
 
-compl-cong : ∀{i}{l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → ¬ l ≅⟨ i ⟩≅ ¬ k
+compl-cong : ∀{i}{l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → compl l ≅⟨ i ⟩≅ compl k
 ≅ν (compl-cong p) rewrite ≅ν p = refl
 ≅δ (compl-cong p) a = compl-cong (≅δ p a)
 
