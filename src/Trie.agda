@@ -2,7 +2,7 @@ open import Library
 
 module _
   (decA : DecSetoid lzero lzero)
-  (open DecSetoid decA using (_≟_) renaming (Carrier to A)) where
+  (open DecSetoid decA using (_≟_; _≈_) renaming (Carrier to A)) where
 
 infix   1 _≅⟨_⟩≅_
 infix   2 _∈_
@@ -121,9 +121,41 @@ l ^ suc n = l · l ^ n
 
 -- Examples
 
-aⁿbⁿ : ∀{i} (a b : A) (n : ℕ) → Lang i
-aⁿbⁿ a b n = char a ^ n · char b ^ n
+aⁿbⁿ! : ∀{i} (a b : A) (n : ℕ) → Lang i
+aⁿbⁿ! a b n = char a ^ n · char b ^ n
 
+data ThisThatElse (a b x : A) : Set where
+  this : (p : x ≈ a) → ThisThatElse a b x
+  that : (p : x ≈ b) → ThisThatElse a b x
+  else : (¬this : ¬ (x ≈ a)) (¬that : ¬(x ≈ b)) → ThisThatElse a b x
+
+thisThatElse : (a b x : A) → ThisThatElse a b x
+thisThatElse a b x with x ≟ a
+thisThatElse a b x | yes p = this p
+thisThatElse a b x | no ¬p with x ≟ b
+thisThatElse a b x | no ¬p | yes p = that p
+thisThatElse a b x | no ¬p | no ¬q = else ¬p ¬q
+
+-- Finish with n bs more than as coming now.
+thenbs : ∀{i} (a b : A) (n : ℕ) → Lang i
+ν (thenbs a b n)   = zero? n
+δ (thenbs a b n) x = case (thisThatElse a b x) of \
+  { (this p) → thenbs a b (suc n)
+  ; (that p) → char b ^ n
+  ; _        → ∅
+  }
+
+-- -- Does not reduce, see issue #...!
+-- thenbs : ∀{i} (a b : A) (n : ℕ) → Lang i
+-- ν (thenbs a b zero)    = true
+-- ν (thenbs a b (suc _)) = false
+-- δ (thenbs a b n)       x with thisThatElse a b x
+-- δ (thenbs a b n)       x | this p = thenbs a b (suc n)
+-- δ (thenbs a b (suc n)) x | that p = char b ^ n
+-- δ (thenbs a b n)       x | _      = ∅
+
+aⁿbⁿ : ∀{i} (a b : A) → Lang i
+aⁿbⁿ a b = thenbs a b zero
 
 -- Language equality
 

@@ -16,7 +16,7 @@ open import Data.Unit public using (⊤)
 open import Data.Fin public using (Fin; zero; suc)
 open import Data.Vec public using (Vec; []; _∷_)
 
-open import Relation.Nullary public using (Dec; yes; no)
+open import Function public using (case_of_)
 
 open import Relation.Nullary public using (¬_; Dec; yes; no)
 open import Relation.Nullary.Decidable public using (⌊_⌋)
