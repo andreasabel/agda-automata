@@ -37,6 +37,13 @@ record Lang i : Set where
     δ : ∀{j : Size< i} → A → Lang j
 open Lang
 
+delta2 : ∀{i} → Lang (↑ (↑ i)) → A → Lang i
+delta2 l a = δ (δ l a) a
+
+half : ∀{i} → Lang ∞ → Lang i
+ν (half l) = ν l
+δ (half l) x = half (δ (δ l x) x)
+
 -- Word membership
 
 _∈_ : List A → Lang ∞ → Bool
