@@ -173,6 +173,9 @@ record _≅⟨_⟩≅_ (l : Lang ∞) i (k : Lang ∞) : Set where
     ≅δ : ∀{j : Size< i} (a : A) → δ l a ≅⟨ j ⟩≅ δ k a
 open _≅⟨_⟩≅_ public
 
+_≅_ : ∀ (l k : Lang ∞) → Set
+l ≅ k = l ≅⟨ ∞ ⟩≅ k
+
 -- Equivalence relation laws
 
 ≅refl : ∀{i} {l : Lang ∞} → l ≅⟨ i ⟩≅ l

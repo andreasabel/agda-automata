@@ -8,7 +8,7 @@ open import Data.Empty public using (⊥; ⊥-elim)
 open import Data.List.Base public using (List; []; _∷_) -- hiding (module List)
 
 open import Data.Maybe public using (Maybe; nothing; just)
-open import Data.Nat.Base public using (ℕ; zero; suc)
+open import Data.Nat.Base public using (ℕ; zero; suc; _+_)
 open import Data.Product public using (_×_; _,_; proj₁; proj₂)
 open import Data.Sum public using (_⊎_; inj₁; inj₂)
 open import Data.Unit public using (⊤)
@@ -22,7 +22,7 @@ open import Relation.Nullary public using (¬_; Dec; yes; no)
 open import Relation.Nullary.Decidable public using (⌊_⌋)
 open import Relation.Binary public
 open import Relation.Binary.PropositionalEquality public
-  using (_≡_; refl; sym; trans; cong; cong₂; module ≡-Reasoning)
+  using (_≡_; _≢_; refl; sym; trans; cong; cong₂; module ≡-Reasoning)
 import Relation.Binary.EqReasoning
 module EqR = Relation.Binary.EqReasoning
 
@@ -44,6 +44,10 @@ module ICMSolver = Algebra.IdempotentCommutativeMonoidSolver
 ∨-∧-distribˡ = proj₁ ∨-∧-distrib
 ∧-∨-distribˡ = proj₁ ∧-∨-distrib
 ∧-∨-distribʳ = proj₂ ∧-∨-distrib
+
+zero? : ℕ → Bool
+zero? zero = true
+zero? (suc _) = false
 
 module List where
 
