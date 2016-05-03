@@ -42,9 +42,9 @@ _∪_ : ∀{i} (k l : Lang i) → Lang i
 
 _·_ : ∀{i} (k l : Lang i) → Lang i
 ν (k · l)   = ν k ∧ ν l
-δ (_·_ {i} k l) {j} a = if ν k then _∪_ {j} (_·_ {j} (δ k a) l) (δ l a)
-  else (_·_ {j} (δ k {j} a) l)
--- δ (k · l) a = if ν k then (δ k a · l) ∪ δ l a else (δ k a · l)
+-- δ (_·_ {i} k l) {j} a = if ν k then _∪_ {j} (_·_ {j} (δ k a) l) (δ l a)
+--   else (_·_ {j} (δ k {j} a) l)
+δ (k · l) a = if ν k then (δ k a · l) ∪ δ l a else (δ k a · l)
 
 -- Kleene star
 
