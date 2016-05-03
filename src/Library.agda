@@ -8,7 +8,7 @@ open import Data.Empty public using (⊥; ⊥-elim)
 open import Data.List.Base public using (List; []; _∷_) hiding (module List)
 
 open import Data.Maybe public using (Maybe; nothing; just)
-open import Data.Nat.Base public using (ℕ; zero; suc; _+_)
+open import Data.Nat.Base public using (ℕ; zero; suc; _+_; pred)
 open import Data.Product public using (_×_; _,_; proj₁; proj₂)
 open import Data.Sum public using (_⊎_; inj₁; inj₂)
 open import Data.Unit public using (⊤)

@@ -518,3 +518,12 @@ star-rec : ∀{i} (l : Lang ∞) → l * ≅⟨ i ⟩≅ ε ∪ (l · l *)
   ∎
   where open EqR (Bis _)
 ... | false = ≅sym union-empty
+
+-- Kleene star absorbs ε
+
+unit-union-star : ∀{i} (l : Lang ∞) → ε ∪ (l *) ≅⟨ i ⟩≅ (l *)
+≅ν (unit-union-star l)   = refl
+≅δ (unit-union-star l) a = union-empty
+
+star-union-unit : ∀{i} (l : Lang ∞) → (l *) ∪ ε ≅⟨ i ⟩≅ (l *)
+star-union-unit l = ≅trans (union-comm (l *) ε) (unit-union-star _)

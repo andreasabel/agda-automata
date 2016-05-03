@@ -29,12 +29,16 @@ data RE : Set where
 -- simplifying smart constructors
 -- (arguments are assumed to be simplified
 
--- monoid structure for _+ʳ_
+-- idempotent monoid structure for _+ʳ_
+
 _+ˢ_ : (r s : RE) → RE
-0ʳ +ˢ         s = s
-r +ˢ          0ʳ = r
-(r +ʳ r₁) +ˢ  s = r +ʳ (r₁ +ʳ s)
-r +ˢ          s = r +ʳ s
+0ʳ +ˢ s = s
+r +ˢ 0ʳ = r
+1ʳ +ˢ 1ʳ = 1ʳ
+1ʳ +ˢ (r *ʳ) = r *ʳ
+(r *ʳ) +ˢ 1ʳ = r *ʳ
+(r +ʳ r₁) +ˢ s = r +ʳ (r₁ +ʳ s)
+r +ˢ s = r +ʳ s
 
 -- monoid with zero for _∙ʳ_
 
@@ -54,16 +58,56 @@ _*ˢ : (r : RE) → RE
 (r *ʳ) *ˢ = r *ʳ
 r *ˢ = r *ʳ
 
+-- Equality of REs
+
+_≅ʳ_ : (r s : RE) → Set
+r ≅ʳ s = ⟦ r ⟧ ≅ ⟦ s ⟧
+
+≅ʳisEquivalence : IsEquivalence _≅ʳ_
+IsEquivalence.refl  ≅ʳisEquivalence = ≅refl
+IsEquivalence.sym   ≅ʳisEquivalence = ≅sym
+IsEquivalence.trans ≅ʳisEquivalence = ≅trans
+
+REq : Setoid lzero lzero
+Setoid.Carrier       REq = RE
+Setoid._≈_           REq = _≅ʳ_
+Setoid.isEquivalence REq = ≅ʳisEquivalence
+
+plus-icm : IdempotentCommutativeMonoid _ _
+plus-icm =  record
+  { Carrier = RE
+  ; _≈_ = _≅ʳ_
+  ; _∙_ = _+ʳ_
+  ; ε = 0ʳ
+  ; isIdempotentCommutativeMonoid = record
+    { isCommutativeMonoid = record
+      { isSemigroup = record
+        { isEquivalence = ≅ʳisEquivalence
+        ; assoc = λ r s t → union-assoc _
+        ; ∙-cong = union-cong
+        }
+      ; identityˡ = λ r → union-empty
+      ; comm = λ r s → union-comm _ _
+      }
+    ; idem = λ r → union-idem
+    }
+  }
+
+plus-cong : ∀{r r' s s'} (p : r ≅ʳ r') (q : s ≅ʳ s') → (r +ʳ s) ≅ʳ (r' +ʳ s')
+plus-cong = union-cong
+
+-- plus-congˡ :
+
 -- Correctness proofs.
 
 plus-correct : ∀{i} r s → ⟦ r +ˢ s ⟧ ≅⟨ i ⟩≅ ⟦ r +ʳ s ⟧
 plus-correct 0ʳ s                = ≅sym union-empty
 plus-correct 1ʳ 0ʳ               = ≅trans (≅sym union-empty) (union-comm _ _)
-plus-correct 1ʳ 1ʳ               = ≅refl
+plus-correct 1ʳ 1ʳ               = ≅sym union-idem
 plus-correct 1ʳ (chʳ a)          = ≅refl
 plus-correct 1ʳ (s +ʳ s₁)        = ≅refl
 plus-correct 1ʳ (s ∙ʳ s₁)        = ≅refl
-plus-correct 1ʳ (s *ʳ)           = ≅refl
+plus-correct 1ʳ (s *ʳ)           = ≅sym (unit-union-star _)
 plus-correct (chʳ a) 0ʳ          = ≅trans (≅sym union-empty) (union-comm _ _)
 plus-correct (chʳ a) 1ʳ          = ≅refl
 plus-correct (chʳ a) (chʳ a₁)    = ≅refl
@@ -83,7 +127,7 @@ plus-correct (r ∙ʳ r₁) (s +ʳ s₁) = ≅refl
 plus-correct (r ∙ʳ r₁) (s ∙ʳ s₁) = ≅refl
 plus-correct (r ∙ʳ r₁) (s *ʳ)    = ≅refl
 plus-correct (r *ʳ) 0ʳ           = ≅trans (≅sym union-empty) (union-comm _ _)
-plus-correct (r *ʳ) 1ʳ           = ≅refl
+plus-correct (r *ʳ) 1ʳ           = ≅sym (star-union-unit _)
 plus-correct (r *ʳ) (chʳ a)      = ≅refl
 plus-correct (r *ʳ) (s +ʳ s₁)    = ≅refl
 plus-correct (r *ʳ) (s ∙ʳ s₁)    = ≅refl
