@@ -10,17 +10,19 @@ open import Trie decA
 
 data RE : Set where
   0ʳ   : RE
-  1ʳ   : RE
   chʳ  : (a : A) → RE
   _+ʳ_ : (r s : RE) → RE
   _∙ʳ_  : (r s : RE) → RE
   _*ʳ  : (r : RE) → RE
 
+-- The unit is definable
+
+pattern 1ʳ = 0ʳ *ʳ
+
 -- semantics of regular expressions
 
 ⟦_⟧ : ∀{i} (r : RE) → Lang i
 ⟦ 0ʳ ⟧     = ∅
-⟦ 1ʳ ⟧     = ε
 ⟦ chʳ a ⟧  = char a
 ⟦ r +ʳ s ⟧ = ⟦ r ⟧ ∪ ⟦ s ⟧
 ⟦ r ∙ʳ s ⟧ = ⟦ r ⟧ · ⟦ s ⟧
@@ -34,7 +36,6 @@ data RE : Set where
 _+ˢ_ : (r s : RE) → RE
 0ʳ +ˢ s = s
 r +ˢ 0ʳ = r
-1ʳ +ˢ 1ʳ = 1ʳ
 1ʳ +ˢ (r *ʳ) = r *ʳ
 (r *ʳ) +ˢ 1ʳ = r *ʳ
 (r +ʳ r₁) +ˢ s = r +ʳ (r₁ +ʳ s)
@@ -54,7 +55,6 @@ r ∙ˢ s = r ∙ʳ s
 
 _*ˢ : (r : RE) → RE
 0ʳ *ˢ = 1ʳ
-1ʳ *ˢ = 1ʳ
 (r *ʳ) *ˢ = r *ʳ
 r *ˢ = r *ʳ
 
@@ -98,16 +98,22 @@ plus-cong = union-cong
 
 -- plus-congˡ :
 
+unit-correct : ⟦ 1ʳ ⟧ ≅ ε
+unit-correct = star-empty
+
 -- Correctness proofs.
 
 plus-correct : ∀{i} r s → ⟦ r +ˢ s ⟧ ≅⟨ i ⟩≅ ⟦ r +ʳ s ⟧
 plus-correct 0ʳ s                = ≅sym union-empty
 plus-correct 1ʳ 0ʳ               = ≅trans (≅sym union-empty) (union-comm _ _)
-plus-correct 1ʳ 1ʳ               = ≅sym union-idem
 plus-correct 1ʳ (chʳ a)          = ≅refl
 plus-correct 1ʳ (s +ʳ s₁)        = ≅refl
 plus-correct 1ʳ (s ∙ʳ s₁)        = ≅refl
-plus-correct 1ʳ (s *ʳ)           = ≅sym (unit-union-star _)
+plus-correct 1ʳ 1ʳ               = ≅sym union-idem
+plus-correct 1ʳ (chʳ a *ʳ) = ≅sym (empty-star-union-star _)
+plus-correct 1ʳ ((s +ʳ s₁) *ʳ) = ≅sym (empty-star-union-star _)
+plus-correct 1ʳ ((s ∙ʳ s₁) *ʳ) = ≅sym (empty-star-union-star _)
+plus-correct 1ʳ ((s *ʳ) *ʳ) = ≅sym (empty-star-union-star _)
 plus-correct (chʳ a) 0ʳ          = ≅trans (≅sym union-empty) (union-comm _ _)
 plus-correct (chʳ a) 1ʳ          = ≅refl
 plus-correct (chʳ a) (chʳ a₁)    = ≅refl
@@ -127,15 +133,35 @@ plus-correct (r ∙ʳ r₁) (s +ʳ s₁) = ≅refl
 plus-correct (r ∙ʳ r₁) (s ∙ʳ s₁) = ≅refl
 plus-correct (r ∙ʳ r₁) (s *ʳ)    = ≅refl
 plus-correct (r *ʳ) 0ʳ           = ≅trans (≅sym union-empty) (union-comm _ _)
-plus-correct (r *ʳ) 1ʳ           = ≅sym (star-union-unit _)
 plus-correct (r *ʳ) (chʳ a)      = ≅refl
 plus-correct (r *ʳ) (s +ʳ s₁)    = ≅refl
 plus-correct (r *ʳ) (s ∙ʳ s₁)    = ≅refl
-plus-correct (r *ʳ) (s *ʳ)       = ≅refl
+plus-correct (chʳ a *ʳ) (0ʳ *ʳ) = ≅sym (star-union-empty-star _)
+plus-correct (chʳ a *ʳ) (chʳ a₁ *ʳ) = ≅refl
+plus-correct (chʳ a *ʳ) ((s +ʳ s₁) *ʳ) = ≅refl
+plus-correct (chʳ a *ʳ) ((s ∙ʳ s₁) *ʳ) = ≅refl
+plus-correct (chʳ a *ʳ) ((s *ʳ) *ʳ) = ≅refl
+plus-correct ((r +ʳ r₁) *ʳ) (0ʳ *ʳ) = ≅sym (star-union-empty-star _)
+plus-correct ((r +ʳ r₁) *ʳ) (chʳ a *ʳ) = ≅refl
+plus-correct ((r +ʳ r₁) *ʳ) ((s +ʳ s₁) *ʳ) = ≅refl
+plus-correct ((r +ʳ r₁) *ʳ) ((s ∙ʳ s₁) *ʳ) = ≅refl
+plus-correct ((r +ʳ r₁) *ʳ) ((s *ʳ) *ʳ) = ≅refl
+plus-correct ((r ∙ʳ r₁) *ʳ) (0ʳ *ʳ) = ≅sym (star-union-empty-star _)
+plus-correct ((r ∙ʳ r₁) *ʳ) (chʳ a *ʳ) = ≅refl
+plus-correct ((r ∙ʳ r₁) *ʳ) ((s +ʳ s₁) *ʳ) = ≅refl
+plus-correct ((r ∙ʳ r₁) *ʳ) ((s ∙ʳ s₁) *ʳ) = ≅refl
+plus-correct ((r ∙ʳ r₁) *ʳ) ((s *ʳ) *ʳ) = ≅refl
+plus-correct ((r *ʳ) *ʳ) (0ʳ *ʳ) = ≅sym (star-union-empty-star _)
+plus-correct ((r *ʳ) *ʳ) (chʳ a *ʳ) = ≅refl
+plus-correct ((r *ʳ) *ʳ) ((s +ʳ s₁) *ʳ) = ≅refl
+plus-correct ((r *ʳ) *ʳ) ((s ∙ʳ s₁) *ʳ) = ≅refl
+plus-correct ((r *ʳ) *ʳ) ((s *ʳ) *ʳ) = ≅refl
+
+postulate times-correct : ∀{i} r s → ⟦ r ∙ˢ s ⟧ ≅⟨ i ⟩≅ ⟦ r ∙ʳ s ⟧
+-- times-correct =
 
 star-correct : ∀{i} r → ⟦ r *ˢ ⟧ ≅⟨ i ⟩≅ ⟦ r *ʳ ⟧
-star-correct 0ʳ        = ≅sym star-empty
-star-correct 1ʳ        = ≅sym star-unit
+star-correct 0ʳ        = ≅refl
 star-correct (chʳ a)   = ≅refl
 star-correct (r +ʳ r₁) = ≅refl
 star-correct (r ∙ʳ r₁) = ≅refl

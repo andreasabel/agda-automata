@@ -527,3 +527,10 @@ unit-union-star : ∀{i} (l : Lang ∞) → ε ∪ (l *) ≅⟨ i ⟩≅ (l *)
 
 star-union-unit : ∀{i} (l : Lang ∞) → (l *) ∪ ε ≅⟨ i ⟩≅ (l *)
 star-union-unit l = ≅trans (union-comm (l *) ε) (unit-union-star _)
+
+empty-star-union-star : ∀{i} (l : Lang ∞) → (∅ *) ∪ (l *) ≅⟨ i ⟩≅ (l *)
+≅ν (empty-star-union-star l)   = refl
+≅δ (empty-star-union-star l) a =  ≅trans (union-congˡ (concat-emptyˡ _)) union-empty
+
+star-union-empty-star : ∀{i} (l : Lang ∞) → (l *) ∪ (∅ *) ≅⟨ i ⟩≅ (l *)
+star-union-empty-star l = ≅trans (union-comm (l *) (∅ *)) (empty-star-union-star _)
