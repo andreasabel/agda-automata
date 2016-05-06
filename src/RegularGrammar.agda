@@ -5,6 +5,7 @@ module RegularGrammar
   (decA : DecSetoid lzero lzero)
   (open DecSetoid decA using (_≟_) renaming (Carrier to A)) where
 
+open import Trie decA
 open import RE decA
 
 -- A regular grammar consists of equations for non-terminals of
@@ -113,3 +114,37 @@ gauss (w ∷ (w₀ ∷ ws)) with step (w ∷ (w₀ ∷ ws))
 -- ... | w' ∷ ws' = gauss {! ws' !} {! w' ∷ Vec.map (subst w') vs !}
 
 -- [[ gauss ws vs ]] = [[ revapp vs ws ]]
+
+-- Correctness proofs
+
+-- Evaluation is a morphism of vector spaces
+
+eval-plus : ∀{n} (v w : LinComb n) (ρ  : Vec RE (pred n)) →
+  eval (v +ᵛ w) ρ ≅ʳ (eval v ρ +ʳ eval w ρ)
+eval-plus [] [] _ = ≅sym union-empty
+eval-plus (a ∷ []) (b ∷ []) [] = plus-correct a _
+eval-plus (a ∷ a' ∷ v) (b ∷ b' ∷ w) (r ∷ ρ) = {!!}  -- This should be an instance of AC for +.
+
+eval-scale : ∀{n} (v : LinComb n) {a} {ρ} → eval (a ∙ᵛ v) ρ ≅ʳ (a ∙ʳ eval v ρ)
+eval-scale = {!!} -- This should follow from the distributivity law.
+
+-- Substitution
+
+subst-correct : ∀{n} (v : LinComb (2 + n)) {w : LinComb (1 + n)} {ρ : Vec RE n} →
+  eval (subst w v) ρ ≅ʳ eval v (eval w ρ ∷ ρ)
+subst-correct (a ∷ b ∷ v) {w} {ρ} = begin
+  eval (subst w (a ∷ b ∷ v)) ρ      ≡⟨⟩
+  eval ((a ∙ᵛ w) +ᵛ (b ∷ v)) ρ       ≈⟨ eval-plus (a ∙ᵛ w) _ _ ⟩
+  eval (a ∙ᵛ w) ρ +ʳ eval (b ∷ v) ρ  ≈⟨ union-cong (eval-scale w {a = a}) ≅refl ⟩
+  (a ∙ʳ eval w ρ) +ʳ eval (b ∷ v) ρ  ≈⟨ union-cong (≅sym (times-correct a _)) ≅refl ⟩
+  (a ∙ˢ eval w ρ) +ʳ eval (b ∷ v) ρ  ≈⟨  ≅sym (plus-correct (a ∙ˢ eval w ρ) _) ⟩
+  (a ∙ˢ eval w ρ) +ˢ eval (b ∷ v) ρ  ≡⟨⟩
+  eval (a ∷ b ∷ v) (eval w ρ ∷ ρ)    ∎ where open EqR REq
+
+
+-- Semantics of a linear combination
+
+⟦_⟧ᵛ : ∀{n i} → LinComb n → Vec (Lang i) (pred n) → Lang i
+⟦ []           ⟧ᵛ _        = ∅
+⟦ a ∷ []       ⟧ᵛ _        = ⟦ a ⟧
+⟦ a ∷ (b ∷ bs) ⟧ᵛ (l ∷ ls) = ⟦ a ⟧ · l ∪ ⟦ b ∷ bs ⟧ᵛ ls
