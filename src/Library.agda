@@ -1,6 +1,6 @@
 module Library where
 
-open import Level public renaming (zero to lzero; suc to lsuc)
+open import Level public using (Level) renaming (zero to lzero; suc to lsuc)
 open import Size  public
 
 open import Data.Bool.Base public using (Bool; true; false; if_then_else_; not; _∧_; _∨_)

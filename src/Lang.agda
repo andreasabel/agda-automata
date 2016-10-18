@@ -1,3 +1,5 @@
+-- Cut-down version of Language.agda
+
 open import Library
 
 module _

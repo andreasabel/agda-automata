@@ -1,16 +1,6 @@
 open import Library
 
-module _
-  (decA : DecSetoid lzero lzero)
-  (open DecSetoid decA using (_≟_; _≈_) renaming (Carrier to A)) where
-
-infix   1 _≅⟨_⟩≅_
-infix   2 _∈_
-infixl  4 _∪_
-infixl  5 _∩_
-infixl  6 _·_
-infixr 15 _^_
-infixr 15 _*
+module Trie where
 
 -- Coalgebra L → Bool × (A → L)
 --
@@ -30,85 +20,148 @@ infixr 15 _*
 
 -- A decidable language is a decidable set of words aka dictionary aka trie.
 
-record Lang i : Set where
+record Trie i A B : Set where
   coinductive
   field
-    ν : Bool -- nullable
-    δ : ∀{j : Size< i} → A → Lang j
-open Lang
+    ν : B   -- Label, e.g. Bool for formal languages or Maybe C for dictionaries.
+    δ : ∀{j : Size< i} (a : A) → Trie j A B
+open Trie public
 
--- Examples for sized typing:
---
--- delta2 : ∀{i} → Lang (↑ (↑ i)) → A → Lang i
--- delta2 l a = δ (δ l a) a
---
--- half : ∀{i} → Lang ∞ → Lang i
--- ν (half l) = ν l
--- δ (half l) x = half (δ (δ l x) x)
+-- Bisimilarity
 
--- Word membership
+infix   1 _≅⟨_⟩≅_
 
-_∈_ : List A → Lang ∞ → Bool
-[]     ∈ l = ν l
-a ∷ as ∈ l = as ∈ δ l a
+record _≅⟨_⟩≅_ {A B} (l : Trie ∞ A B) i (k : Trie ∞ A B) : Set where
+  coinductive
+  field
+    ≅ν : ν l ≡ ν k
+    ≅δ : ∀{j : Size< i} (a : A) → δ l a ≅⟨ j ⟩≅ δ k a
+open _≅⟨_⟩≅_ public
 
--- Language from word membership
+_≅_ : ∀{A B} (l k : Trie ∞ A B) → Set
+l ≅ k = l ≅⟨ ∞ ⟩≅ k
 
-lang : ∀{i} (mem : List A → Bool) → Lang i
-ν (lang mem)   = mem []
-δ (lang mem) a = lang λ as → mem (a ∷ as)
+-- Equivalence relation laws
 
--- This makes Lang isomophic to (List A → Bool)
+≅refl : ∀{i A B} {l : Trie ∞ A B} → l ≅⟨ i ⟩≅ l
+≅ν ≅refl   = refl
+≅δ ≅refl a = ≅refl
 
--- Constructions of language
+≅sym : ∀{i A B} {k l : Trie ∞ A B} (p : l ≅⟨ i ⟩≅ k) → k ≅⟨ i ⟩≅ l
+≅ν (≅sym p)   = sym (≅ν p)
+≅δ (≅sym p) a = ≅sym (≅δ p a)
 
--- empty language
+≅trans : ∀{i A B} {k l m : Trie ∞ A B} (p : k ≅⟨ i ⟩≅ l) (q : l ≅⟨ i ⟩≅ m) → k ≅⟨ i ⟩≅ m
+≅ν (≅trans p q)   = trans (≅ν p) (≅ν q)
+≅δ (≅trans p q) a = ≅trans (≅δ p a) (≅δ q a)
+-- Setoid
 
-∅ : ∀{i} → Lang i
+≅isEquivalence : ∀(i : Size) (A B : Set) → IsEquivalence (λ (l l' : Trie ∞ A B) → l ≅⟨ i ⟩≅ l')
+IsEquivalence.refl  (≅isEquivalence i A B) = ≅refl
+IsEquivalence.sym   (≅isEquivalence i A B) = ≅sym
+IsEquivalence.trans (≅isEquivalence i A B) = ≅trans
+
+Bis : ∀(i : Size) (A B : Set) → Setoid lzero lzero
+Setoid.Carrier       (Bis i A B) = Trie ∞ A B
+Setoid._≈_           (Bis i A B) = λ l k → l ≅⟨ i ⟩≅ k
+Setoid.isEquivalence (Bis i A B) = ≅isEquivalence i A B
+
+-- Lookup
+
+subtrie : ∀{A B} → Trie ∞ A B → List A → Trie ∞ A B
+subtrie t []       = t
+subtrie t (a ∷ as) = subtrie (δ t a) as
+
+lookup : ∀{A B} → Trie ∞ A B → List A → B
+lookup t l = ν (subtrie t l)
+
+-- Trie from function
+
+trie : ∀{i A B} (mem : List A → B) → Trie i A B
+ν (trie mem)   = mem []
+δ (trie mem) a = trie λ as → mem (a ∷ as)
+
+-- This makes Trie isomophic to (List A → Bool)
+
+trie-lookup : ∀{i A B} (t : Trie ∞ A B) → trie (lookup t) ≅⟨ i ⟩≅ t
+≅ν (trie-lookup t)   = refl
+≅δ (trie-lookup t) a = trie-lookup (δ t a)
+
+lookup-trie : ∀{A B} (f : List A → B) as → lookup (trie f) as ≡ f as
+lookup-trie f [] = refl
+lookup-trie f (a ∷ as) = lookup-trie (λ l → f (a ∷ l)) as
+
+-- Constant trie definable as
+-- trie (λ _ → b)
+
+-- Mapping could be defined as
+-- map f t = trie ∘ f ∘ lookup t
+
+map : ∀{i A B C} (f : B → C) (t : Trie i A B) → Trie i A C
+ν (map f t) = f (ν t)
+δ (map f t) a = map f (δ t a)
+
+-- Zipping
+
+zipWith : ∀{i A B C D} (f : B → C → D) (t : Trie i A B) (u : Trie i A C) → Trie i A D
+ν (zipWith f t u) = f (ν t) (ν u)
+δ (zipWith f t u) a = zipWith f (δ t a) (δ u a)
+
+{-
+
+infixl  4 _∪_
+infixl  5 _∩_
+infixl  6 _·_
+infixr 15 _^_
+infixr 15 _*
+
+-- empty trieuage
+
+∅ : ∀{i} → Trie i
 ν ∅   = false
 δ ∅ x = ∅
 
--- trivial language (containing every word)
+-- trivial trieuage (containing every word)
 
-all : ∀{i} → Lang i
+all : ∀{i} → Trie i
 ν all   = true
 δ all x = all
 
--- language consisting of the empty word
+-- trieuage consisting of the empty word
 
-ε : ∀{i} → Lang i
+ε : ∀{i} → Trie i
 ν ε   = true
 δ ε x = ∅
 
--- language consisting of a single single-character word
+-- trieuage consisting of a single single-character word
 
-char : ∀{i} (a : A) → Lang i
+char : ∀{i} (a : A) → Trie i
 ν (char a) = false
 δ (char a) x with a ≟ x
 ... | yes _ = ε
 ... | no  _ = ∅
 
--- language complement
+-- trieuage complement
 
-compl_ : ∀{i} (l : Lang i) → Lang i
+compl_ : ∀{i} (l : Trie i) → Trie i
 ν (compl l)   = not (ν l)
 δ (compl l) x = compl δ l x
 
--- intersection of languages
+-- intersection of trieuages
 
-_∩_ : ∀{i} (k l : Lang i) → Lang i
+_∩_ : ∀{i} (k l : Trie i) → Trie i
 ν (k ∩ l)   = ν k ∧ ν l
 δ (k ∩ l) x = δ k x ∩ δ l x
 
--- union of languages
+-- union of trieuages
 
-_∪_ : ∀{i} (k l : Lang i) → Lang i
+_∪_ : ∀{i} (k l : Trie i) → Trie i
 ν (k ∪ l)   = ν k ∨ ν l
 δ (k ∪ l) x = δ k x ∪ δ l x
 
--- concatenation of languages
+-- concatenation of trieuages
 
-_·_ : ∀{i} (k l : Lang i) → Lang i
+_·_ : ∀{i} (k l : Trie i) → Trie i
 ν (k · l)   = ν k ∧ ν l
 δ (k · l) x = let k'l = δ k x · l in
   if ν k then k'l ∪ δ l x else k'l
@@ -118,19 +171,19 @@ _·_ : ∀{i} (k l : Lang i) → Lang i
 
 -- Kleene star
 
-_* : ∀{i} (l : Lang i) → Lang i
+_* : ∀{i} (l : Trie i) → Trie i
 ν (l *)   = true
 δ (l *) x = δ l x · (l *)
 
 -- Exponentiation
 
-_^_ : ∀{i} (l : Lang i) (n : ℕ) → Lang i
+_^_ : ∀{i} (l : Trie i) (n : ℕ) → Trie i
 l ^ zero  = ε
 l ^ suc n = l · l ^ n
 
 -- Examples
 
-aⁿbⁿ! : ∀{i} (a b : A) (n : ℕ) → Lang i
+aⁿbⁿ! : ∀{i} (a b : A) (n : ℕ) → Trie i
 aⁿbⁿ! a b n = char a ^ n · char b ^ n
 
 data ThisThatElse (a b x : A) : Set where
@@ -146,7 +199,7 @@ thisThatElse a b x | no ¬p | yes p = that p
 thisThatElse a b x | no ¬p | no ¬q = else ¬p ¬q
 
 -- Finish with n bs more than as coming now.
-thenbs : ∀{i} (a b : A) (n : ℕ) → Lang i
+thenbs : ∀{i} (a b : A) (n : ℕ) → Trie i
 ν (thenbs a b n)   = zero? n
 δ (thenbs a b n) x = case (thisThatElse a b x) of \
   { (this p) → thenbs a b (suc n)
@@ -155,7 +208,7 @@ thenbs : ∀{i} (a b : A) (n : ℕ) → Lang i
   }
 
 -- -- Does not reduce, see issue #...!
--- thenbs : ∀{i} (a b : A) (n : ℕ) → Lang i
+-- thenbs : ∀{i} (a b : A) (n : ℕ) → Trie i
 -- ν (thenbs a b zero)    = true
 -- ν (thenbs a b (suc _)) = false
 -- δ (thenbs a b n)       x with thisThatElse a b x
@@ -163,53 +216,42 @@ thenbs : ∀{i} (a b : A) (n : ℕ) → Lang i
 -- δ (thenbs a b (suc n)) x | that p = char b ^ n
 -- δ (thenbs a b n)       x | _      = ∅
 
-aⁿbⁿ : ∀{i} (a b : A) → Lang i
+aⁿbⁿ : ∀{i} (a b : A) → Trie i
 aⁿbⁿ a b = thenbs a b zero
 
--- Language equality
+-- Trieuage equality
 
-record _≅⟨_⟩≅_ (l : Lang ∞) i (k : Lang ∞) : Set where
+record _≅⟨_⟩≅_ (l : Trie ∞) i (k : Trie ∞) : Set where
   coinductive
   field
     ≅ν : ν l ≡ ν k
     ≅δ : ∀{j : Size< i} (a : A) → δ l a ≅⟨ j ⟩≅ δ k a
 open _≅⟨_⟩≅_ public
 
-_≅_ : ∀ (l k : Lang ∞) → Set
+_≅_ : ∀ (l k : Trie ∞) → Set
 l ≅ k = l ≅⟨ ∞ ⟩≅ k
 
 -- Equivalence relation laws
 
-≅refl : ∀{i} {l : Lang ∞} → l ≅⟨ i ⟩≅ l
+≅refl : ∀{i} {l : Trie ∞} → l ≅⟨ i ⟩≅ l
 ≅ν ≅refl   = refl
 ≅δ ≅refl a = ≅refl
 
-≅sym : ∀{i} {k l : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → k ≅⟨ i ⟩≅ l
+≅sym : ∀{i} {k l : Trie ∞} (p : l ≅⟨ i ⟩≅ k) → k ≅⟨ i ⟩≅ l
 ≅ν (≅sym p)   = sym (≅ν p)
 ≅δ (≅sym p) a = ≅sym (≅δ p a)
 
-≅trans : ∀{i} {k l m : Lang ∞} (p : k ≅⟨ i ⟩≅ l) (q : l ≅⟨ i ⟩≅ m) → k ≅⟨ i ⟩≅ m
+≅trans : ∀{i} {k l m : Trie ∞} (p : k ≅⟨ i ⟩≅ l) (q : l ≅⟨ i ⟩≅ m) → k ≅⟨ i ⟩≅ m
 ≅ν (≅trans p q)   = trans (≅ν p) (≅ν q)
 ≅δ (≅trans p q) a = ≅trans (≅δ p a) (≅δ q a)
 
 -- Congruence law (UNPROVABLE)
 
--- ≅cong : ∀{i} (f : Lang ∞ → Lang ∞) {k l : Lang ∞} (p : l ≅⟨ i ⟩≅ k) →
+-- ≅cong : ∀{i} (f : Trie ∞ → Trie ∞) {k l : Trie ∞} (p : l ≅⟨ i ⟩≅ k) →
 --   f l ≅⟨ i ⟩≅ f k
 -- ≅ν (≅cong f p) = {!≅ν p!}
 -- ≅δ (≅cong f p) a = {!!}
 
--- Setoid
-
-≅isEquivalence : (i : Size) → IsEquivalence (λ l l' → l ≅⟨ i ⟩≅ l')
-IsEquivalence.refl  (≅isEquivalence i) = ≅refl
-IsEquivalence.sym   (≅isEquivalence i) = ≅sym
-IsEquivalence.trans (≅isEquivalence i) = ≅trans
-
-Bis : ∀(i : Size) → Setoid lzero lzero
-Setoid.Carrier       (Bis i) = Lang ∞
-Setoid._≈_           (Bis i) = λ l k → l ≅⟨ i ⟩≅ k
-Setoid.isEquivalence (Bis i) = ≅isEquivalence i
 
 -- Complement laws
 
@@ -221,79 +263,79 @@ compl-top : ∀{i} → compl all ≅⟨ i ⟩≅ ∅
 ≅ν compl-top   = refl
 ≅δ compl-top a = compl-top
 
-compl-cong : ∀{i}{l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → compl l ≅⟨ i ⟩≅ compl k
+compl-cong : ∀{i}{l k : Trie ∞} (p : l ≅⟨ i ⟩≅ k) → compl l ≅⟨ i ⟩≅ compl k
 ≅ν (compl-cong p) rewrite ≅ν p = refl
 ≅δ (compl-cong p) a = compl-cong (≅δ p a)
 
 -- Intersection laws
 
-inter-assoc : ∀{i} (k {l m} : Lang ∞) → (k ∩ l) ∩ m ≅⟨ i ⟩≅ k ∩ (l ∩ m)
+inter-assoc : ∀{i} (k {l m} : Trie ∞) → (k ∩ l) ∩ m ≅⟨ i ⟩≅ k ∩ (l ∩ m)
 ≅ν (inter-assoc k)   =  ∧-assoc (ν k) _ _
 ≅δ (inter-assoc k) a = inter-assoc _
 
-inter-comm : ∀{i} (l {k} : Lang ∞) → l ∩ k ≅⟨ i ⟩≅ k ∩ l
+inter-comm : ∀{i} (l {k} : Trie ∞) → l ∩ k ≅⟨ i ⟩≅ k ∩ l
 ≅ν (inter-comm l)   = ∧-comm (ν l) _
 ≅δ (inter-comm l) a = inter-comm (δ l a)
 
-inter-idem : ∀{i} (l : Lang ∞) → l ∩ l ≅⟨ i ⟩≅ l
+inter-idem : ∀{i} (l : Trie ∞) → l ∩ l ≅⟨ i ⟩≅ l
 ≅ν (inter-idem l)   = ∧-idempotent (ν l)
 ≅δ (inter-idem l) a = inter-idem (δ l a)
 
-inter-empty : ∀{i} {l : Lang ∞} → ∅ ∩ l ≅⟨ i ⟩≅ ∅
+inter-empty : ∀{i} {l : Trie ∞} → ∅ ∩ l ≅⟨ i ⟩≅ ∅
 ≅ν inter-empty   = refl
 ≅δ inter-empty a = inter-empty
 
-inter-top : ∀{i} {l : Lang ∞} → all ∩ l ≅⟨ i ⟩≅ l
+inter-top : ∀{i} {l : Trie ∞} → all ∩ l ≅⟨ i ⟩≅ l
 ≅ν inter-top   = refl
 ≅δ inter-top a = inter-top
 
-inter-congˡ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → l ∩ m ≅⟨ i ⟩≅ k ∩ m
+inter-congˡ : ∀{i}{m l k : Trie ∞} (p : l ≅⟨ i ⟩≅ k) → l ∩ m ≅⟨ i ⟩≅ k ∩ m
 ≅ν (inter-congˡ p) rewrite ≅ν p = refl
 ≅δ (inter-congˡ p) a = inter-congˡ (≅δ p a)
 
-inter-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m ∩ l ≅⟨ i ⟩≅ m ∩ l
+inter-congʳ : ∀{i}{m l k : Trie ∞} (p : l ≅⟨ i ⟩≅ k) → m ∩ l ≅⟨ i ⟩≅ m ∩ l
 ≅ν (inter-congʳ p) rewrite ≅ν p = refl
 ≅δ (inter-congʳ p) a = inter-congʳ (≅δ p a)
 
 -- Union laws
 
-union-assoc : ∀{i} (k {l m} : Lang ∞) → (k ∪ l) ∪ m ≅⟨ i ⟩≅ k ∪ (l ∪ m)
+union-assoc : ∀{i} (k {l m} : Trie ∞) → (k ∪ l) ∪ m ≅⟨ i ⟩≅ k ∪ (l ∪ m)
 ≅ν (union-assoc k)   = ∨-assoc (ν k) _ _
 ≅δ (union-assoc k) a = union-assoc _
 
-union-comm : ∀{i} (l k : Lang ∞) → l ∪ k ≅⟨ i ⟩≅ k ∪ l
+union-comm : ∀{i} (l k : Trie ∞) → l ∪ k ≅⟨ i ⟩≅ k ∪ l
 ≅ν (union-comm l k)   = ∨-comm (ν l) _
 ≅δ (union-comm l k) a = union-comm (δ l a) (δ k a)
 
-union-idem : ∀{i} {l : Lang ∞} → l ∪ l ≅⟨ i ⟩≅ l
+union-idem : ∀{i} {l : Trie ∞} → l ∪ l ≅⟨ i ⟩≅ l
 ≅ν union-idem   = ∨-idempotent _
 ≅δ union-idem a = union-idem
 
-union-empty : ∀{i} {l : Lang ∞} → ∅ ∪ l ≅⟨ i ⟩≅ l
+union-empty : ∀{i} {l : Trie ∞} → ∅ ∪ l ≅⟨ i ⟩≅ l
 ≅ν union-empty   = refl
 ≅δ union-empty a = union-empty
 
-union-top : ∀{i} {l : Lang ∞} → all ∪ l ≅⟨ i ⟩≅ all
+union-top : ∀{i} {l : Trie ∞} → all ∪ l ≅⟨ i ⟩≅ all
 ≅ν union-top   = refl
 ≅δ union-top a = union-top
 
-union-congˡ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → l ∪ m ≅⟨ i ⟩≅ k ∪ m
+union-congˡ : ∀{i}{m l k : Trie ∞} (p : l ≅⟨ i ⟩≅ k) → l ∪ m ≅⟨ i ⟩≅ k ∪ m
 ≅ν (union-congˡ p) rewrite ≅ν p = refl
 ≅δ (union-congˡ p) a = union-congˡ (≅δ p a)
 
-union-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m ∪ l ≅⟨ i ⟩≅ m ∪ k
+union-congʳ : ∀{i}{m l k : Trie ∞} (p : l ≅⟨ i ⟩≅ k) → m ∪ l ≅⟨ i ⟩≅ m ∪ k
 ≅ν (union-congʳ p) rewrite ≅ν p = refl
 ≅δ (union-congʳ p) a = union-congʳ (≅δ p a)
 
-union-cong : ∀{i}{k k' l l' : Lang ∞} (p : k ≅⟨ i ⟩≅ k') (q : l ≅⟨ i ⟩≅ l') → k ∪ l ≅⟨ i ⟩≅ k' ∪ l'
+union-cong : ∀{i}{k k' l l' : Trie ∞} (p : k ≅⟨ i ⟩≅ k') (q : l ≅⟨ i ⟩≅ l') → k ∪ l ≅⟨ i ⟩≅ k' ∪ l'
 ≅ν (union-cong p q) rewrite ≅ν p | ≅ν q = refl
 ≅δ (union-cong p q) a = union-cong (≅δ p a) (≅δ q a)
 
--- Language union forms an idempotent commutative monoid.
+-- Trieuage union forms an idempotent commutative monoid.
 
 union-icm : (i : Size) → IdempotentCommutativeMonoid _ _
 union-icm i = record
-  { Carrier = Lang ∞
+  { Carrier = Trie ∞
   ; _≈_ = λ l l' → l ≅⟨ i ⟩≅ l'
   ; _∙_ = _∪_
   ; ε = ∅
@@ -313,7 +355,7 @@ union-icm i = record
 
 -- Specialized laws for union
 
-union-swap23 : ∀{i} (k {l m} : Lang ∞) →
+union-swap23 : ∀{i} (k {l m} : Trie ∞) →
   (k ∪ l) ∪ m ≅⟨ i ⟩≅ (k ∪ m) ∪ l
 union-swap23 {i} k {l} {m} = prove 3 ((x ⊕ y) ⊕ z) ((x ⊕ z) ⊕ y) (k ∷ l ∷ m ∷ [])
   where
@@ -322,7 +364,7 @@ union-swap23 {i} k {l} {m} = prove 3 ((x ⊕ y) ⊕ z) ((x ⊕ z) ⊕ y) (k ∷ 
   y = var (suc zero)
   z = var (suc (suc zero))
 
-union-swap24 : ∀{i} {k l m n : Lang ∞} →
+union-swap24 : ∀{i} {k l m n : Trie ∞} →
   (k ∪ l) ∪ (m ∪ n) ≅⟨ i ⟩≅ (k ∪ m) ∪ (l ∪ n)
 union-swap24 {i} {k} {l} {m} {n} = prove 4 ((x ⊕ y) ⊕ (z ⊕ u)) ((x ⊕ z) ⊕ (y ⊕ u)) (k ∷ l ∷ m ∷ n ∷ [])
   where
@@ -332,7 +374,7 @@ union-swap24 {i} {k} {l} {m} {n} = prove 4 ((x ⊕ y) ⊕ (z ⊕ u)) ((x ⊕ z) 
   z = var (suc (suc zero))
   u = var (suc (suc (suc zero)))
 
-union-union-distr : ∀{i} (k {l m} : Lang ∞) →
+union-union-distr : ∀{i} (k {l m} : Trie ∞) →
   (k ∪ l) ∪ m ≅⟨ i ⟩≅ (k ∪ m) ∪ (l ∪ m)
 union-union-distr {i} k {l} {m} = prove 3 ((x ⊕ y) ⊕ z) ((x ⊕ z) ⊕ (y ⊕ z)) (k ∷ l ∷ m ∷ [])
   where
@@ -343,7 +385,7 @@ union-union-distr {i} k {l} {m} = prove 3 ((x ⊕ y) ⊕ z) ((x ⊕ z) ⊕ (y �
 
 -- Long manual proof:
 
--- union-union-distr : ∀{i} (k {l m} : Lang ∞) →
+-- union-union-distr : ∀{i} (k {l m} : Trie ∞) →
 --   (k ∪ l) ∪ m ≅⟨ i ⟩≅ (k ∪ m) ∪ (l ∪ m)
 -- union-union-distr k {l} {m} = begin
 --     (k ∪ l) ∪ m
@@ -366,7 +408,7 @@ union-union-distr {i} k {l} {m} = prove 3 ((x ⊕ y) ⊕ z) ((x ⊕ z) ⊕ (y �
 
 -- Concatenation distributes over union
 
-concat-union-distribˡ : ∀{i} (k {l m} : Lang ∞) → (k ∪ l) · m ≅⟨ i ⟩≅ (k · m) ∪ (l · m)
+concat-union-distribˡ : ∀{i} (k {l m} : Trie ∞) → (k ∪ l) · m ≅⟨ i ⟩≅ (k · m) ∪ (l · m)
 ≅ν (concat-union-distribˡ k) = ∧-∨-distribʳ _ (ν k) _
 ≅δ (concat-union-distribˡ k {l} {m}) a with ν k | ν l
 
@@ -403,7 +445,7 @@ concat-union-distribˡ : ∀{i} (k {l m} : Lang ∞) → (k ∪ l) · m ≅⟨ i
 ... | false | false = concat-union-distribˡ (δ k a)
 
 
-concat-union-distribʳ : ∀{i} (k {l m} : Lang ∞) → k · (l ∪ m) ≅⟨ i ⟩≅ (k · l) ∪ (k · m)
+concat-union-distribʳ : ∀{i} (k {l m} : Trie ∞) → k · (l ∪ m) ≅⟨ i ⟩≅ (k · l) ∪ (k · m)
 ≅ν (concat-union-distribʳ k) = ∧-∨-distribˡ (ν k) _ _
 ≅δ (concat-union-distribʳ k) a with ν k
 ≅δ (concat-union-distribʳ k {l} {m}) a | true = begin
@@ -419,7 +461,7 @@ concat-union-distribʳ : ∀{i} (k {l m} : Lang ∞) → k · (l ∪ m) ≅⟨ i
 
 -- Concatenation is congruence
 
-concat-congˡ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → l · m ≅⟨ i ⟩≅ k · m
+concat-congˡ : ∀{i}{m l k : Trie ∞} (p : l ≅⟨ i ⟩≅ k) → l · m ≅⟨ i ⟩≅ k · m
 ≅ν (concat-congˡ p) rewrite ≅ν p = refl
 ≅δ (concat-congˡ {l = l}{k = k} p) a with ν l | ν k | ≅ν p
 ≅δ (concat-congˡ p) a | false | false | refl = concat-congˡ (≅δ p a)
@@ -427,14 +469,14 @@ concat-congˡ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → l · m �
 ≅δ (concat-congˡ p) a | false | true  | ()
 ≅δ (concat-congˡ p) a | true  | false | ()
 
-concat-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m · l ≅⟨ i ⟩≅ m · k
+concat-congʳ : ∀{i}{m l k : Trie ∞} (p : l ≅⟨ i ⟩≅ k) → m · l ≅⟨ i ⟩≅ m · k
 ≅ν (concat-congʳ p) rewrite ≅ν p = refl
 ≅δ (concat-congʳ {m = m} p) a with ν m
 ≅δ (concat-congʳ p) a | false = concat-congʳ p
 ≅δ (concat-congʳ p) a | true  = union-cong (concat-congʳ p) (≅δ p a)
 
 -- TODO
--- concat-cong : ∀{i}{k k' l l' : Lang ∞} (p : k ≅⟨ i ⟩≅ k') (q : l ≅⟨ i ⟩≅ l') → k · l ≅⟨ i ⟩≅ k' · l'
+-- concat-cong : ∀{i}{k k' l l' : Trie ∞} (p : k ≅⟨ i ⟩≅ k') (q : l ≅⟨ i ⟩≅ l') → k · l ≅⟨ i ⟩≅ k' · l'
 -- ≅ν (concat-cong p q) rewrite ≅ν p | ≅ν q = refl
 -- ≅δ (concat-cong p q) a = {!TODO!} -- concat-cong (≅δ p a) (≅δ q a)
 
@@ -442,7 +484,7 @@ concat-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m · l �
 --
 -- uses concat-union-distribˡ
 
-concat-assoc : ∀{i} (k {l m} : Lang ∞) → (k · l) · m ≅⟨ i ⟩≅ k · (l · m)
+concat-assoc : ∀{i} (k {l m} : Trie ∞) → (k · l) · m ≅⟨ i ⟩≅ k · (l · m)
 ≅ν (concat-assoc k)   = ∧-assoc (ν k) _ _
 ≅δ (concat-assoc k) a with ν k
 ≅δ (concat-assoc k    ) a | false = concat-assoc (δ k a)
@@ -483,7 +525,7 @@ star-unit : ∀{i} → ε * ≅⟨ i ⟩≅ ε
 ≅ν star-unit = refl
 ≅δ star-unit a = concat-emptyˡ _
 
-star-concat-idem : ∀{i} (l : Lang ∞) → l * · l * ≅⟨ i ⟩≅ l *
+star-concat-idem : ∀{i} (l : Trie ∞) → l * · l * ≅⟨ i ⟩≅ l *
 ≅ν (star-concat-idem l) = refl
 ≅δ (star-concat-idem l) a = begin
     δ l a · l * · l * ∪ δ l a · l *
@@ -496,7 +538,7 @@ star-concat-idem : ∀{i} (l : Lang ∞) → l * · l * ≅⟨ i ⟩≅ l *
   ∎
   where open EqR (Bis _)
 
-star-idem : ∀{i} (l : Lang ∞) → (l *) * ≅⟨ i ⟩≅ l *
+star-idem : ∀{i} (l : Trie ∞) → (l *) * ≅⟨ i ⟩≅ l *
 ≅ν (star-idem l) = refl
 ≅δ (star-idem l) a = begin
   δ l a · l * · (l *) *  ≈⟨ concat-congʳ (star-idem l) ⟩
@@ -508,7 +550,7 @@ star-idem : ∀{i} (l : Lang ∞) → (l *) * ≅⟨ i ⟩≅ l *
 
 -- Recursion equation for the Kleene star
 
-star-rec : ∀{i} (l : Lang ∞) → l * ≅⟨ i ⟩≅ ε ∪ (l · l *)
+star-rec : ∀{i} (l : Trie ∞) → l * ≅⟨ i ⟩≅ ε ∪ (l · l *)
 ≅ν (star-rec l) = refl
 ≅δ (star-rec l) a with ν l
 ... | true  = begin
@@ -523,16 +565,18 @@ star-rec : ∀{i} (l : Lang ∞) → l * ≅⟨ i ⟩≅ ε ∪ (l · l *)
 
 -- Kleene star absorbs ε
 
-unit-union-star : ∀{i} (l : Lang ∞) → ε ∪ (l *) ≅⟨ i ⟩≅ (l *)
+unit-union-star : ∀{i} (l : Trie ∞) → ε ∪ (l *) ≅⟨ i ⟩≅ (l *)
 ≅ν (unit-union-star l)   = refl
 ≅δ (unit-union-star l) a = union-empty
 
-star-union-unit : ∀{i} (l : Lang ∞) → (l *) ∪ ε ≅⟨ i ⟩≅ (l *)
+star-union-unit : ∀{i} (l : Trie ∞) → (l *) ∪ ε ≅⟨ i ⟩≅ (l *)
 star-union-unit l = ≅trans (union-comm (l *) ε) (unit-union-star _)
 
-empty-star-union-star : ∀{i} (l : Lang ∞) → (∅ *) ∪ (l *) ≅⟨ i ⟩≅ (l *)
+empty-star-union-star : ∀{i} (l : Trie ∞) → (∅ *) ∪ (l *) ≅⟨ i ⟩≅ (l *)
 ≅ν (empty-star-union-star l)   = refl
 ≅δ (empty-star-union-star l) a =  ≅trans (union-congˡ (concat-emptyˡ _)) union-empty
 
-star-union-empty-star : ∀{i} (l : Lang ∞) → (l *) ∪ (∅ *) ≅⟨ i ⟩≅ (l *)
+star-union-empty-star : ∀{i} (l : Trie ∞) → (l *) ∪ (∅ *) ≅⟨ i ⟩≅ (l *)
 star-union-empty-star l = ≅trans (union-comm (l *) (∅ *)) (empty-star-union-star _)
+
+-}
