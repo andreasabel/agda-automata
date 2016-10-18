@@ -4,7 +4,7 @@ module RegularTrie
   (decA : DecSetoid lzero lzero)
   (open DecSetoid decA using (_≟_) renaming (Carrier to A)) where
 
-open import Trie decA
+open import Language decA
 
 -- We present regular grammars as regular tries where each inner node
 -- is a binder and leafs are variables (de Bruijn indices) refering

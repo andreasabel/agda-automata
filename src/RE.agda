@@ -6,7 +6,7 @@ module RE
   (decA : DecSetoid lzero lzero)
   (open DecSetoid decA using (_≟_) renaming (Carrier to A)) where
 
-open import Trie decA
+open import Language decA
 
 data RE : Set where
   0ʳ   : RE

@@ -5,7 +5,7 @@ module RegularGrammar
   (decA : DecSetoid lzero lzero)
   (open DecSetoid decA using (_≟_) renaming (Carrier to A)) where
 
-open import Trie decA
+open import Language decA
 open import RE decA
 
 -- A regular grammar consists of equations for non-terminals of

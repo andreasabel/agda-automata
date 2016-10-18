@@ -4,7 +4,7 @@ module LocallyFinite
   (decA : DecSetoid lzero lzero)
   (open DecSetoid decA using (_≟_) renaming (Carrier to A; refl to ≈refl)) where
 
-open import Trie decA
+open import Language decA
 
 -- Do all nodes of a trie satisfy a predicate?
 
