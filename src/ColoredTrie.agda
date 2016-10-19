@@ -9,6 +9,10 @@ open import Trie
 δs t (a ∷ as) = δ (δs t as) a
 -- δs t (a ∷ as) = δs (δ t a) as
 
+δs-++ : ∀{i A B} (t : Trie ∞ A B) as bs → δs (δs t as) bs ≅⟨ i ⟩≅ δs t (bs ++ as)
+δs-++ t as []       = ≅refl
+δs-++ t as (b ∷ bs) = ≅δ (δs-++ t as bs) b
+
 -- An index f to a Trie exhibits for each B
 -- a subtree with that root label.
 Index : ∀{A B} (f : B → List A) → Trie ∞ A B → Set
@@ -36,6 +40,11 @@ RootDet t₁ t₂ = ν t₁ ≡ ν t₂ → t₁ ≅ t₂
 Coh : ∀{A B} (t : Trie ∞ A B) → Set
 Coh t = ∀ as bs → RootDet (δs t as) (δs t bs)
 
+coh-δ : ∀{A B} (t : Trie ∞ A B) → Coh t → ∀ cs → Coh (δs t cs)
+coh-δ t coh cs as bs = {!coh (as ++ cs) (bs ++ cs) !} -- Need RootDet closed under bisim
+-- ≅ν (coh-δ t coh cs as bs eq) = eq
+-- ≅δ (coh-δ t coh cs as bs eq) a = {!coh!}
+
 -- CorrAut' :
 --   ∀{i A B} (t : Trie ∞ A B) (coh : Coh t) (f : B → List A) (ind : Index f t)
 --   → ∀ as → let t' = δs t as; b = ν t' in t' ≅⟨ i ⟩≅ lang (aut t f) b
@@ -44,25 +53,40 @@ Coh t = ∀ as bs → RootDet (δs t as) (δs t bs)
 --   = ≅trans (CorrAut' t coh f ind (a ∷ as)) {!coh ? ? ?!}
 -- --   = {!CorrAut t coh f ind (ν (δ (δs t (f b)) a))!}
 
--- Theorem: Infinite Myhill-Nerode
---
--- Given
---   * a coherently colored trie t and
---   * for each color b a path (f b) to a subtree δs t (f b) of that color
--- then the automata constructed from the nodes indicated by f
--- recognizes language t.
+module _ {A B} (t : Trie ∞ A B) (coh : Coh t) (f : B → List A) (ind : Index f t) where
 
-CorrAut :
-  ∀{i A B} (t : Trie ∞ A B) (coh : Coh t) (f : B → List A) (ind : Index f t)
-  → ∀ b → δs t (f b) ≅⟨ i ⟩≅ lang (aut t f) b
-≅ν (CorrAut t coh f ind b) = ind b
-≅δ (CorrAut t coh f ind b) a = begin
-  δ (δs t (f b)) a          ≡⟨⟩
-  δs t (a ∷ f b)            ≈⟨ coh (a ∷ f b) ((f b')) root-eq   ⟩
-  δs t (f b')               ≈⟨ CorrAut t coh f ind b' ⟩
-  lang (aut t f) b'         ≡⟨⟩
-  δ (lang (aut t f) b) a     ∎
-  where
+  fact :  ∀{i} as → let t' = (δs t as) in δs t (f (ν t')) ≅⟨ i ⟩≅ t'
+  ≅ν (fact as) = ind (ν (δs t as))
+  ≅δ (fact as) a = {! coh-δ t coh (a ∷ []) {! (f (ν (δs t as))) !} as {!ind !} !}
+-- coh (a ∷ f (ν (δs t as))) (a ∷ as) {!ind !}
+
+  -- Fact: The subtrie indicated by f (ν t) is bisimilar to the whole tree t
+  -- (Thus, w.l.o.g. f (ν t) ≡ [])
+  start : ∀{i} → δs t (f (ν t)) ≅⟨ i ⟩≅ t
+  ≅ν start = ind (ν t)
+  ≅δ start a = coh (a ∷ f (ν t)) (a ∷ []) {!ind (ν (δ t a))!}
+
+  -- Theorem: Infinite Myhill-Nerode
+  --
+  -- Given
+  --   * a coherently colored trie t and
+  --   * for each color b a path (f b) to a subtree δs t (f b) of that color
+  -- then the automata constructed from the nodes indicated by f
+  -- recognizes language t.
+
+  CorrAut : ∀{i} b → δs t (f b) ≅⟨ i ⟩≅ lang (aut t f) b
+
+  ≅ν (CorrAut b) = ind b
+
+  ≅δ (CorrAut b) a = begin
+
+      δ (δs t (f b)) a          ≡⟨⟩
+      δs t (a ∷ f b)            ≈⟨ coh (a ∷ f b) (f b') root-eq   ⟩
+      δs t (f b')               ≈⟨ CorrAut b' ⟩
+      lang (aut t f) b'         ≡⟨⟩
+      δ (lang (aut t f) b) a     ∎
+
+    where
     b' = ν (δ (δs t (f b)) a)
     root-eq : ν (δs t (a ∷ f b)) ≡ ν (δs t (f b'))
     root-eq = sym (ind b')

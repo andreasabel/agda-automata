@@ -5,7 +5,7 @@ open import Size  public
 
 open import Data.Bool.Base public using (Bool; true; false; if_then_else_; not; _∧_; _∨_)
 open import Data.Empty public using (⊥; ⊥-elim)
-open import Data.List.Base public using (List; []; _∷_) hiding (module List)
+open import Data.List.Base public using (List; []; _∷_; _++_) hiding (module List)
 
 open import Data.Maybe public using (Maybe; nothing; just)
 open import Data.Nat.Base public using (ℕ; zero; suc; _+_; pred)
