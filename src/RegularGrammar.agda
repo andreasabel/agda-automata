@@ -8,35 +8,58 @@ module RegularGrammar
 open import Language decA
 open import RE decA
 
+-- Let Σ = {a₁,...,aₘ} be a finite alphabet.
 -- A regular grammar consists of equations for non-terminals of
 -- one of the following forms:
 --
---   Y = a₁ X₁ + ... + aₙ Xₙ
---   Y = a₁ X₁ + ... + aₙ Xₙ + ε
+--   Y = a₁ Y₁ + ... + aₘ Yₘ
+--   Y = a₁ Y₁ + ... + aₘ Yₘ + ε
+--
+-- Herein, the non-terminals Yᵢ are not necessarily different.
+--
+-- Let X₁..Xₙ be an enumeration of the n non-terminals of a grammar.
+-- The productions for non-terminal Xᵢ can be written as equation
+--
+--   Xᵢ = rᵢ₁ X₁ + ... + rᵢₙ Xₙ + sᵢ
+--
+-- where the rᵢⱼ regular expressions which are either 0 or a simple
+-- sum of different characters such that Σ{rᵢⱼ|j=1..n} = a₁ + ... + aₘ.
+-- The regular expression sᵢ ∈ {0,1}.
 --
 -- The whole grammar can be expressed as a linear equation system
 --
---   X = A·X + b
+--   X = R·X + s
 --
--- where bᵢ ∈ {0,1} and A = (aᵢⱼ).  A is a square matrix of regular expressions
--- which contain of exactly one letter each.  We can solve this system
--- by a Gauss-like elimination procedure using the law
+-- where bᵢ ∈ {0,1} and R is a n×n square matrix of regular expressions.
+--
+-- We can solve this system by a Gauss-like elimination procedure
+-- using the law
 --
 --   L = K·L + M  ==> L = K*·M    (if K ≠ ∅)
 --
 -- We have for the last variable (non-terminal)
 --
---   Xₙ = aₙₙ Xₙ + (aₙ₁ X₁ + ... + aₙ_(n-1) X_(n-1) + bₙ)
+--   Xₙ = rₙₙ Xₙ + (rₙ₁ X₁ + ... + rₙ_(n-1) X_(n-1) + sₙ)
 --
--- and thus,
+-- and thus, of rₙₙ = 0,
 --
---   Xₙ = aₙₙ* · (aₙ₁ X₁ + ... + aₙ_(n-1) X_(n-1) + bₙ)
---   Xₙ = aₙₙ*aₙ₁ X₁ + ... + aₙₙ*aₙ_(n-1) X_(n-1) + aₙₙ*bₙ
+--   Xₙ = rₙ₁ X₁ + ... + rₙ_(n-1) X_(n-1) + sₙ
+--
+-- and otherwise, if rₙₙ ≠ 0,
+--
+--   Xₙ = rₙₙ* · (rₙ₁ X₁ + ... + rₙ_(n-1) X_(n-1) + sₙ)
+--   Xₙ = rₙₙ*rₙ₁ X₁ + ... + rₙₙ*rₙ_(n-1) X_(n-1) + rₙₙ*sₙ
+--
+-- We summarize both case as
+--
+--   Xₙ = rₙ₁' X₁ + ... + rₙ_(n-1)' X_(n-1) + sₙ'
 --
 -- We substitute the solution in the remaining (n-1) equation
--- and get a system of (n-1) linear equations where each of
--- the r.e. coefficients is not ∅.
-
+-- and get a system of (n-1) linear equations.
+--
+--   Xᵢ = rᵢ₁ X₁ + ... + rᵢ(n-1) X(n-1) + rᵢₙ Xₙ + sᵢ
+--     =  (rᵢ₁ + rₙ₁') X₁ + ... + (rᵢ(n-1) + rₙ(n-1)') X(n-1) + (sᵢ + sₙ')
+--
 -- record RHS (n : ℕ) : Set where
 --   constructor rhs
 --   field coeffs : Vec RE (suc n)
