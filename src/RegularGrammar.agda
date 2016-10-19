@@ -6,7 +6,7 @@ module RegularGrammar
   (open DecSetoid decA using (_≟_) renaming (Carrier to A)) where
 
 open import Language decA
-open import RE decA
+open import RegularExpressions decA
 
 -- Let Σ = {a₁,...,aₘ} be a finite alphabet.
 -- A regular grammar consists of equations for non-terminals of
@@ -69,12 +69,12 @@ open import RE decA
 -- Scaling
 
 _∙ᵛ_ : ∀{n} → RE → Vec RE n → Vec RE n
-r ∙ᵛ v = Vec.map (λ s → r ∙ˢ s) v
+r ∙ᵛ v = Vec.map (λ s → r ∙ʳ s) v
 
 -- Addition
 
 _+ᵛ_ : ∀{n} (v w : Vec RE n) → Vec RE n
-v +ᵛ w = Vec.zipWith (_+ˢ_) v w
+v +ᵛ w = Vec.zipWith (_+ʳ_) v w
 
 -- We represent the linear combination in n variables
 --
@@ -93,7 +93,7 @@ LinComb n = Vec RE n
 eval : ∀{n} → LinComb n → Vec RE (pred n) → RE
 eval [] _ = 0ʳ
 eval (a ∷ []) _ = a
-eval (a ∷ (b ∷ bs)) (r ∷ rs) = (a ∙ˢ r) +ˢ eval (b ∷ bs) rs
+eval (a ∷ (b ∷ bs)) (r ∷ rs) = (a ∙ʳ r) +ʳ eval (b ∷ bs) rs
 
 -- Substitute w for the first variable (Xₙ) in v.
 -- We need to substitute at least one variable.
@@ -116,9 +116,10 @@ psubst {n} a v = Vec.foldr (λ _ → LinComb n) (_+ᵛ_) (Vec.replicate 0ʳ)
 -- The first equation is the one we eliminate and return as "solved".
 
 step : ∀{n m} → Vec (LinComb (2 + n)) (suc m) → Vec (LinComb (1 + n)) (suc m)
-step ((r ∷ v) ∷ vs) = v' ∷ Vec.map (subst v') vs
+step ((0ʳ    ∷ v) ∷ vs) = v ∷ Vec.map (subst v) vs
+step ((⌜ r ⌝ ∷ v) ∷ vs) = v' ∷ Vec.map (subst v') vs
   where
-    v' = (r *ˢ) ∙ᵛ v
+    v' = ⌜ r *ⁿ ⌝ ∙ᵛ v
 
 gauss : ∀{n}
    → Vec (LinComb (suc n)) (suc n)
@@ -144,8 +145,8 @@ gauss (w ∷ (w₀ ∷ ws)) with step (w ∷ (w₀ ∷ ws))
 
 eval-plus : ∀{n} (v w : LinComb n) (ρ  : Vec RE (pred n)) →
   eval (v +ᵛ w) ρ ≅ʳ (eval v ρ +ʳ eval w ρ)
-eval-plus [] [] _ = ≅sym union-empty
-eval-plus (a ∷ []) (b ∷ []) [] = plus-correct a _
+eval-plus [] [] _ =  ≅refl
+eval-plus (a ∷ []) (b ∷ []) [] =  ≅refl
 eval-plus (a ∷ a' ∷ v) (b ∷ b' ∷ w) (r ∷ ρ) = {!!}  -- This should be an instance of AC for +.
 
 eval-scale : ∀{n} (v : LinComb n) {a} {ρ} → eval (a ∙ᵛ v) ρ ≅ʳ (a ∙ʳ eval v ρ)
@@ -158,10 +159,10 @@ subst-correct : ∀{n} (v : LinComb (2 + n)) {w : LinComb (1 + n)} {ρ : Vec RE 
 subst-correct (a ∷ b ∷ v) {w} {ρ} = begin
   eval (subst w (a ∷ b ∷ v)) ρ      ≡⟨⟩
   eval ((a ∙ᵛ w) +ᵛ (b ∷ v)) ρ       ≈⟨ eval-plus (a ∙ᵛ w) _ _ ⟩
-  eval (a ∙ᵛ w) ρ +ʳ eval (b ∷ v) ρ  ≈⟨ union-cong (eval-scale w {a = a}) ≅refl ⟩
-  (a ∙ʳ eval w ρ) +ʳ eval (b ∷ v) ρ  ≈⟨ union-cong (≅sym (times-correct a _)) ≅refl ⟩
-  (a ∙ˢ eval w ρ) +ʳ eval (b ∷ v) ρ  ≈⟨  ≅sym (plus-correct (a ∙ˢ eval w ρ) _) ⟩
-  (a ∙ˢ eval w ρ) +ˢ eval (b ∷ v) ρ  ≡⟨⟩
+  eval (a ∙ᵛ w) ρ +ʳ eval (b ∷ v) ρ  ≈⟨ {! plus-cong {{!!}} (eval-scale w {a = a}) ≅refl !} ⟩
+  (a ∙ʳ eval w ρ) +ʳ eval (b ∷ v) ρ  ≈⟨ {! plus-cong (≅sym {! (times-correct a _) !}) ≅refl !} ⟩
+  (a ∙ʳ eval w ρ) +ʳ eval (b ∷ v) ρ  ≈⟨  ≅sym {!(plus-correct (a ∙ʳ eval w ρ) _)!} ⟩
+  (a ∙ʳ eval w ρ) +ʳ eval (b ∷ v) ρ  ≡⟨⟩
   eval (a ∷ b ∷ v) (eval w ρ ∷ ρ)    ∎ where open EqR REq
 
 

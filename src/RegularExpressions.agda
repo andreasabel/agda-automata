@@ -79,8 +79,8 @@ Setoid.isEquivalence REq = ≅ʳisEquivalence
 0≠r (chⁿ a) p with a ≟ a | ≅ν (≅δ p a)
 0≠r (chⁿ a) p | yes p₁ | ()
 0≠r (chⁿ a) p | no ¬p | q = ¬p (DecSetoid.refl decA)
-0≠r (r +ⁿ r₁) p = {!!}  -- Follows from union=∅ ==> both are ∅
-0≠r (r ∙ⁿ r₁) p = {!!}  -- Follows from r∙s=∅ ==> both are ∅
+0≠r (r +ⁿ r₁) p = TODO  -- Follows from union=∅ ==> both are ∅
+0≠r (r ∙ⁿ r₁) p = TODO  -- Follows from r∙s=∅ ==> both are ∅
 0≠r (r *ⁿ) p with ≅ν p
 ... | ()
 

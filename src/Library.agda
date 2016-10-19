@@ -40,6 +40,8 @@ open import Algebra.Properties.DistributiveLattice (record { isDistributiveLatti
 import Algebra.IdempotentCommutativeMonoidSolver
 module ICMSolver = Algebra.IdempotentCommutativeMonoidSolver
 
+postulate TODO : ∀{a}{A : Set a} → A
+
 -- These names are not exported from Algebra.Properties.DistributiveLattice
 ∨-∧-distribˡ = proj₁ ∨-∧-distrib
 ∧-∨-distribˡ = proj₁ ∧-∨-distrib
