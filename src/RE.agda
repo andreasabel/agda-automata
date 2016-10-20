@@ -28,36 +28,6 @@ pattern 1ʳ = 0ʳ *ʳ
 ⟦ r ∙ʳ s ⟧ = ⟦ r ⟧ · ⟦ s ⟧
 ⟦ r *ʳ ⟧   = ⟦ r ⟧ *
 
--- simplifying smart constructors
--- (arguments are assumed to be simplified
-
--- idempotent monoid structure for _+ʳ_
-
-_+ˢ_ : (r s : RE) → RE
-0ʳ +ˢ s = s
-r +ˢ 0ʳ = r
-1ʳ +ˢ (r *ʳ) = r *ʳ
-(r *ʳ) +ˢ 1ʳ = r *ʳ
-(r +ʳ r₁) +ˢ s = r +ʳ (r₁ +ʳ s)
-r +ˢ s = r +ʳ s
-
--- monoid with zero for _∙ʳ_
-
-_∙ˢ_ : (r s : RE) → RE
-0ʳ ∙ˢ s = 0ʳ
-1ʳ ∙ˢ s = s
-r ∙ˢ 0ʳ = 0ʳ
-r ∙ˢ 1ʳ = r
-(r ∙ʳ r₁) ∙ˢ s = r ∙ʳ (r₁ ∙ʳ s)
-r ∙ˢ s = r ∙ʳ s
-
--- Star is idempotent
-
-_*ˢ : (r : RE) → RE
-0ʳ *ˢ = 1ʳ
-(r *ʳ) *ˢ = r *ʳ
-r *ˢ = r *ʳ
-
 -- Equality of REs
 
 _≅ʳ_ : (r s : RE) → Set
@@ -96,12 +66,42 @@ plus-icm =  record
 plus-cong : ∀{r r' s s'} (p : r ≅ʳ r') (q : s ≅ʳ s') → (r +ʳ s) ≅ʳ (r' +ʳ s')
 plus-cong = union-cong
 
--- plus-congˡ :
-
 unit-correct : ⟦ 1ʳ ⟧ ≅ ε
 unit-correct = star-empty
 
--- Correctness proofs.
+------------------------------------------------------------------------
+
+-- Simplifying smart constructors
+-- (arguments are assumed to be simplified
+
+-- idempotent monoid structure for _+ʳ_
+
+_+ˢ_ : (r s : RE) → RE
+0ʳ +ˢ s = s
+r +ˢ 0ʳ = r
+1ʳ +ˢ (r *ʳ) = r *ʳ
+(r *ʳ) +ˢ 1ʳ = r *ʳ
+(r +ʳ r₁) +ˢ s = r +ʳ (r₁ +ʳ s)
+r +ˢ s = r +ʳ s
+
+-- monoid with zero for _∙ʳ_
+
+_∙ˢ_ : (r s : RE) → RE
+0ʳ ∙ˢ s = 0ʳ
+1ʳ ∙ˢ s = s
+r ∙ˢ 0ʳ = 0ʳ
+r ∙ˢ 1ʳ = r
+(r ∙ʳ r₁) ∙ˢ s = r ∙ʳ (r₁ ∙ʳ s)
+r ∙ˢ s = r ∙ʳ s
+
+-- Star is idempotent
+
+_*ˢ : (r : RE) → RE
+0ʳ *ˢ = 1ʳ
+(r *ʳ) *ˢ = r *ʳ
+r *ˢ = r *ʳ
+
+-- Correctness proofs of simplified regular expressions.
 
 plus-correct : ∀{i} r s → ⟦ r +ˢ s ⟧ ≅⟨ i ⟩≅ ⟦ r +ʳ s ⟧
 plus-correct 0ʳ s                = ≅sym union-empty

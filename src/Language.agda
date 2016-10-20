@@ -35,7 +35,7 @@ record Lang i : Set where
   field
     ν : Bool -- nullable
     δ : ∀{j : Size< i} → A → Lang j
-open Lang
+open Lang public
 
 -- Examples for sized typing:
 --
