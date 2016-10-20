@@ -1,12 +1,12 @@
 
 open import Library
 
-module RegularGrammar
+module RegularGrammarNonZero
   (decA : DecSetoid lzero lzero)
   (open DecSetoid decA using (_≟_) renaming (Carrier to A)) where
 
 open import Language decA
-open import RENotNullable decA
+open import RegularExpressions decA
 
 -- Let Σ = {a₁,...,aₘ} be a finite alphabet.
 -- A regular grammar consists of equations for non-terminals of
@@ -25,30 +25,32 @@ open import RENotNullable decA
 -- where the rᵢⱼ regular expressions which are either 0 or a simple
 -- sum of different characters such that Σ{rᵢⱼ|j=1..n} = a₁ + ... + aₘ.
 -- The regular expression sᵢ ∈ {0,1}.
--- All of the rᵢⱼ are not nullable.
 --
 -- The whole grammar can be expressed as a linear equation system
 --
 --   X = R·X + s
 --
--- where bᵢ ∈ {0,1} and R is a n×n square matrix of regular expressions
--- that are not nullable.
+-- where bᵢ ∈ {0,1} and R is a n×n square matrix of regular expressions.
 --
 -- We can solve this system by a Gauss-like elimination procedure
 -- using the law
 --
---   L = K·L + M  ==> L = K*·M    (unless K is nullable)
+--   L = K·L + M  ==> L = K*·M    (if K ≠ ∅)  WRONG, MUST BE:  (unless ν K)
 --
 -- We have for the last variable (non-terminal)
 --
 --   Xₙ = rₙₙ Xₙ + (rₙ₁ X₁ + ... + rₙ_(n-1) X_(n-1) + sₙ)
 --
--- and thus, if rₙₙ not nullable,
+-- and thus, of rₙₙ = 0,
+--
+--   Xₙ = rₙ₁ X₁ + ... + rₙ_(n-1) X_(n-1) + sₙ
+--
+-- and otherwise, if rₙₙ ≠ 0,
 --
 --   Xₙ = rₙₙ* · (rₙ₁ X₁ + ... + rₙ_(n-1) X_(n-1) + sₙ)
 --   Xₙ = rₙₙ*rₙ₁ X₁ + ... + rₙₙ*rₙ_(n-1) X_(n-1) + rₙₙ*sₙ
 --
--- With appropriate definition of r' and s' this is
+-- We summarize both case as
 --
 --   Xₙ = rₙ₁' X₁ + ... + rₙ_(n-1)' X_(n-1) + sₙ'
 --
@@ -112,7 +114,7 @@ sound-scale : ∀{i n} a (v : LinComb n) ρ →
   ⟦ a ∙ᵛ v ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ a ⟧ · ⟦ v ⟧ᵛ ρ
 
 sound-scale a [] ρ = ≅sym (concat-emptyʳ _)
-sound-scale a (_ ∷ []) ρ = ≅refl
+sound-scale a (_ ∷ []) ρ = den-comp a _
 sound-scale a (b ∷ c ∷ w) (l ∷ ρ) = begin
 
     ⟦ a ∙ᵛ (b ∷ v) ⟧ᵛ (l ∷ ρ)
@@ -225,20 +227,21 @@ L ≅⟨ i ⟩≅ᴸ L' = Vec.All (λ ll' → proj₁ ll' ≅⟨ i ⟩≅ proj�
 -- The first equation is the one we eliminate and return as "solved".
 
 step : ∀{n m} → Vec (LinComb (2 + n)) (suc m) → Vec (LinComb (1 + n)) (suc m)
-step ((r ∷ v) ∷ vs) = v' ∷ Vec.map (subst v') vs
+step ((0ʳ    ∷ v) ∷ vs) = v ∷ Vec.map (subst v) vs
+step ((⌜ r ⌝ ∷ v) ∷ vs) = v' ∷ Vec.map (subst v') vs
   where
-    v' = (r *ʳ) ∙ᵛ v
+    v' = ⌜ r *ⁿ ⌝ ∙ᵛ v
 
 --   L = r·L + a  ==> L = r*·a    (if r ≠ ∅)
 --   r*·a = r·r*·a + a
 
 lemma : ∀{i n} r (v : Vec RE (suc n)) (ρ : Vec (Lang ∞) n) →
-   ⟦ Vec.map ((r *ʳ) ∙ʳ_) v ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ r ∷ v ⟧ᵛ (⟦ Vec.map ((r *ʳ) ∙ʳ_) v ⟧ᵛ ρ ∷ ρ)
--- lemma r (0ʳ ∷ []) ρ = ≅sym (≅trans (union-congˡ (≅trans (concat-emptyʳ _) (≅sym (concat-emptyˡ _)))) (union-concat-empty {l = ⟦ r* ⟧})) -- boring proof about ∅
---   where
---   r* : RE
---   r* = (r *ʳ)
-lemma r (a ∷ []) ρ = star-concat _   -- Law for star
+   ⟦ Vec.map (⌜ r *ⁿ ⌝ ∙ʳ_) v ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ ⌜ r ⌝ ∷ v ⟧ᵛ (⟦ Vec.map (⌜ r *ⁿ ⌝ ∙ʳ_) v ⟧ᵛ ρ ∷ ρ)
+lemma r (0ʳ ∷ []) ρ = ≅sym (≅trans (union-congˡ (≅trans (concat-emptyʳ _) (≅sym (concat-emptyˡ _)))) (union-concat-empty {l = ⟦ r* ⟧})) -- boring proof about ∅
+  where
+  r* : RE
+  r* = ⌜ r *ⁿ ⌝
+lemma r (⌜ a ⌝ ∷ []) ρ = star-concat _   -- Law for star
 lemma {i} r (a ∷ b ∷ v') (l ∷ ρ) = begin
     ⟦ r* ∙ᵛ (a ∷ v) ⟧ᵛ (l ∷ ρ)
   ≡⟨⟩
@@ -246,19 +249,20 @@ lemma {i} r (a ∷ b ∷ v') (l ∷ ρ) = begin
   ≡⟨⟩
      ⟦ r* ∙ʳ a ⟧ · l ∪ ⟦ r* ∙ᵛ v ⟧ᵛ ρ
   ≈⟨ {!!} ⟩
-    ⟦ r ⟧ · (⟦ r* ∙ʳ a ⟧ · l ∪ ⟦ r* ∙ᵛ v ⟧ᵛ ρ) ∪ (⟦ a ⟧ · l ∪ ⟦ v ⟧ᵛ ρ)
+    ⟦ r ⟧ⁿ · (⟦ r* ∙ʳ a ⟧ · l ∪ ⟦ r* ∙ᵛ v ⟧ᵛ ρ) ∪ (⟦ a ⟧ · l ∪ ⟦ v ⟧ᵛ ρ)
   ≡⟨⟩
-    ⟦ r ⟧ · ⟦ r* ∙ʳ a ∷ r* ∙ᵛ v ⟧ᵛ (l ∷ ρ) ∪ (⟦ a ⟧ · l ∪ ⟦ v ⟧ᵛ ρ)
+    ⟦ r ⟧ⁿ · ⟦ r* ∙ʳ a ∷ r* ∙ᵛ v ⟧ᵛ (l ∷ ρ) ∪ (⟦ a ⟧ · l ∪ ⟦ v ⟧ᵛ ρ)
   ≡⟨⟩
-    ⟦ r ⟧ · ⟦ r* ∙ᵛ (a ∷ v) ⟧ᵛ (l ∷ ρ) ∪ ⟦ a ∷ v ⟧ᵛ (l ∷ ρ)
+    ⟦ r ⟧ⁿ · ⟦ r* ∙ᵛ (a ∷ v) ⟧ᵛ (l ∷ ρ) ∪ ⟦ a ∷ v ⟧ᵛ (l ∷ ρ)
   ≡⟨⟩
-    ⟦ r ∷ a ∷ v ⟧ᵛ (⟦ r* ∙ᵛ (a ∷ v) ⟧ᵛ (l ∷ ρ) ∷ l ∷ ρ)
+    ⟦ ⌜ r ⌝ ∷ a ∷ v ⟧ᵛ (⟦ r* ∙ᵛ (a ∷ v) ⟧ᵛ (l ∷ ρ) ∷ l ∷ ρ)
   ∎
   where
   v : Vec RE _
   v = b ∷ v'
   r* : RE
-  r* = (r *ʳ)
+  r* = ⌜ r *ⁿ ⌝
+
   open EqR (Bis _)
 
 
@@ -275,7 +279,7 @@ sound-step : ∀{i n m} (M : Vec (LinComb (2 + n)) (suc m)) (ρ : Vec (Lang ∞)
   let M' = step M; l = ⟦ Vec.head M' ⟧ᵛ ρ
   in  ⟦ M' ⟧ᴹ ρ ≅⟨ i ⟩≅ᴸ ⟦ M ⟧ᴹ (l ∷ ρ)
   -- Vec (LinComb (1 + n)) (suc m)
--- sound-step {i} {n} ((0ʳ ∷ v) ∷ M) ρ =  {! ≅sym (sem-empty v (⟦ v ⟧ᵛ ρ ∷ ρ)) !} ∷ᵃ {! lem v M ρ !}
+sound-step {i} {n} ((0ʳ ∷ v) ∷ M) ρ = ≅sym (sem-empty v (⟦ v ⟧ᵛ ρ ∷ ρ)) ∷ᵃ {! lem v M ρ !}
 {-  where
   lem : ∀{i m} (M : Vec (LinComb (2 + n)) m) →
      Vec.All (λ ll' → proj₁ ll' ≅⟨ i  ⟩≅ proj₂ ll')
@@ -286,9 +290,7 @@ sound-step : ∀{i n m} (M : Vec (LinComb (2 + n)) (suc m)) (ρ : Vec (Lang ∞)
   lem (w ∷ M') = (sound-subst w v ρ) ∷ᵃ lem M'  -- lem rewrite zipWith-map-map _,_ = {!!}
 -}
 
-sound-step ((r ∷ v) ∷ M) ρ = {!aux!} ∷ᵃ {!!}
-
--- -}
+sound-step ((⌜ r ⌝ ∷ v) ∷ M) ρ = {!aux!} ∷ᵃ {!!}
 
 gauss : ∀{n}
    → Vec (LinComb (suc n)) (suc n)
@@ -297,8 +299,6 @@ gauss (w ∷ []) = w ∷ []
 gauss (w ∷ (w₀ ∷ ws)) with step (w ∷ (w₀ ∷ ws))
 ... | w' ∷ ws' with gauss ws'
 ... | vs = psubst vs w' ∷ vs
-
-
 
 -- We have a work-list and a solution list.
 -- One step moves one equation from the work list to the solution list.
@@ -326,15 +326,15 @@ eval (a ∷ (b ∷ bs)) (r ∷ rs) = (a ∙ʳ r) +ʳ eval (b ∷ bs) rs
 
 eval-plus : ∀{n} (v w : LinComb n) (ρ  : Vec RE (pred n)) →
   eval (v +ᵛ w) ρ ≅ʳ (eval v ρ +ʳ eval w ρ)
-eval-plus [] [] _ =  ≅sym union-empty
+eval-plus [] [] _ =  ≅refl
 eval-plus (a ∷ []) (b ∷ []) [] =  ≅refl
 eval-plus (a ∷ a' ∷ v) (b ∷ b' ∷ w) (r ∷ ρ) = begin
 
     ((a +ʳ b) ∙ʳ r) +ʳ eval (v' +ᵛ w') ρ
 
-  ≈⟨  plus-cong {((a +ʳ b) ∙ʳ r)} {((a ∙ʳ r) +ʳ (b ∙ʳ r))} {eval (v' +ᵛ w') ρ} {eval v' ρ +ʳ eval w' ρ}
+  ≈⟨ plus-cong {((a +ʳ b) ∙ʳ r)} {((a ∙ʳ r) +ʳ (b ∙ʳ r))}
       (plus-comp-distr a b r)
-      (eval-plus v' w' ρ)  ⟩
+      (eval-plus v' w' ρ) ⟩
 
     ((a ∙ʳ r) +ʳ (b ∙ʳ r)) +ʳ (eval v' ρ +ʳ eval w' ρ)
 
@@ -369,13 +369,11 @@ eval-scale (b ∷ c ∷ w) a (r ∷ ρ) = begin
 
     (((a ∙ʳ b) ∙ʳ r) +ʳ eval (a ∙ᵛ v) ρ)
 
-  ≈⟨ plus-cong {(a ∙ʳ b) ∙ʳ r} {a ∙ʳ (b ∙ʳ r)} {eval (a ∙ᵛ v) ρ} {a ∙ʳ eval v ρ}
-      (comp-assoc a b r)
-      (eval-scale v a ρ) ⟩
+  ≈⟨ plus-cong {(a ∙ʳ b) ∙ʳ r} {a ∙ʳ (b ∙ʳ r)} (comp-assoc a b r) (eval-scale v a ρ) ⟩
 
     ((a ∙ʳ (b ∙ʳ r)) +ʳ (a ∙ʳ eval v ρ))
 
-  ≈⟨ ≅sym (comp-plus-distr a (b ∙ʳ r) (eval v ρ)) ⟩
+  ≈⟨ ≅sym (comp-plus-distr a _ _) ⟩
 
     (a ∙ʳ ((b ∙ʳ r) +ʳ eval v ρ))
   ∎ where
@@ -390,9 +388,7 @@ subst-correct : ∀{n} (v : LinComb (2 + n)) {w : LinComb (1 + n)} {ρ : Vec RE 
 subst-correct (a ∷ b ∷ v) {w} {ρ} = begin
   eval (subst w (a ∷ b ∷ v)) ρ      ≡⟨⟩
   eval ((a ∙ᵛ w) +ᵛ (b ∷ v)) ρ       ≈⟨ eval-plus (a ∙ᵛ w) _ _ ⟩
-  eval (a ∙ᵛ w) ρ +ʳ eval (b ∷ v) ρ  ≈⟨  union-congˡ -- {eval (a ∙ᵛ w) ρ} {a ∙ʳ eval w ρ}
-                                         (eval-scale w a ρ)   ⟩
+  eval (a ∙ᵛ w) ρ +ʳ eval (b ∷ v) ρ  ≈⟨  plus-cong {eval (a ∙ᵛ w) ρ} {a ∙ʳ eval w ρ}
+                                         (eval-scale w a ρ) ≅refl  ⟩
   (a ∙ʳ eval w ρ) +ʳ eval (b ∷ v) ρ  ≡⟨⟩
   eval (a ∷ b ∷ v) (eval w ρ ∷ ρ)    ∎ where open EqR REq
-
--- -}

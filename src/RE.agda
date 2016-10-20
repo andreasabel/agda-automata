@@ -52,6 +52,9 @@ plus-assoc r s t = union-assoc _
 plus-cong : ∀{r r' s s'} (p : r ≅ʳ r') (q : s ≅ʳ s') → (r +ʳ s) ≅ʳ (r' +ʳ s')
 plus-cong = union-cong
 
+plus-congˡ : ∀{r r' s } (p : r ≅ʳ r') → (r +ʳ s) ≅ʳ (r' +ʳ s)
+plus-congˡ = union-congˡ
+
 plus-idem : ∀ r → ⟦ r +ʳ r ⟧ ≅⟨ ∞ ⟩≅ ⟦ r ⟧
 plus-idem r = union-idem
 

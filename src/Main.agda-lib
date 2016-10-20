@@ -1,2 +1,3 @@
 name: Main
-include: . /home/abel/agda/agda-stdlib/src
+include: .
+  /home/abel/agda/agda-stdlib/src
