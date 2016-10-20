@@ -229,15 +229,6 @@ sound-subst w ((a ∷ v) +ᶜ c) ρ = begin
     v' = v +ᶜ c
 
 
--- parallel substitution is a kind of matrix multiplication
---
--- psubst (wₙ-1 ∷ ... ∷ w₀ ∷ []) (aₙ-1 ∷ ... ∷ a₀ ∷ [])
---   = aₙ-1 ∙ᵛ wₙ-1 +ᵛ ... +ᵛ a₀ ∙ᵛ w₀ +ᵛ 0ᵛ
-psubst : ∀{n m} → Vec (LinComb n) m → LinComb m → LinComb n
-psubst {n} M (v +ᶜ c) = Vec.foldr (λ _ → LinComb n) (_+ᵛ_) 0ᵛ
-  (Vec.zipWith (λ r → re r ∙ᵛ_) v M)
-
-
 -- The semantics of m equations in n-1 variables:
 
 ⟦_⟧ᴹ : ∀{i n m} → Vec (LinComb n) m → Vec (Lang i) n → Vec (Lang i) m
@@ -255,6 +246,8 @@ L ≅⟨ i ⟩≅ᴸ L' = Vec.All₂ (λ l l' → l ≅⟨ i ⟩≅ l') L L'
 -- We have m+1 equations in n+1 variables.
 -- The first equation is the one we eliminate and return as "solved".
 
+-- L = K·L + M  ==> L = K*·M    (unless K is nullable)
+
 step : ∀{n m} → Vec (LinComb (suc n)) (suc m) → Vec (LinComb n) (suc m)
 step (((r ∷ v) +ᶜ c) ∷ vs) = v' ∷ Vec.map (subst v') vs
   where
@@ -263,10 +256,10 @@ step (((r ∷ v) +ᶜ c) ∷ vs) = v' ∷ Vec.map (subst v') vs
 --   L = r·L + a  ==> L = r*·a    (if r ≠ ∅)
 --   r*·a = r·r*·a + a
 
-lemma : ∀{i n} r (v : LinComb n) (ρ : Vec (Lang ∞) n) →
+unused-lemma : ∀{i n} r (v : LinComb n) (ρ : Vec (Lang ∞) n) →
    ⟦ (r *ⁿ) ∙ᵛ v ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ r ∷ᶜ v ⟧ᵛ (⟦ (r *ⁿ) ∙ᵛ v ⟧ᵛ ρ ∷ ρ)
-lemma r ([] +ᶜ c) ρ = star-concat _   -- Law for star
-lemma {i} r ((a ∷ v) +ᶜ c) (l ∷ ρ) = begin
+unused-lemma r ([] +ᶜ c) ρ = star-concat _   -- Law for star
+unused-lemma {i} r ((a ∷ v) +ᶜ c) (l ∷ ρ) = begin
     ⟦ r* ∙ᵛ ((a ∷ v) +ᶜ c) ⟧ᵛ (l ∷ ρ)
   ≡⟨⟩
     ⟦ (r* ∙ⁿ a) ∷ᶜ (r* ∙ᵛ v') ⟧ᵛ (l ∷ ρ)
@@ -288,31 +281,10 @@ lemma {i} r ((a ∷ v) +ᶜ c) (l ∷ ρ) = begin
   r* = (re r *ʳ)
   open EqR (Bis _)
 
-{-
--- Lemma for sound-step
-sound-step-lem : ∀{i n m} (v : Vec RE (suc n)) (M : Vec (LinComb (2 + n)) m) (ρ : Vec (Lang ∞) n)→
-   Vec.All (λ ll' → proj₁ ll' ≅⟨ i  ⟩≅ proj₂ ll')
-    (Vec.zipWith _,_
-     (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ ρ) (Vec.map (subst v) M)) --  Vec.map (λ v₁ → ⟦ subst v v₁ ⟧ᵛ ρ) M)
-     (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ (⟦ v ⟧ᵛ ρ ∷ ρ)) M))
-sound-step-lem v []       ρ = []ᵃ
-sound-step-lem v (w ∷ M') ρ = (sound-subst w v ρ) ∷ᵃ sound-step-lem v M' ρ
--}
 
 sound-step : ∀{i n m} (M : Vec (LinComb (suc n)) (suc m)) (ρ : Vec (Lang ∞) n) →
   let M' = step M; l = ⟦ Vec.head M' ⟧ᵛ ρ
   in  ⟦ M' ⟧ᴹ ρ ≅⟨ i ⟩≅ᴸ ⟦ M ⟧ᴹ (l ∷ ρ)
-  -- Vec (LinComb (1 + n)) (suc m)
--- sound-step {i} {n} ((0ʳ ∷ v) ∷ M) ρ =  {! ≅sym (sem-empty v (⟦ v ⟧ᵛ ρ ∷ ρ)) !} ∷ᵃ {! lem v M ρ !}
-{-  where
-  lem : ∀{i m} (M : Vec (LinComb (2 + n)) m) →
-     Vec.All (λ ll' → proj₁ ll' ≅⟨ i  ⟩≅ proj₂ ll')
-      (Vec.zipWith _,_
-       (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ ρ) (Vec.map (subst v) M))
-       (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ (⟦ v ⟧ᵛ ρ ∷ ρ)) M))
-  lem [] = []ᵃ
-  lem (w ∷ M') = (sound-subst w v ρ) ∷ᵃ lem M'  -- lem rewrite zipWith-map-map _,_ = {!!}
--}
 
 sound-step {i} {n} (((r ∷ v) +ᶜ c) ∷ M) ρ = (begin
     ⟦ (r *ⁿ) ∙ᵛ v' ⟧ᵛ ρ
@@ -327,37 +299,71 @@ sound-step {i} {n} (((r ∷ v) +ᶜ c) ∷ M) ρ = (begin
   ≈⟨ union-congˡ (concat-congʳ (≅sym (sound-scale (r *ⁿ) v' ρ))) ⟩
      ⟦ r ⟧ⁿ · ⟦ (r *ⁿ) ∙ᵛ v' ⟧ᵛ ρ ∪ ⟦ v' ⟧ᵛ ρ
   ∎) ∷ᵃ lem M
-  -- (show
-  --   Vec.All₂ (λ l l' → l ≅⟨ i ⟩≅  l')
-  --     (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ ρ) (Vec.map (subst v'') M))
-  --     (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ (⟦ v'' ⟧ᵛ ρ ∷ ρ)) M)
-  -- proof {!lem M!})
- -- Vec.All₂ (λ l → _≅⟨_⟩≅_ l .i)
- --      (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ ρ)
- --       (Vec.map (subst (.RegularGrammar._.v' decA r v c M)) M))
- --      (Vec.map
- --       (λ v₁ → ⟦ v₁ ⟧ᵛ (⟦ .RegularGrammar._.v' decA r v c M ⟧ᵛ ρ ∷ ρ)) M)
   where
   open EqR (Bis i)
   v' = v +ᶜ c
   v'' = (r *ⁿ) ∙ᵛ v'
   lem : ∀ {i m} (M : Vec (LinComb (suc n)) m) →
-    Vec.All₂ (λ l l' → l ≅⟨ i ⟩≅  l')
       (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ ρ) (Vec.map (subst v'') M))
+      ≅⟨ i ⟩≅ᴸ
       (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ (⟦ v'' ⟧ᵛ ρ ∷ ρ)) M)
   lem [] = []ᵃ
   lem (w ∷ M') = (sound-subst v'' w ρ) ∷ᵃ (lem M')
 
 
+-- -- parallel substitution is a kind of matrix multiplication
+-- --
+-- -- psubst (wₙ-1 ∷ ... ∷ w₀ ∷ []) (aₙ-1 ∷ ... ∷ a₀ ∷ [])
+-- --   = aₙ-1 ∙ᵛ wₙ-1 +ᵛ ... +ᵛ a₀ ∙ᵛ w₀ +ᵛ 0ᵛ
+-- psubst : ∀{n m} → Vec (LinComb n) m → LinComb m → LinComb n
+-- psubst {n} M (v +ᶜ c) = Vec.foldr (λ _ → LinComb n) (_+ᵛ_) 0ᵛ
+--   (Vec.zipWith (λ r → re r ∙ᵛ_) v M)
+
+
+-- old-gauss : ∀{n}
+--    → Vec (LinComb (suc n)) (suc n)
+--   →  Vec (LinComb 1) (suc n)
+-- old-gauss (w ∷ []) = w ∷ []
+-- old-gauss (w ∷ (w₀ ∷ ws)) with step (w ∷ (w₀ ∷ ws))
+-- ... | w' ∷ ws' with old-gauss ws'
+-- ... | vs = psubst vs w' ∷ vs
+
+scalar-l : ∀{n} → Vec RE (suc n) → LinComb n → RE
+scalar-l (a ∷ [])       ([]      +ᶜ c) = a ∙ʳ c
+scalar-l (a ∷ (a' ∷ v)) ((b ∷ w) +ᶜ c) = (a ∙ʳ re b) +ʳ scalar-l (a' ∷ v) (w +ᶜ c)
+
+scalar : ∀{n} (as : Vec Renn n) (bs : Vec RE n) → Renn
+scalar [] [] = 0ⁿ
+scalar (a ∷ as) (b ∷ bs) = (a ⁿ∙ b) +ⁿ scalar as bs
+
 gauss : ∀{n}
-   → Vec (LinComb (suc n)) (suc n)
-  →  Vec (LinComb 1) (suc n)
-gauss (w ∷ []) = w ∷ []
-gauss (w ∷ (w₀ ∷ ws)) with step (w ∷ (w₀ ∷ ws))
-... | w' ∷ ws' with gauss ws'
-... | vs = psubst vs w' ∷ vs
+   → Vec (LinComb n) n
+   → Vec RE n
+gauss [] = []
+gauss (w ∷ ws) with step (w ∷ ws)
+-- ... | ([] +ᶜ c) ∷ [] = c ∷ []
+... | (as +ᶜ c) ∷ ws' = (re (scalar as bs) +ʳ c) ∷ bs
+  where bs = gauss ws'
+
+sound-gauss : ∀{i n} (M : Vec (LinComb n) n) →
+  let  ρ = Vec.map ⟦_⟧ (gauss M)
+  in   ⟦ M ⟧ᴹ ρ ≅⟨ i ⟩≅ᴸ  ρ
+sound-gauss [] = []ᵃ
+sound-gauss (w ∷ M) with step (w ∷ M)
+... | (as +ᶜ c) ∷ M' = {!!} ∷ᵃ {!sound-gauss M'!}
+
+-- gauss : ∀{n}
+--    → Vec (LinComb (suc n)) (suc n)
+--    → Vec RE (suc n)
+-- gauss (([] +ᶜ c) ∷ []) = c ∷ []
+-- gauss (w ∷ (w₀ ∷ ws)) with step (w ∷ (w₀ ∷ ws))
+-- ... | w' ∷ ws' with gauss ws'
+-- ... | vs = scalar vs w' ∷ vs
 
 
+-- sound-gauss : ∀{n} (M : Vec (LinComb (suc n)) (suc n)) →
+--   let  ρ = Vec.map ⟦_⟧ (gauss M)  in  ⟦ M ⟧ᴹ ρ ≅ ρ
+-- sound-gauss = ?
 
 -- We have a work-list and a solution list.
 -- One step moves one equation from the work list to the solution list.
