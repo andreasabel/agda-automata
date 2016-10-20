@@ -560,7 +560,6 @@ empty-star-union-star : ∀{i} (l : Lang ∞) → (∅ *) ∪ (l *) ≅⟨ i ⟩
 star-union-empty-star : ∀{i} (l : Lang ∞) → (l *) ∪ (∅ *) ≅⟨ i ⟩≅ (l *)
 star-union-empty-star l = ≅trans (union-comm (l *) (∅ *)) (empty-star-union-star _)
 
--- L = K·L + M  ==> L = K*·M    (if K ≠ ∅)
 
 -- Star composed with some language
 -- r*·a = r·r*·a + a
@@ -581,3 +580,26 @@ star-concat : ∀{i} (k {m} : Lang ∞) → k * · m ≅⟨ i ⟩≅ k · (k * �
     x y : Expr 2
     x = var zero
     y = var (suc zero)
+
+-- Arden's rule
+-- L = K·L + M  ==> L = K*·M    (unless ν k)
+
+-- Show: δ L a = δ K a ∙ K* ∙ M ∪ δ M a
+-- Hyp : δ L a = δ K a ∙ L      ∪ δ M a
+
+star-from-rec : ∀{i} (k {l m} : Lang ∞)
+   → ν k ≡ false
+   → l ≅⟨ i ⟩≅ k · l ∪ m
+   → l ≅⟨ i ⟩≅ k * · m
+≅ν (star-from-rec k n p) with ≅ν p
+... | b rewrite n = b
+≅δ (star-from-rec k {l} {m} n p) a with ≅δ p a
+... | q rewrite n = begin
+     (δ l a)
+  ≈⟨  q ⟩
+     δ k a · l ∪ δ m a
+  ≈⟨ union-congˡ (concat-congʳ (star-from-rec k {l} {m} n p)) ⟩
+     (δ k a · (k * · m) ∪ δ m a)
+  ≈⟨ union-congˡ (≅sym (concat-assoc (δ k a))) ⟩
+     (δ k a · k * · m ∪ δ m a)
+  ∎ where open EqR (Bis _)

@@ -237,7 +237,7 @@ step ((⌜ r ⌝ ∷ v) ∷ vs) = v' ∷ Vec.map (subst v') vs
 
 lemma : ∀{i n} r (v : Vec RE (suc n)) (ρ : Vec (Lang ∞) n) →
    ⟦ Vec.map (⌜ r *ⁿ ⌝ ∙ʳ_) v ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ ⌜ r ⌝ ∷ v ⟧ᵛ (⟦ Vec.map (⌜ r *ⁿ ⌝ ∙ʳ_) v ⟧ᵛ ρ ∷ ρ)
-lemma r (0ʳ ∷ []) ρ = ≅sym (≅trans (union-congˡ (≅trans (concat-emptyʳ _) (≅sym (concat-emptyˡ _)))) (union-concat-empty {l = ⟦ r* ⟧}))
+lemma r (0ʳ ∷ []) ρ = ≅sym (≅trans (union-congˡ (≅trans (concat-emptyʳ _) (≅sym (concat-emptyˡ _)))) (union-concat-empty {l = ⟦ r* ⟧})) -- boring proof about ∅
   where
   r* : RE
   r* = ⌜ r *ⁿ ⌝
