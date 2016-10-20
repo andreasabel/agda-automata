@@ -273,6 +273,10 @@ union-empty : ∀{i} {l : Lang ∞} → ∅ ∪ l ≅⟨ i ⟩≅ l
 ≅ν union-empty   = refl
 ≅δ union-empty a = union-empty
 
+union-emptyʳ : ∀{i} {l : Lang ∞} → l ∪ ∅ ≅⟨ i ⟩≅ l
+≅ν union-emptyʳ   = ∨-false _
+≅δ union-emptyʳ a = union-emptyʳ
+
 union-top : ∀{i} {l : Lang ∞} → all ∪ l ≅⟨ i ⟩≅ all
 ≅ν union-top   = refl
 ≅δ union-top a = union-top
@@ -473,6 +477,25 @@ concat-emptyˡ : ∀{i} l → ∅ · l ≅⟨ i ⟩≅ ∅
 ≅ν (concat-emptyˡ l) = refl
 ≅δ (concat-emptyˡ l) a = concat-emptyˡ l
 
+concat-emptyʳ : ∀{i} l → l · ∅ ≅⟨ i ⟩≅ ∅
+≅ν (concat-emptyʳ l) = ∧-false (ν l)
+≅δ (concat-emptyʳ l) a with ν l
+... | false = concat-emptyʳ (δ l a)
+... | true = begin
+    δ l a · ∅ ∪ ∅
+  ≈⟨  union-emptyʳ ⟩
+    δ l a · ∅
+  ≈⟨  concat-emptyʳ (δ l a) ⟩
+    ∅
+  ∎ where open EqR (Bis _)
+
+-- Specialized laws for union and concat
+
+union-concat-empty : ∀{i l l'} → ∅ · l ∪ l' ≅⟨ i ⟩≅ l'
+≅ν union-concat-empty = refl
+≅δ union-concat-empty a = union-concat-empty
+
+
 -- Laws of the Kleene star
 
 star-empty : ∀{i} → ∅ * ≅⟨ i ⟩≅ ε
@@ -536,3 +559,25 @@ empty-star-union-star : ∀{i} (l : Lang ∞) → (∅ *) ∪ (l *) ≅⟨ i ⟩
 
 star-union-empty-star : ∀{i} (l : Lang ∞) → (l *) ∪ (∅ *) ≅⟨ i ⟩≅ (l *)
 star-union-empty-star l = ≅trans (union-comm (l *) (∅ *)) (empty-star-union-star _)
+
+-- L = K·L + M  ==> L = K*·M    (if K ≠ ∅)
+
+-- Star composed with some language
+-- r*·a = r·r*·a + a
+
+star-concat : ∀{i} (k {m} : Lang ∞) → k * · m ≅⟨ i ⟩≅ k · (k * · m) ∪ m
+≅ν (star-concat k {m}) = ∨-absorbs-∧ (ν k) (ν m) -- absorption A = (B ∧ A) ∨ A
+≅δ (star-concat k {m}) a with ν k
+... | false = union-congˡ (concat-assoc _)
+... | true = begin
+    δ k a · k * · m ∪ δ m a
+  ≈⟨  prove 2 (x ⊕ y) ((x ⊕ (x ⊕ y)) ⊕ y) ((δ k a · k * · m) ∷ δ m a ∷ [])  ⟩
+    δ k a · k * · m ∪ (δ k a · k * · m ∪ δ m a) ∪ δ m a
+  ≈⟨ union-congˡ (union-congˡ (concat-assoc _)) ⟩
+    δ k a · (k * · m) ∪ (δ k a · k * · m ∪ δ m a) ∪ δ m a
+  ∎ where
+    open EqR (Bis _)
+    open ICMSolver (union-icm _)
+    x y : Expr 2
+    x = var zero
+    y = var (suc zero)

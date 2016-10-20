@@ -84,8 +84,9 @@ Setoid.isEquivalence REq = ≅ʳisEquivalence
 0≠r (r *ⁿ) p with ≅ν p
 ... | ()
 
-plus-empty : ∀ r → (0ʳ +ʳ r) ≅ʳ r
-plus-empty r = ≅refl
+plus-empty : ∀ r → (r +ʳ 0ʳ) ≅ʳ r
+plus-empty 0ʳ = ≅refl
+plus-empty ⌜ r ⌝ = ≅refl
 
 plus-assoc : ∀ r s t → ((r +ʳ s) +ʳ t) ≅ʳ (r +ʳ (s +ʳ t))
 plus-assoc 0ʳ s t = ≅refl
@@ -125,14 +126,44 @@ plus-icm =  record
         ; assoc = plus-assoc
         ; ∙-cong = λ {r r' s s'} → plus-cong {r} {r'} {s} {s'}
         }
-      ; identityˡ = plus-empty
+      ; identityˡ = λ _ → ≅refl
       ; comm = plus-comm
       }
     ; idem = plus-idem
     }
   }
 
--- plus-congˡ :
+comp-empty : ∀ r → (r ∙ʳ 0ʳ) ≅ʳ 0ʳ
+comp-empty 0ʳ    = ≅refl
+comp-empty ⌜ r ⌝ = ≅refl
 
-unit-correct : ⟦ 1ʳ ⟧ ≅ ε
-unit-correct =  ≅refl
+comp-assoc : ∀ r s t → ((r ∙ʳ s) ∙ʳ t) ≅ʳ (r ∙ʳ (s ∙ʳ t))
+comp-assoc 0ʳ s t = ≅refl
+comp-assoc ⌜ r ⌝ 0ʳ t = ≅refl
+comp-assoc ⌜ r ⌝ ⌜ s ⌝ 0ʳ = ≅refl
+comp-assoc ⌜ r ⌝ ⌜ s ⌝ ⌜ t ⌝ = concat-assoc ⟦ r ⟧ⁿ
+
+plus-comp-distr : ∀ r r' s → ((r +ʳ r') ∙ʳ s) ≅ʳ ((r ∙ʳ s) +ʳ (r' ∙ʳ s))
+plus-comp-distr 0ʳ r' s = ≅refl
+plus-comp-distr ⌜ r ⌝ 0ʳ s = ≅sym (plus-empty (⌜ r ⌝ ∙ʳ s))
+plus-comp-distr ⌜ r ⌝ ⌜ r' ⌝ 0ʳ = ≅refl
+plus-comp-distr ⌜ r ⌝ ⌜ r' ⌝ ⌜ s ⌝ = concat-union-distribˡ ⟦ r ⟧ⁿ
+
+comp-plus-distr : ∀ r s s' → (r ∙ʳ (s +ʳ s')) ≅ʳ ((r ∙ʳ s) +ʳ (r ∙ʳ s'))
+comp-plus-distr 0ʳ s s' = ≅refl
+comp-plus-distr ⌜ r ⌝ 0ʳ s' = ≅refl
+comp-plus-distr ⌜ r ⌝ ⌜ s ⌝ 0ʳ = ≅refl
+comp-plus-distr ⌜ r ⌝ ⌜ s ⌝ ⌜ s' ⌝ = concat-union-distribʳ ⟦ r ⟧ⁿ
+
+den-unit : ⟦ 1ʳ ⟧ ≅ ε
+den-unit =  ≅refl
+
+den-plus : ∀ {i} r s → ⟦ r +ʳ s ⟧ ≅⟨ i ⟩≅ ⟦ r ⟧ ∪ ⟦ s ⟧
+den-plus 0ʳ s = ≅sym (union-empty)
+den-plus ⌜ r ⌝ 0ʳ = ≅sym (union-emptyʳ)
+den-plus ⌜ r ⌝ ⌜ s ⌝ = ≅refl
+
+den-comp : ∀ {i} r s → ⟦ r ∙ʳ s ⟧ ≅⟨ i ⟩≅ ⟦ r ⟧ · ⟦ s ⟧
+den-comp 0ʳ s = ≅sym (concat-emptyˡ _)
+den-comp ⌜ r ⌝ 0ʳ = ≅sym (concat-emptyʳ _)
+den-comp ⌜ r ⌝ ⌜ s ⌝ = ≅refl

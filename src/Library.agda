@@ -1,6 +1,6 @@
 module Library where
 
-open import Level public using (Level) renaming (zero to lzero; suc to lsuc)
+open import Level public using (Level) renaming (zero to lzero; suc to lsuc; _⊔_ to _l⊔_)
 open import Size  public
 
 open import Data.Bool.Base public using (Bool; true; false; if_then_else_; not; _∧_; _∨_)
@@ -42,10 +42,27 @@ module ICMSolver = Algebra.IdempotentCommutativeMonoidSolver
 
 postulate TODO : ∀{a}{A : Set a} → A
 
+-- Goals
+show_proof_ : ∀{a} (A : Set a) → A → A
+show A proof x = x
+
 -- These names are not exported from Algebra.Properties.DistributiveLattice
 ∨-∧-distribˡ = proj₁ ∨-∧-distrib
 ∧-∨-distribˡ = proj₁ ∧-∨-distrib
 ∧-∨-distribʳ = proj₂ ∧-∨-distrib
+
+∨-false : ∀ b → b ∨ false ≡ b
+∨-false true  = refl
+∨-false false = refl
+
+∧-false : ∀ b → b ∧ false ≡ false
+∧-false true  = refl
+∧-false false = refl
+
+∨-absorbs-∧ : ∀ b a → a ≡ (b ∧ a) ∨ a
+∨-absorbs-∧ false a = refl
+∨-absorbs-∧ true false = refl
+∨-absorbs-∧ true true = refl
 
 zero? : ℕ → Bool
 zero? zero = true
@@ -62,10 +79,45 @@ module List where
 
 module Vec where
 
-  open Data.Vec public
+  open Data.Vec public hiding (map; zipWith; zip)
 
-  vcong : ∀{A : Set}{n} {v v' : Vec A (suc n)} (p : head v ≡ head v') (q : tail v ≡ tail v') → v ≡ v'
+  -- Reimplementing some functions for nicer reduction behavior
+
+  map : ∀ {a b n} {A : Set a} {B : Set b} →
+          (A → B) → Vec A n → Vec B n
+  map f [] = []
+  map f (x ∷ xs) = f x ∷ map f xs
+
+  zipWith : ∀ {a b c n} {A : Set a} {B : Set b} {C : Set c} →
+            (A → B → C) → Vec A n → Vec B n → Vec C n
+  zipWith f [] [] = []
+  zipWith f (x ∷ xs) (y ∷ ys) = f x y ∷ zipWith f xs ys
+
+  zip : ∀ {a b n} {A : Set a} {B : Set b} →
+        Vec A n → Vec B n → Vec (A × B) n
+  zip = zipWith _,_
+
+  -- New lemma about zipWith fusion
+
+  vcong : ∀{a}{A : Set a}{n} {v v' : Vec A (suc n)} (p : head v ≡ head v') (q : tail v ≡ tail v') → v ≡ v'
   vcong {v = _ ∷ _} {v' = _ ∷ _} p q = cong₂ _ p q
+
+  zipWith-map-map :  ∀ {a b c n} {A A' : Set a} {B B' : Set b} {C : Set c} →
+    (f : A' → B' → C) (g : A → A') (h : B → B') (xs : Vec A n) (ys : Vec B n) →
+    zipWith f (map g xs) (map h ys) ≡ zipWith (λ x y → f (g x) (h y)) xs ys
+  zipWith-map-map f g h [] [] = refl
+  zipWith-map-map f g h (x ∷ xs) (y ∷ ys) = vcong refl (zipWith-map-map f g h xs ys)
+
+  -- New functionality
+
+  tail' : ∀{a} {A : Set a} {n} (v : Vec A n) → Vec A (pred n)
+  tail' [] = []
+  tail' (x ∷ xs) = xs
+
+  -- open import Data.List.All public using (module All) renaming (All to ListAll)
+  data All {a p} {A : Set a} (P : A → Set p) : ∀{n} → Vec A n → Set (p l⊔ a) where
+    []ᵃ  : All P []
+    _∷ᵃ_ : ∀ {n x}{xs : Vec A n} (px : P x) (pxs : All P xs) → All P (x ∷ xs)
 
   any : ∀{n} → Vec Bool n → Bool
   any = foldr (λ _ → Bool) _∨_ false
@@ -128,3 +180,5 @@ module Vec where
     rewrite [suc]' true true (replicate false) (trues v)
           | elemSet-trues v
           = refl
+
+open Vec public using ([]ᵃ; _∷ᵃ_)
