@@ -43,6 +43,21 @@ Setoid.Carrier       REq = RE
 Setoid._≈_           REq = _≅ʳ_
 Setoid.isEquivalence REq = ≅ʳisEquivalence
 
+plus-empty : ∀ r → (r +ʳ 0ʳ) ≅ʳ r
+plus-empty r = ≅trans (union-comm _ _) union-empty
+
+plus-assoc : ∀ r s t → ((r +ʳ s) +ʳ t) ≅ʳ (r +ʳ (s +ʳ t))
+plus-assoc r s t = union-assoc _
+
+plus-cong : ∀{r r' s s'} (p : r ≅ʳ r') (q : s ≅ʳ s') → (r +ʳ s) ≅ʳ (r' +ʳ s')
+plus-cong = union-cong
+
+plus-idem : ∀ r → ⟦ r +ʳ r ⟧ ≅⟨ ∞ ⟩≅ ⟦ r ⟧
+plus-idem r = union-idem
+
+plus-comm : ∀ r s → ⟦ r +ʳ s ⟧ ≅⟨ ∞ ⟩≅ ⟦ s +ʳ r ⟧
+plus-comm r s = union-comm _ _
+
 plus-icm : IdempotentCommutativeMonoid _ _
 plus-icm =  record
   { Carrier = RE
@@ -53,21 +68,36 @@ plus-icm =  record
     { isCommutativeMonoid = record
       { isSemigroup = record
         { isEquivalence = ≅ʳisEquivalence
-        ; assoc = λ r s t → union-assoc _
+        ; assoc = plus-assoc
         ; ∙-cong = union-cong
         }
       ; identityˡ = λ r → union-empty
-      ; comm = λ r s → union-comm _ _
+      ; comm = plus-comm
       }
-    ; idem = λ r → union-idem
+    ; idem = plus-idem
     }
   }
 
-plus-cong : ∀{r r' s s'} (p : r ≅ʳ r') (q : s ≅ʳ s') → (r +ʳ s) ≅ʳ (r' +ʳ s')
-plus-cong = union-cong
+comp-empty : ∀ r → (r ∙ʳ 0ʳ) ≅ʳ 0ʳ
+comp-empty r = concat-emptyʳ _
 
-unit-correct : ⟦ 1ʳ ⟧ ≅ ε
-unit-correct = star-empty
+comp-assoc : ∀ r s t → ((r ∙ʳ s) ∙ʳ t) ≅ʳ (r ∙ʳ (s ∙ʳ t))
+comp-assoc r s t = concat-assoc _
+
+plus-comp-distr : ∀ r r' s → ((r +ʳ r') ∙ʳ s) ≅ʳ ((r ∙ʳ s) +ʳ (r' ∙ʳ s))
+plus-comp-distr r r' s = concat-union-distribˡ _
+
+comp-plus-distr : ∀ r s s' → (r ∙ʳ (s +ʳ s')) ≅ʳ ((r ∙ʳ s) +ʳ (r ∙ʳ s'))
+comp-plus-distr r s s' = concat-union-distribʳ _
+
+den-unit : ⟦ 1ʳ ⟧ ≅ ε
+den-unit = star-empty
+
+den-plus : ∀ {i} r s → ⟦ r +ʳ s ⟧ ≅⟨ i ⟩≅ ⟦ r ⟧ ∪ ⟦ s ⟧
+den-plus r s = ≅refl
+
+den-comp : ∀ {i} r s → ⟦ r ∙ʳ s ⟧ ≅⟨ i ⟩≅ ⟦ r ⟧ · ⟦ s ⟧
+den-comp r s = ≅refl
 
 ------------------------------------------------------------------------
 
