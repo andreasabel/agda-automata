@@ -5,11 +5,8 @@ module RegularGrammar
   (decA : DecSetoid lzero lzero)
   (open DecSetoid decA using (_≟_) renaming (Carrier to A)) where
 
-import Language
-import RENotNullable
-
-open module LA = Language decA
-open module RA = RENotNullable decA
+open import Language decA
+open import RENotNullable decA
 
 -- Let Σ = {a₁,...,aₘ} be a finite alphabet.
 -- A regular grammar consists of equations for non-terminals of
@@ -67,58 +64,35 @@ open module RA = RENotNullable decA
 
 -- Vector space over regular expressions
 
--- -- Scaling
+-- Scaling
 
--- _∙ᵛ_ : ∀{n} → RE → Vec RE n → Vec RE n
--- r ∙ᵛ v = Vec.map (λ s → r ∙ʳ s) v
+_∙ᵛ_ : ∀{n} → RE → Vec RE n → Vec RE n
+r ∙ᵛ v = Vec.map (λ s → r ∙ʳ s) v
 
--- -- Addition
+-- Addition
 
--- _+ᵛ_ : ∀{n} (v w : Vec RE n) → Vec RE n
--- v +ᵛ w = Vec.zipWith (_+ʳ_) v w
+_+ᵛ_ : ∀{n} (v w : Vec RE n) → Vec RE n
+v +ᵛ w = Vec.zipWith (_+ʳ_) v w
 
 -- We represent the linear combination in n variables
 --
 --   v = a₁ X₁ + ... + aₙ Xₙ + a₀
 --
--- as pair of a vector aₙ ∷ ... ∷ a₁ ∷ [] and a final coefficient a₀
--- The coefficients of the Xᵢ are assumed to be non-nullable.
+-- as vector aₙ ∷ ... ∷ a₁ ∷ a₀
 
--- LinComb n is a linear combination in n variables
+-- LinComb (suc n) is a linear combination in n variables
+-- LinComb 0       is the empty sum which represent the empty language
 
-record LinComb (n : ℕ) : Set where
-  constructor _+ᶜ_
-  field v : Vec Renn n
-        c : RE
-
-_∷ᶜ_ : ∀{n} → Renn → LinComb n → LinComb (suc n)
-r ∷ᶜ (v +ᶜ c) = (r ∷ v) +ᶜ c
+LinComb : ℕ → Set
+LinComb n = Vec RE n
 
 -- Semantics of a linear combination
 
-⟦_⟧ᵛ : ∀{n i} → LinComb n → Vec (Lang i) n → Lang i
-⟦ []       +ᶜ c ⟧ᵛ ρ       = ⟦ c ⟧
-⟦ (a ∷ as) +ᶜ c ⟧ᵛ (l ∷ ρ) = ⟦ a ⟧ⁿ · l ∪ ⟦ as +ᶜ c ⟧ᵛ ρ
--- ⟦ []           ⟧ᵛ _        = ∅
--- ⟦ a ∷ []       ⟧ᵛ _        = ⟦ a ⟧
--- ⟦ a ∷ (b ∷ bs) ⟧ᵛ (l ∷ ls) = ⟦ a ⟧ · l ∪ ⟦ b ∷ bs ⟧ᵛ ls
+⟦_⟧ᵛ : ∀{n i} → LinComb n → Vec (Lang i) (pred n) → Lang i
+⟦ []           ⟧ᵛ _        = ∅
+⟦ a ∷ []       ⟧ᵛ _        = ⟦ a ⟧
+⟦ a ∷ (b ∷ bs) ⟧ᵛ (l ∷ ls) = ⟦ a ⟧ · l ∪ ⟦ b ∷ bs ⟧ᵛ ls
 
--- Scaling
-
-_∙ᵛ_ : ∀{n} → RE → LinComb n → LinComb n
-r ∙ᵛ (v +ᶜ c) = Vec.map (r ∙ⁿ_) v +ᶜ (r ∙ʳ c)
-
--- Addition
-
-_+ᵛ_ : ∀{n} (v w : LinComb n) → LinComb n
-(v +ᶜ c) +ᵛ (w +ᶜ d) = Vec.zipWith (_+ⁿ_) v w +ᶜ (c +ʳ d)
-
--- Zero
-
-0ᵛ : ∀{n} → LinComb n
-0ᵛ = Vec.replicate 0ⁿ +ᶜ 0ʳ
-
-{-
 -- Simplification if first coefficient is 0
 
 sem-empty : ∀{i n} (v : LinComb n) (ls : Vec (Lang ∞) n) →
@@ -128,7 +102,6 @@ sem-empty : ∀{i n} (v : LinComb n) (ls : Vec (Lang ∞) n) →
 sem-empty [] ls = ≅refl
 sem-empty (a ∷ []) (l ∷ ls) = union-concat-empty
 sem-empty (a ∷ b ∷ v) (l ∷ ls) = union-concat-empty
--}
 
 -- Semantics is a vector space morphism
 
@@ -138,64 +111,66 @@ sound-scale : ∀{i n} a (v : LinComb n) ρ →
 
   ⟦ a ∙ᵛ v ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ a ⟧ · ⟦ v ⟧ᵛ ρ
 
-sound-scale a ([]      +ᶜ c) ρ = ≅refl
-sound-scale a ((b ∷ v) +ᶜ c) (l ∷ ρ) = begin
+sound-scale a [] ρ = ≅sym (concat-emptyʳ _)
+sound-scale a (_ ∷ []) ρ = ≅refl
+sound-scale a (b ∷ c ∷ w) (l ∷ ρ) = begin
 
-    ⟦ a ∙ᵛ ((b ∷ v) +ᶜ c) ⟧ᵛ (l ∷ ρ)
+    ⟦ a ∙ᵛ (b ∷ v) ⟧ᵛ (l ∷ ρ)
   ≡⟨⟩
-    ⟦ a ∙ⁿ b ⟧ⁿ · l ∪ ⟦ a ∙ᵛ (v +ᶜ c) ⟧ᵛ ρ
+    ⟦ a ∙ʳ b ⟧ · l ∪ ⟦ a ∙ᵛ v ⟧ᵛ ρ
 
-  ≈⟨  union-congʳ (sound-scale a (v +ᶜ c) ρ)  ⟩
+  ≈⟨ union-cong (concat-congˡ (den-comp a b)) (sound-scale a v ρ) ⟩
 
-    (⟦ a ⟧ · ⟦ b ⟧ⁿ) · l ∪ ⟦ a ⟧ · ⟦ v +ᶜ c ⟧ᵛ ρ
+    (⟦ a ⟧ · ⟦ b ⟧) · l ∪ ⟦ a ⟧ · ⟦ v ⟧ᵛ ρ
 
   ≈⟨ union-congˡ (concat-assoc ⟦ a ⟧) ⟩
 
-    ⟦ a ⟧ · (⟦ b ⟧ⁿ · l) ∪ ⟦ a ⟧ · ⟦ v +ᶜ c ⟧ᵛ ρ
+    ⟦ a ⟧ · (⟦ b ⟧ · l) ∪ ⟦ a ⟧ · ⟦ v ⟧ᵛ ρ
 
   ≈⟨ ≅sym (concat-union-distribʳ ⟦ a ⟧) ⟩
 
-    ⟦ a ⟧ · (⟦ b ⟧ⁿ · l ∪ ⟦ v +ᶜ c ⟧ᵛ ρ)
+    ⟦ a ⟧ · (⟦ b ⟧ · l ∪ ⟦ v ⟧ᵛ ρ)
   ≡⟨⟩
-    ⟦ a ⟧ · ⟦ (b ∷ v) +ᶜ c ⟧ᵛ (l ∷ ρ)
+    ⟦ a ⟧ · ⟦ b ∷ v ⟧ᵛ (l ∷ ρ)
   ∎
   where
+  v : LinComb _
+  v = c ∷ w
   open EqR (Bis _)
-
 
 -- Adding linear combinations is sound
 
-sound-plus : ∀{i n} (v w : LinComb n) (ρ  : Vec (Lang ∞) n) →
+sound-plus : ∀{i n} (v w : LinComb n) (ρ  : Vec (Lang ∞) (pred n)) →
   ⟦ v +ᵛ w ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ v ⟧ᵛ ρ ∪ ⟦ w ⟧ᵛ ρ
-sound-plus ([] +ᶜ c) ([] +ᶜ d) [] = ≅refl
-sound-plus ((a ∷ v) +ᶜ c) ((b ∷ w) +ᶜ d) (l ∷ ρ) = begin
+sound-plus [] [] _ = ≅sym union-empty
+sound-plus (a ∷ []) (b ∷ []) [] = den-plus a b
+sound-plus (a ∷ a' ∷ v') (b ∷ b' ∷ w') (l ∷ ρ) = begin
 
-    ⟦ ((a ∷ v) +ᶜ c) +ᵛ ((b ∷ w) +ᶜ d) ⟧ᵛ (l ∷ ρ)
-
-  ≡⟨⟩
-
-    ⟦ a +ⁿ b ⟧ⁿ · l ∪ ⟦ v' +ᵛ w' ⟧ᵛ ρ
-
-  ≈⟨ union-congʳ (sound-plus v' w' ρ) ⟩
-
-    (⟦ a ⟧ⁿ ∪ ⟦ b ⟧ⁿ) · l ∪ ( ⟦ v' ⟧ᵛ ρ ∪ ⟦ w' ⟧ᵛ ρ)
-
-  ≈⟨ union-congˡ (concat-union-distribˡ ⟦ a ⟧ⁿ) ⟩
-
-    (⟦ a ⟧ⁿ · l ∪ ⟦ b ⟧ⁿ · l) ∪ (⟦ v' ⟧ᵛ ρ ∪ ⟦ w' ⟧ᵛ ρ)
-
-  ≈⟨ prove 4 ((x₁ ⊕ x₂) ⊕ (x₃ ⊕ x₄))
-             ((x₁ ⊕ x₃) ⊕ (x₂ ⊕ x₄)) (⟦ a ⟧ⁿ · l ∷ ⟦ b ⟧ⁿ · l ∷ ⟦ v' ⟧ᵛ ρ ∷ ⟦ w' ⟧ᵛ ρ ∷ []) ⟩
-
-    ((⟦ a ⟧ⁿ · l) ∪ ⟦ v' ⟧ᵛ ρ) ∪ ((⟦ b ⟧ⁿ · l) ∪ ⟦ w' ⟧ᵛ ρ)
+    ⟦ (a ∷ v) +ᵛ (b ∷ w) ⟧ᵛ (l ∷ ρ)
 
   ≡⟨⟩
 
-    ⟦ (a ∷ v) +ᶜ c ⟧ᵛ (l ∷ ρ) ∪ ⟦ (b ∷ w) +ᶜ d ⟧ᵛ (l ∷ ρ)
+    ⟦ a +ʳ b ⟧ · l ∪ ⟦ v +ᵛ w ⟧ᵛ ρ
+
+  ≈⟨ union-cong (concat-congˡ (den-plus a b)) (sound-plus v w ρ) ⟩
+
+    (⟦ a ⟧ ∪ ⟦ b ⟧) · l ∪ ( ⟦ v ⟧ᵛ ρ ∪ ⟦ w ⟧ᵛ ρ)
+
+  ≈⟨ union-congˡ (concat-union-distribˡ ⟦ a ⟧) ⟩
+
+    (⟦ a ⟧ · l ∪ ⟦ b ⟧ · l) ∪ (⟦ v ⟧ᵛ ρ ∪ ⟦ w ⟧ᵛ ρ)
+
+  ≈⟨ prove 4 ((x₁ ⊕ x₂) ⊕ (x₃ ⊕ x₄)) ((x₁ ⊕ x₃) ⊕ (x₂ ⊕ x₄)) (⟦ a ⟧ · l ∷ ⟦ b ⟧ · l ∷ ⟦ v ⟧ᵛ ρ ∷ ⟦ w ⟧ᵛ ρ ∷ []) ⟩
+
+    ((⟦ a ⟧ · l) ∪ ⟦ v ⟧ᵛ ρ) ∪ ((⟦ b ⟧ · l) ∪ ⟦ w ⟧ᵛ ρ)
+
+  ≡⟨⟩
+
+    ⟦ a ∷ v ⟧ᵛ (l ∷ ρ) ∪ ⟦ b ∷ w ⟧ᵛ (l ∷ ρ)
 
   ∎  where
-    v' = v +ᶜ c
-    w' = w +ᶜ d
+    v = a' ∷ v'
+    w = b' ∷ w'
     open EqR (Bis _)
     open ICMSolver (union-icm _) using (prove; Expr; var; _⊕_)
     x₁ x₂ x₃ x₄ : Expr 4
@@ -204,47 +179,41 @@ sound-plus ((a ∷ v) +ᶜ c) ((b ∷ w) +ᶜ d) (l ∷ ρ) = begin
     x₃ = var (suc (suc zero))
     x₄ = var (suc (suc (suc zero)))
 
-sound-zero : ∀{i n}(ρ : Vec (Lang ∞) n) → ⟦ 0ᵛ ⟧ᵛ ρ ≅⟨ i ⟩≅ ∅
-sound-zero [] = ≅refl
-sound-zero (l ∷ ρ) = ≅trans union-concat-empty (sound-zero ρ)
-
 -- Substitute w for the first variable (Xₙ) in v.
 -- We need to substitute at least one variable.
 
 -- Semantics: ⟦ subst w v ⟧ᵛ ρ ≅ʳ ⟦ v ⟧ᵛ (⟦ w ⟧ᵛ ρ ∷ ρ)
 
-subst : ∀{n} → LinComb n → LinComb (1 + n) → LinComb n
-subst w ((r ∷ v) +ᶜ c) = (re r ∙ᵛ w) +ᵛ (v +ᶜ c)
+subst : ∀{n} → LinComb (1 + n) → LinComb (2 + n) → LinComb (1 + n)
+subst w (r ∷ v) = (r ∙ᵛ w) +ᵛ v
 
-sound-subst : ∀ {i n} (w : LinComb n) (v : LinComb (1 + n)) (ρ : Vec (Lang ∞) n) →
+sound-subst : ∀ {i n} (v : LinComb (2 + n)) (w : LinComb (1 + n)) (ρ : Vec (Lang ∞) n) →
   ⟦ subst w v ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ v ⟧ᵛ (⟦ w ⟧ᵛ ρ ∷ ρ)
-sound-subst w ((a ∷ v) +ᶜ c) ρ = begin
-  ⟦ subst w ((a ∷ v) +ᶜ c) ⟧ᵛ ρ     ≡⟨⟩
-  ⟦ (re a ∙ᵛ w) +ᵛ v' ⟧ᵛ ρ          ≈⟨ sound-plus (re a ∙ᵛ w) v' ρ ⟩
-  ⟦ re a ∙ᵛ w  ⟧ᵛ ρ ∪ ⟦ v' ⟧ᵛ ρ     ≈⟨ union-congˡ (sound-scale (re a) w ρ) ⟩
-  ⟦ a ⟧ⁿ · ⟦ w  ⟧ᵛ ρ ∪ ⟦ v' ⟧ᵛ ρ    ≡⟨⟩
-  ⟦ (a ∷ v) +ᶜ c ⟧ᵛ (⟦ w ⟧ᵛ ρ ∷ ρ)
+sound-subst (a ∷ b ∷ v') w ρ = begin
+  ⟦ subst w (a ∷ v) ⟧ᵛ ρ          ≡⟨⟩
+  ⟦ (a ∙ᵛ w) +ᵛ v ⟧ᵛ ρ            ≈⟨ sound-plus (a ∙ᵛ w) v ρ ⟩
+  ⟦ a ∙ᵛ w  ⟧ᵛ ρ ∪ ⟦ v ⟧ᵛ ρ       ≈⟨ union-congˡ (sound-scale a w ρ) ⟩
+  ⟦ a ⟧ · ⟦ w  ⟧ᵛ ρ ∪ ⟦ v ⟧ᵛ ρ    ≡⟨⟩
+  ⟦ a ∷ v ⟧ᵛ (⟦ w ⟧ᵛ ρ ∷ ρ)
   ∎ where
     open EqR (Bis _)
-    v' = v +ᶜ c
-
+    v = b ∷ v'
 
 -- parallel substitution is a kind of matrix multiplication
 --
 -- psubst (wₙ-1 ∷ ... ∷ w₀ ∷ []) (aₙ-1 ∷ ... ∷ a₀ ∷ [])
 --   = aₙ-1 ∙ᵛ wₙ-1 +ᵛ ... +ᵛ a₀ ∙ᵛ w₀ +ᵛ 0ᵛ
 psubst : ∀{n m} → Vec (LinComb n) m → LinComb m → LinComb n
-psubst {n} M (v +ᶜ c) = Vec.foldr (λ _ → LinComb n) (_+ᵛ_) 0ᵛ
-  (Vec.zipWith (λ r → re r ∙ᵛ_) v M)
-
+psubst {n} M v = Vec.foldr (λ _ → LinComb n) (_+ᵛ_) (Vec.replicate 0ʳ)
+  (Vec.zipWith (_∙ᵛ_) v M)
 
 -- The semantics of m equations in n-1 variables:
 
-⟦_⟧ᴹ : ∀{i n m} → Vec (LinComb n) m → Vec (Lang i) n → Vec (Lang i) m
+⟦_⟧ᴹ : ∀{i n m} → Vec (LinComb n) m → Vec (Lang i) (pred n) → Vec (Lang i) m
 ⟦ M ⟧ᴹ ρ = Vec.map (λ v → ⟦ v ⟧ᵛ ρ) M
 
 _≅⟨_⟩≅ᴸ_ : ∀{n} (L : Vec (Lang ∞) n) (i : Size) (L' : Vec (Lang ∞) n) → Set
-L ≅⟨ i ⟩≅ᴸ L' = Vec.All₂ (λ l l' → l ≅⟨ i ⟩≅ l') L L'
+L ≅⟨ i ⟩≅ᴸ L' = Vec.All (λ ll' → proj₁ ll' ≅⟨ i ⟩≅ proj₂ ll') (Vec.zip L L')
 
 -- sound-psubst : ∀{i n m} (A : Vec (LinComb n) m) (v : LinComb m) (ρ : Vec (Lang ∞) (pred n)) →
 --   ⟦ psubst A v ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ v ⟧ᵛ (⟦ A ⟧ᴹ ρ)
@@ -255,40 +224,44 @@ L ≅⟨ i ⟩≅ᴸ L' = Vec.All₂ (λ l l' → l ≅⟨ i ⟩≅ l') L L'
 -- We have m+1 equations in n+1 variables.
 -- The first equation is the one we eliminate and return as "solved".
 
-step : ∀{n m} → Vec (LinComb (suc n)) (suc m) → Vec (LinComb n) (suc m)
-step (((r ∷ v) +ᶜ c) ∷ vs) = v' ∷ Vec.map (subst v') vs
+step : ∀{n m} → Vec (LinComb (2 + n)) (suc m) → Vec (LinComb (1 + n)) (suc m)
+step ((r ∷ v) ∷ vs) = v' ∷ Vec.map (subst v') vs
   where
-    v' = (r *ⁿ) ∙ᵛ (v +ᶜ c)
+    v' = (r *ʳ) ∙ᵛ v
 
 --   L = r·L + a  ==> L = r*·a    (if r ≠ ∅)
 --   r*·a = r·r*·a + a
 
-lemma : ∀{i n} r (v : LinComb n) (ρ : Vec (Lang ∞) n) →
-   ⟦ (r *ⁿ) ∙ᵛ v ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ r ∷ᶜ v ⟧ᵛ (⟦ (r *ⁿ) ∙ᵛ v ⟧ᵛ ρ ∷ ρ)
-lemma r ([] +ᶜ c) ρ = star-concat _   -- Law for star
-lemma {i} r ((a ∷ v) +ᶜ c) (l ∷ ρ) = begin
-    ⟦ r* ∙ᵛ ((a ∷ v) +ᶜ c) ⟧ᵛ (l ∷ ρ)
+lemma : ∀{i n} r (v : Vec RE (suc n)) (ρ : Vec (Lang ∞) n) →
+   ⟦ Vec.map ((r *ʳ) ∙ʳ_) v ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ r ∷ v ⟧ᵛ (⟦ Vec.map ((r *ʳ) ∙ʳ_) v ⟧ᵛ ρ ∷ ρ)
+-- lemma r (0ʳ ∷ []) ρ = ≅sym (≅trans (union-congˡ (≅trans (concat-emptyʳ _) (≅sym (concat-emptyˡ _)))) (union-concat-empty {l = ⟦ r* ⟧})) -- boring proof about ∅
+--   where
+--   r* : RE
+--   r* = (r *ʳ)
+lemma r (a ∷ []) ρ = star-concat _   -- Law for star
+lemma {i} r (a ∷ b ∷ v') (l ∷ ρ) = begin
+    ⟦ r* ∙ᵛ (a ∷ v) ⟧ᵛ (l ∷ ρ)
   ≡⟨⟩
-    ⟦ (r* ∙ⁿ a) ∷ᶜ (r* ∙ᵛ v') ⟧ᵛ (l ∷ ρ)
+    ⟦ (r* ∙ʳ a) ∷ r* ∙ᵛ v ⟧ᵛ (l ∷ ρ)
   ≡⟨⟩
-     ⟦ r* ∙ⁿ a ⟧ⁿ · l ∪ ⟦ r* ∙ᵛ v' ⟧ᵛ ρ
+     ⟦ r* ∙ʳ a ⟧ · l ∪ ⟦ r* ∙ᵛ v ⟧ᵛ ρ
   ≈⟨ {!!} ⟩
-    ⟦ r ⟧ⁿ · (⟦ r* ∙ⁿ a ⟧ⁿ · l ∪ ⟦ r* ∙ᵛ v' ⟧ᵛ ρ) ∪ (⟦ a ⟧ⁿ · l ∪ ⟦ v' ⟧ᵛ ρ)
+    ⟦ r ⟧ · (⟦ r* ∙ʳ a ⟧ · l ∪ ⟦ r* ∙ᵛ v ⟧ᵛ ρ) ∪ (⟦ a ⟧ · l ∪ ⟦ v ⟧ᵛ ρ)
   ≡⟨⟩
-    ⟦ r ⟧ⁿ · ⟦ (r* ∙ⁿ a) ∷ᶜ (r* ∙ᵛ v') ⟧ᵛ (l ∷ ρ) ∪ (⟦ a ⟧ⁿ · l ∪ ⟦ v' ⟧ᵛ ρ)
+    ⟦ r ⟧ · ⟦ r* ∙ʳ a ∷ r* ∙ᵛ v ⟧ᵛ (l ∷ ρ) ∪ (⟦ a ⟧ · l ∪ ⟦ v ⟧ᵛ ρ)
   ≡⟨⟩
-    ⟦ r ⟧ⁿ · ⟦ r* ∙ᵛ ((a ∷ v) +ᶜ c) ⟧ᵛ (l ∷ ρ) ∪ ⟦ (a ∷ v) +ᶜ c ⟧ᵛ (l ∷ ρ)
+    ⟦ r ⟧ · ⟦ r* ∙ᵛ (a ∷ v) ⟧ᵛ (l ∷ ρ) ∪ ⟦ a ∷ v ⟧ᵛ (l ∷ ρ)
   ≡⟨⟩
-    ⟦ (r ∷ (a ∷ v)) +ᶜ c ⟧ᵛ (⟦ r* ∙ᵛ ((a ∷ v) +ᶜ c) ⟧ᵛ (l ∷ ρ) ∷ l ∷ ρ)
+    ⟦ r ∷ a ∷ v ⟧ᵛ (⟦ r* ∙ᵛ (a ∷ v) ⟧ᵛ (l ∷ ρ) ∷ l ∷ ρ)
   ∎
   where
-  v' : LinComb _
-  v' = v +ᶜ c
+  v : Vec RE _
+  v = b ∷ v'
   r* : RE
-  r* = (re r *ʳ)
+  r* = (r *ʳ)
   open EqR (Bis _)
 
-{-
+
 -- Lemma for sound-step
 sound-step-lem : ∀{i n m} (v : Vec RE (suc n)) (M : Vec (LinComb (2 + n)) m) (ρ : Vec (Lang ∞) n)→
    Vec.All (λ ll' → proj₁ ll' ≅⟨ i  ⟩≅ proj₂ ll')
@@ -297,9 +270,8 @@ sound-step-lem : ∀{i n m} (v : Vec RE (suc n)) (M : Vec (LinComb (2 + n)) m) (
      (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ (⟦ v ⟧ᵛ ρ ∷ ρ)) M))
 sound-step-lem v []       ρ = []ᵃ
 sound-step-lem v (w ∷ M') ρ = (sound-subst w v ρ) ∷ᵃ sound-step-lem v M' ρ
--}
 
-sound-step : ∀{i n m} (M : Vec (LinComb (suc n)) (suc m)) (ρ : Vec (Lang ∞) n) →
+sound-step : ∀{i n m} (M : Vec (LinComb (2 + n)) (suc m)) (ρ : Vec (Lang ∞) n) →
   let M' = step M; l = ⟦ Vec.head M' ⟧ᵛ ρ
   in  ⟦ M' ⟧ᴹ ρ ≅⟨ i ⟩≅ᴸ ⟦ M ⟧ᴹ (l ∷ ρ)
   -- Vec (LinComb (1 + n)) (suc m)
@@ -314,40 +286,9 @@ sound-step : ∀{i n m} (M : Vec (LinComb (suc n)) (suc m)) (ρ : Vec (Lang ∞)
   lem (w ∷ M') = (sound-subst w v ρ) ∷ᵃ lem M'  -- lem rewrite zipWith-map-map _,_ = {!!}
 -}
 
-sound-step {i} {n} (((r ∷ v) +ᶜ c) ∷ M) ρ = (begin
-    ⟦ (r *ⁿ) ∙ᵛ v' ⟧ᵛ ρ
-  ≈⟨ sound-scale (r *ⁿ) v' ρ ⟩
-    ⟦ r *ⁿ ⟧ · ⟦ v' ⟧ᵛ ρ
-  ≡⟨⟩
-    ⟦ r ⟧ⁿ * · ⟦ v' ⟧ᵛ ρ
-  ≈⟨ star-concat ⟦ r ⟧ⁿ  ⟩
-     ⟦ r ⟧ⁿ · (⟦ r ⟧ⁿ * · ⟦ v' ⟧ᵛ ρ) ∪ ⟦ v' ⟧ᵛ ρ
-  ≡⟨⟩
-     ⟦ r ⟧ⁿ · (⟦ r *ⁿ ⟧ · ⟦ v' ⟧ᵛ ρ) ∪ ⟦ v' ⟧ᵛ ρ
-  ≈⟨ union-congˡ (concat-congʳ (≅sym (sound-scale (r *ⁿ) v' ρ))) ⟩
-     ⟦ r ⟧ⁿ · ⟦ (r *ⁿ) ∙ᵛ v' ⟧ᵛ ρ ∪ ⟦ v' ⟧ᵛ ρ
-  ∎) ∷ᵃ lem M
-  -- (show
-  --   Vec.All₂ (λ l l' → l ≅⟨ i ⟩≅  l')
-  --     (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ ρ) (Vec.map (subst v'') M))
-  --     (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ (⟦ v'' ⟧ᵛ ρ ∷ ρ)) M)
-  -- proof {!lem M!})
- -- Vec.All₂ (λ l → _≅⟨_⟩≅_ l .i)
- --      (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ ρ)
- --       (Vec.map (subst (.RegularGrammar._.v' decA r v c M)) M))
- --      (Vec.map
- --       (λ v₁ → ⟦ v₁ ⟧ᵛ (⟦ .RegularGrammar._.v' decA r v c M ⟧ᵛ ρ ∷ ρ)) M)
-  where
-  open EqR (Bis i)
-  v' = v +ᶜ c
-  v'' = (r *ⁿ) ∙ᵛ v'
-  lem : ∀ {i m} (M : Vec (LinComb (suc n)) m) →
-    Vec.All₂ (λ l l' → l ≅⟨ i ⟩≅  l')
-      (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ ρ) (Vec.map (subst v'') M))
-      (Vec.map (λ v₁ → ⟦ v₁ ⟧ᵛ (⟦ v'' ⟧ᵛ ρ ∷ ρ)) M)
-  lem [] = []ᵃ
-  lem (w ∷ M') = (sound-subst v'' w ρ) ∷ᵃ (lem M')
+sound-step ((r ∷ v) ∷ M) ρ = {!aux!} ∷ᵃ {!!}
 
+-- -}
 
 gauss : ∀{n}
    → Vec (LinComb (suc n)) (suc n)
@@ -376,10 +317,11 @@ gauss (w ∷ (w₀ ∷ ws)) with step (w ∷ (w₀ ∷ ws))
 
 -- Valuing a linear combination
 
-eval : ∀{n} → LinComb n → Vec RE n → RE
-eval ([] +ᶜ c)_ = c
-eval ((a ∷ v) +ᶜ c) (r ∷ rs) = (re a ∙ʳ r) +ʳ eval (v +ᶜ c) rs
-{-
+eval : ∀{n} → LinComb n → Vec RE (pred n) → RE
+eval [] _ = 0ʳ
+eval (a ∷ []) _ = a
+eval (a ∷ (b ∷ bs)) (r ∷ rs) = (a ∙ʳ r) +ʳ eval (b ∷ bs) rs
+
 -- Evaluation is a morphism of vector spaces
 
 eval-plus : ∀{n} (v w : LinComb n) (ρ  : Vec RE (pred n)) →
@@ -453,5 +395,4 @@ subst-correct (a ∷ b ∷ v) {w} {ρ} = begin
   (a ∙ʳ eval w ρ) +ʳ eval (b ∷ v) ρ  ≡⟨⟩
   eval (a ∷ b ∷ v) (eval w ρ ∷ ρ)    ∎ where open EqR REq
 
--- -}
 -- -}

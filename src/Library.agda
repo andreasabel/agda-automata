@@ -119,6 +119,12 @@ module Vec where
     []ᵃ  : All P []
     _∷ᵃ_ : ∀ {n x}{xs : Vec A n} (px : P x) (pxs : All P xs) → All P (x ∷ xs)
 
+  data All₂ {a b p} {A : Set a} {B : Set b} (R : A → B → Set p)
+      : ∀{n} → Vec A n → Vec B n → Set (p l⊔ a l⊔ b) where
+    []ᵃ  : All₂ R [] []
+    _∷ᵃ_ : ∀ {n x}{xs : Vec A n}{y}{ys : Vec B n}
+          (r : R x y) (rs : All₂ R xs ys) → All₂ R (x ∷ xs) (y ∷ ys)
+
   any : ∀{n} → Vec Bool n → Bool
   any = foldr (λ _ → Bool) _∨_ false
 
