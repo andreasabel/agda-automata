@@ -247,40 +247,31 @@ L ≅⟨ i ⟩≅ᴸ L' = Vec.All₂ (λ l l' → l ≅⟨ i ⟩≅ l') L L'
 -- The first equation is the one we eliminate and return as "solved".
 
 -- L = K·L + M  ==> L = K*·M    (unless K is nullable)
+--
+-- step transforms (r = aₙₙ)
+--
+--   Xₙ  = r   Xₙ + aₙₙ₋₁  Xₙ₋₁ + ... + aₙ₀  X₀ + cₙ
+--   Xₙ₋₁ = aₙ₋₁ₙ Xₙ + aₙ₋₁ₙ₋₁ Xₙ₋₁ + ... + aₙ₋₁₀ X₀ + cₙ₋₁
+--
+--   X₀   = a₀ₙ Xₙ + a₀ₙ₋₁  Xₙ₋₁ + ... + a₀₀  X₀ + c₀
+--
+-- into
+--
+--   Xₙ  = r* aₙₙ₋₁  Xₙ₋₁ + ... + r* aₙ₀  X₀ + r* cₙ
+--   Xₙ₋₁ =    bₙ₋₁ₙ₋₁ Xₙ₋₁ + ... + bₙ₋₁₀ X₀ + dₙ₋₁
+--
+--   X₀   =   b₀ₙ₋₁  Xₙ₋₁ + ... + b₀₀  X₀ + d₀
+--
+-- where bᵢⱼ = aᵢₙ aₙₙ* aₙⱼ + aᵢⱼ
+-- and   dᵢ =  aᵢₙ aₙₙ* cₙ + cᵢ
 
 step : ∀{n m} → Vec (LinComb (suc n)) (suc m) → Vec (LinComb n) (suc m)
 step (((r ∷ v) +ᶜ c) ∷ vs) = v' ∷ Vec.map (subst v') vs
   where
     v' = (r *ⁿ) ∙ᵛ (v +ᶜ c)
 
---   L = r·L + a  ==> L = r*·a    (if r ≠ ∅)
+--   L = r·L + a  ==> L = r*·a    (unless ν r)
 --   r*·a = r·r*·a + a
-
-unused-lemma : ∀{i n} r (v : LinComb n) (ρ : Vec (Lang ∞) n) →
-   ⟦ (r *ⁿ) ∙ᵛ v ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ r ∷ᶜ v ⟧ᵛ (⟦ (r *ⁿ) ∙ᵛ v ⟧ᵛ ρ ∷ ρ)
-unused-lemma r ([] +ᶜ c) ρ = star-concat _   -- Law for star
-unused-lemma {i} r ((a ∷ v) +ᶜ c) (l ∷ ρ) = begin
-    ⟦ r* ∙ᵛ ((a ∷ v) +ᶜ c) ⟧ᵛ (l ∷ ρ)
-  ≡⟨⟩
-    ⟦ (r* ∙ⁿ a) ∷ᶜ (r* ∙ᵛ v') ⟧ᵛ (l ∷ ρ)
-  ≡⟨⟩
-     ⟦ r* ∙ⁿ a ⟧ⁿ · l ∪ ⟦ r* ∙ᵛ v' ⟧ᵛ ρ
-  ≈⟨ {!!} ⟩
-    ⟦ r ⟧ⁿ · (⟦ r* ∙ⁿ a ⟧ⁿ · l ∪ ⟦ r* ∙ᵛ v' ⟧ᵛ ρ) ∪ (⟦ a ⟧ⁿ · l ∪ ⟦ v' ⟧ᵛ ρ)
-  ≡⟨⟩
-    ⟦ r ⟧ⁿ · ⟦ (r* ∙ⁿ a) ∷ᶜ (r* ∙ᵛ v') ⟧ᵛ (l ∷ ρ) ∪ (⟦ a ⟧ⁿ · l ∪ ⟦ v' ⟧ᵛ ρ)
-  ≡⟨⟩
-    ⟦ r ⟧ⁿ · ⟦ r* ∙ᵛ ((a ∷ v) +ᶜ c) ⟧ᵛ (l ∷ ρ) ∪ ⟦ (a ∷ v) +ᶜ c ⟧ᵛ (l ∷ ρ)
-  ≡⟨⟩
-    ⟦ (r ∷ (a ∷ v)) +ᶜ c ⟧ᵛ (⟦ r* ∙ᵛ ((a ∷ v) +ᶜ c) ⟧ᵛ (l ∷ ρ) ∷ l ∷ ρ)
-  ∎
-  where
-  v' : LinComb _
-  v' = v +ᶜ c
-  r* : RE
-  r* = (re r *ʳ)
-  open EqR (Bis _)
-
 
 sound-step : ∀{i n m} (M : Vec (LinComb (suc n)) (suc m)) (ρ : Vec (Lang ∞) n) →
   let M' = step M; l = ⟦ Vec.head M' ⟧ᵛ ρ
@@ -311,6 +302,33 @@ sound-step {i} {n} (((r ∷ v) +ᶜ c) ∷ M) ρ = (begin
   lem (w ∷ M') = (sound-subst v'' w ρ) ∷ᵃ (lem M')
 
 
+
+unused-lemma : ∀{i n} r (v : LinComb n) (ρ : Vec (Lang ∞) n) →
+   ⟦ (r *ⁿ) ∙ᵛ v ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ r ∷ᶜ v ⟧ᵛ (⟦ (r *ⁿ) ∙ᵛ v ⟧ᵛ ρ ∷ ρ)
+unused-lemma r ([] +ᶜ c) ρ = star-concat _   -- Law for star
+unused-lemma {i} r ((a ∷ v) +ᶜ c) (l ∷ ρ) = begin
+    ⟦ r* ∙ᵛ ((a ∷ v) +ᶜ c) ⟧ᵛ (l ∷ ρ)
+  ≡⟨⟩
+    ⟦ (r* ∙ⁿ a) ∷ᶜ (r* ∙ᵛ v') ⟧ᵛ (l ∷ ρ)
+  ≡⟨⟩
+     ⟦ r* ∙ⁿ a ⟧ⁿ · l ∪ ⟦ r* ∙ᵛ v' ⟧ᵛ ρ
+  ≈⟨ {!!} ⟩
+    ⟦ r ⟧ⁿ · (⟦ r* ∙ⁿ a ⟧ⁿ · l ∪ ⟦ r* ∙ᵛ v' ⟧ᵛ ρ) ∪ (⟦ a ⟧ⁿ · l ∪ ⟦ v' ⟧ᵛ ρ)
+  ≡⟨⟩
+    ⟦ r ⟧ⁿ · ⟦ (r* ∙ⁿ a) ∷ᶜ (r* ∙ᵛ v') ⟧ᵛ (l ∷ ρ) ∪ (⟦ a ⟧ⁿ · l ∪ ⟦ v' ⟧ᵛ ρ)
+  ≡⟨⟩
+    ⟦ r ⟧ⁿ · ⟦ r* ∙ᵛ ((a ∷ v) +ᶜ c) ⟧ᵛ (l ∷ ρ) ∪ ⟦ (a ∷ v) +ᶜ c ⟧ᵛ (l ∷ ρ)
+  ≡⟨⟩
+    ⟦ (r ∷ (a ∷ v)) +ᶜ c ⟧ᵛ (⟦ r* ∙ᵛ ((a ∷ v) +ᶜ c) ⟧ᵛ (l ∷ ρ) ∷ l ∷ ρ)
+  ∎
+  where
+  v' : LinComb _
+  v' = v +ᶜ c
+  r* : RE
+  r* = (re r *ʳ)
+  open EqR (Bis _)
+
+
 -- -- parallel substitution is a kind of matrix multiplication
 -- --
 -- -- psubst (wₙ-1 ∷ ... ∷ w₀ ∷ []) (aₙ-1 ∷ ... ∷ a₀ ∷ [])
@@ -336,21 +354,92 @@ scalar : ∀{n} (as : Vec Renn n) (bs : Vec RE n) → Renn
 scalar [] [] = 0ⁿ
 scalar (a ∷ as) (b ∷ bs) = (a ⁿ∙ b) +ⁿ scalar as bs
 
+scale-scalar : ∀{i n} (r : RE) (as : Vec Renn n) (bs : Vec RE n) →
+
+  ⟦ scalar (Vec.map (r ∙ⁿ_) as) bs ⟧ⁿ ≅⟨ i ⟩≅ ⟦ r ⟧ · ⟦ scalar as bs ⟧ⁿ
+
+scale-scalar r [] [] = ≅sym (concat-emptyʳ ⟦ r ⟧)
+scale-scalar r (a ∷ as) (b ∷ bs) = begin
+    ⟦ r ⟧ · ⟦ a ⟧ⁿ · ⟦ b ⟧ ∪ ⟦ scalar (Vec.map (_∙ⁿ_ r) as) bs ⟧ⁿ
+  ≈⟨ union-congʳ (scale-scalar r as bs) ⟩
+    (⟦ r ⟧ · ⟦ a ⟧ⁿ) · ⟦ b ⟧ ∪ ⟦ r ⟧ · ⟦ scalar as bs ⟧ⁿ
+  ≈⟨ union-congˡ (concat-assoc ⟦ r ⟧) ⟩
+    ⟦ r ⟧ · (⟦ a ⟧ⁿ · ⟦ b ⟧) ∪ ⟦ r ⟧ · ⟦ scalar as bs ⟧ⁿ
+  ≈⟨ ≅sym (concat-union-distribʳ ⟦ r ⟧) ⟩
+    ⟦ r ⟧ · (⟦ a ⟧ⁿ · ⟦ b ⟧ ∪ ⟦ scalar as bs ⟧ⁿ)
+  ∎ where open EqR (Bis _)
+
+gauss-comb : ∀{n}
+  → (Vec (LinComb n) n → Vec RE n)
+  → (Vec (LinComb n) (suc n) → Vec RE (suc n))
+gauss-comb gauss ((as +ᶜ c) ∷ ws) = (re (scalar as bs) +ʳ c) ∷ bs
+  where bs = gauss ws
+
+-- Given the linear equation system
+--
+--
+--
+
+-- gauss : ∀{n}
+--    → Vec (LinComb n) n
+--    → Vec RE n
+-- gauss [] = []
+-- gauss (w ∷ ws) with step (w ∷ ws)
+-- -- ... | ([] +ᶜ c) ∷ [] = c ∷ []
+-- ... | (as +ᶜ c) ∷ ws' = (re (scalar as bs) +ʳ c) ∷ bs
+--   where bs = gauss ws'
+
 gauss : ∀{n}
    → Vec (LinComb n) n
    → Vec RE n
 gauss [] = []
-gauss (w ∷ ws) with step (w ∷ ws)
--- ... | ([] +ᶜ c) ∷ [] = c ∷ []
-... | (as +ᶜ c) ∷ ws' = (re (scalar as bs) +ʳ c) ∷ bs
-  where bs = gauss ws'
+gauss (w ∷ ws) =
+  let
+    z       = step (w ∷ ws)
+    as +ᶜ c = Vec.head z
+    bs     = gauss (Vec.tail z)
+  in
+    (re (scalar as bs) +ʳ c) ∷ bs
+
+-- Existence:
+-- gauss computes a fixed point of M
+
+--  ⟦ step M ⟧ᴹ ρ ≅⟨ i ⟩≅ᴸ ⟦ M ⟧ᴹ (l ∷ ρ)  where l = ⟦ Vec.head (step M) ⟧ᵛ ρ
 
 sound-gauss : ∀{i n} (M : Vec (LinComb n) n) →
   let  ρ = Vec.map ⟦_⟧ (gauss M)
   in   ⟦ M ⟧ᴹ ρ ≅⟨ i ⟩≅ᴸ  ρ
 sound-gauss [] = []ᵃ
-sound-gauss (w ∷ M) with step (w ∷ M)
-... | (as +ᶜ c) ∷ M' = {!!} ∷ᵃ {!sound-gauss M'!}
+sound-gauss (((r ∷ v) +ᶜ c) ∷ M) = {! first !} ∷ᵃ {! rest !} --  {!!} ∷ᵃ {!!}
+   where
+   w  = (r ∷ v) +ᶜ c
+   bs = gauss (Vec.map (subst ((r *ⁿ) ∙ᵛ (v +ᶜ c))) M)
+
+   open EqR (Bis _)
+   p1 = begin
+       ⟦ r ⟧ⁿ · (⟦ scalar (Vec.map (r *ⁿ ∙ⁿ_) v) bs ⟧ⁿ ∪ ⟦ r ⟧ⁿ * · ⟦ c ⟧)
+       ∪
+       ⟦ v +ᶜ c ⟧ᵛ (Vec.map ⟦_⟧ bs)
+     ≈⟨ {!!} ⟩
+      ⟦ scalar (Vec.map (r *ⁿ ∙ⁿ_) v) bs ⟧ⁿ ∪ ⟦ r ⟧ⁿ * · ⟦ c ⟧
+     ∎
+   first = begin
+       ⟦ w ⟧ᵛ (Vec.map ⟦_⟧ (gauss (w ∷ M)))
+     ≈⟨ {!sound-step!} ⟩
+       ⟦ scalar (LinComb.v (Vec.head (step (w ∷ M)))) (gauss (Vec.tail (step (w ∷ M)))) ⟧ⁿ
+         ∪ ⟦ LinComb.c (Vec.head (step (w ∷ M)))⟧
+     ≡⟨⟩
+       ⟦ re (scalar (LinComb.v (Vec.head (step (w ∷ M)))) (gauss (Vec.tail (step (w ∷ M)))))
+         +ʳ LinComb.c (Vec.head (step (w ∷ M)))
+       ⟧
+     ∎
+   rest = {!!}
+-- with step (w ∷ M)
+-- ... | (as +ᶜ c) ∷ M' = {!!} ∷ᵃ {!sound-gauss M'!}
+
+-- Uniqueness:
+-- every language that is a fixed point of M is equal to gauss
+
 
 -- gauss : ∀{n}
 --    → Vec (LinComb (suc n)) (suc n)
