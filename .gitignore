@@ -7,6 +7,8 @@
 *.blg
 *.nav
 *.snm
+*.spl
+*.ptb
 *.pdf
 *~
 all.bib
@@ -33,3 +35,7 @@ vers1/readme.txt
 /cmcs16/talkCMCS
 /jfp15/Cambridge_Journals_APC_price_list_3.1.xlsx
 /jfp15/JFP-2014-0017 - Decision on Manuscript.eml
+/jlamp17/elsarticle*
+/jlamp17/src/latex
+/jlamp17/latex
+/jlamp17/jlamp17a.tex

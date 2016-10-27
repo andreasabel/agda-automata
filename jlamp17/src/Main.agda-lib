@@ -1,0 +1,3 @@
+name: Main
+include: .
+  /home/abel/agda/agda-stdlib/src/
