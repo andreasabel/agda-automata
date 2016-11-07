@@ -161,10 +161,11 @@ Hidden arguments.
 \label{sec:lang}
 
 Given an alphabet $A$, a word $\vas \in \List\,A$ is a list of
-characters.  A language over $A$ is usally described as set of words,
+characters.  A language over $A$ is usually described as set of words,
 and a decidable language is one whose characteristic function
 $\List\,A \to \Bool$
-is computable.  We will work in the setting of Type Theory \cite{mltt}
+is computable.  We will work in the setting of Type Theory
+\citep{martinlof:predicative75}
 where each function is computable, thus, we can identify decidable
 languages with functions of type $\List\,A \to \Bool$ where $\Bool$ is
 the two-element data type with constructors $\ttrue$ and $\tfalse$.
@@ -330,7 +331,7 @@ with hidden size arguments which will, if type checking succeeds, be
 figured out by Agda's unifier and size constraint solver.
 When taking the derivative $\tdelta\,\{i\}\,t\,\{j\}\,a$ we are free
 to choose any $j$ strictly below $i$.  This expresses that if $t$ was
-only defined to depth $i$, then its $a$-subtree is less
+only defined up to depth $i$, then its $a$-subtree is less
 defined; and we are allowed to waste information and chose a smaller
 $j$ than necessary.  Wasting is fine since $\Lang\,i$ is a subtype of
 $\Lang\,j$ whenever $i \geq j$, as we can always us a \emph{more} defined
@@ -341,17 +342,17 @@ antitone subtyping chain
   \dots \Lang\,0
 \]
 can be justified by the equation
-$\Lang\,i = \Bool \times \bigcap_{j<i} (A \to \Lang\,j)$
+$\Lang\,i \cong \Bool \times \bigcap_{j<i} (A \to \Lang\,j)$
 which holds semantically.
 
 The isomorphism $\Lang\,i \cong \List\,i\,A \to \Bool$ is witnessed by
-the following two functions. The first, $l \ni \vas$ checks membership
+the following two functions. The first, $l \ni \vas$, checks membership
 of word $\vas$ in language $l$ represented as a trie.  The empty word
 $[\,]$ is in the language if $\tnu\,l$, \ie, if the language is
 nullable.  The composite
 word $a :: \vas$ is accepted by $l$ if $\vas$ is accepted by the
 derivative $\tdelta\,l\,a$.
-\ani{}
+\ani{}%
 Visually spoken, $l \ni \vas$ returns the root label of the subtree
 selected by path $\vas$.
 
@@ -359,7 +360,7 @@ The second function constructs a trie representation $\tlang\,f$ from
 the functional representation $f$ of a decidable language.  The trie
 is constructed corecursively by copattern matching
 \citep{abelPientkaThibodeauSetzer:popl13}.
-\alang{}
+\alang{}%
 The root label $\tnu\,(\tlang\,f)$
 is determined by whether $f$ accepts the empty word $[\,]$.
 The $a$-derivative $\tdelta\,(\tlang\,f)\,a$ is constructed by
@@ -376,8 +377,8 @@ the equation system has a unique solution.
 
 The corecursive definition by copattern matching is sometimes likened
 to differential equations \citep{hansenKupkeRutten}.  In the definition of
-$\tlang$, the second equation is the differential equation, and the
-first equation determines the initial value.
+$\tlang$, the second equation ($\tdelta$) is the differential equation, and the
+first equation ($\tnu$) determines the initial value.
 
 \subsection{Constructing decidable languages by coiteration}
 \label{sec:coit}
@@ -388,26 +389,26 @@ compute the trie of any regular expression.
 
 The empty language $\tempty$ is the trie where each node label is
 $\tfalse$.  Naturally, each subtree of $\tempty$ is again $\tempty$.
-\aempty
-The language $\teps$ acception only the empty word has root label
+\aempty%
+The language $\teps$ accepting only the empty word has root label
 $\ttrue$ but all other labels are $\tfalse$.  Hence, any derivative is
 the empty language.
-\aeps
+\aeps%
 The language $\tchar\,a$ accepting the one-letter word $a :: [\,]$ is
 not nullable, its $a$-derivative is $\teps$ and all other derivatives
 are $\tempty$.
-\achar
+\achar%
 We obtain the language complement $\tcompl\,l$ of a language $l$ by
 flipping all lables.  This is accomplished by recursing over the whole
 tree.
-\acompl
+\acompl%
 Complement $\tcompl$ is a special instance of mapping a function
 pointwise over all tree labels.
 
 For the union $k \cup l$ of two languages $l$ and $k$, we overlay the
 two tries and perform the Boolean disjunction operation on
 corresponding node labels.
-\aunion
+\aunion%
 The intersection could be defined
 analogously, using Boolean conjunction.  Both operations are instance
 of a general $\tzipWith$-function that applies a binary operation
@@ -420,7 +421,7 @@ was outermost, \ie, the equation had the form $\tdelta\,(g\,\vec y)\,x
 With the non-recursive equation being $\tnu\,(g\,\vec y) = o$,
 this form is an instance of the commutative diagram for
 terminal coalgebras and sometimes called \emph{coiteration}
-\cite{matthes}.
+\citep{geuvers:indtypes}.
 This is the diagram for a $(\Bool \times (A \to \_))$-coalgebra
 $(\Gamma, h)$ mapping into the terminal coalgebra $(\Lang, \langle \tnu, \tdelta \rangle)$:
 \[
@@ -442,7 +443,7 @@ can be applied to points $\vec y : \Gamma$ to yield
 \[\langle \tnu, \tdelta \rangle (g\,\vec y)
   = (\tid \times (g \circ \_)) (h\,\vec y).\]
 For our instance, $h\, \vec y= (o,\, \lambda x \to \vec t)$
-with $\vec y : \Gamma \der o : \Bool$ and $\vec y : \Gamma, x : A \der
+with $\vec y \of \Gamma \der o : \Bool$ and $\vec y \of \Gamma, x \of A \der
 t : \Lang$, thus,
 \[\langle \tnu, \tdelta \rangle (g\,\vec y)
   = (o,\; g \circ (\lambda x \to \vec t)).\]
@@ -463,8 +464,8 @@ set $\Gamma \to \Bool$ and the transition function $\Gamma \to (A \to \Gamma)$.
 Function $\tcoit\,h$ maps a state $s : \Gamma$ to the language
 $\tcoit\,h\,s$ accepted by $h$ starting from state $s$.
 The discussed language constructions correspond to
-(infinite) automata
-constructions with references to existing automata as oracles. The
+constructions of (possibly infinite) automata
+with references to existing automata as oracles. The
 reader is invited to confirm this by expressing the given
 constructions through coiteration.  Note however, that the state type $\Gamma$
 might involve $\Lang$ and is, thus, not guaranteed to be finite!
@@ -487,7 +488,7 @@ leads to a specification
 $(k \cdot l) \ni \vcs
   = \exists n.\; k \ni (\ttake\,n\,\vcs) \wedge l \ni (\tdrop\,n\,\vcs)
 $
-that does not suggest a pretty implementation \citep{smolka}.
+that does not suggest a pretty implementation \citep{doczkalKaiserSmolka:cpp13}.
 
 We can try to understand language concatenation as an operation on the
 tries $k$ and $l$.  If we think about accepting a word $\vcs$ in $k \cdot l$
@@ -515,19 +516,38 @@ trie intuition.
 The above definition is not an instance of coiteration for two
 reasons:  First, the outermost call is to $\tifthenelse$ rather than
 the recursive call $\kpl$.  Even if we consider $\tifthenelse$ to be special
-(rather than just arbitary Agda function), then there is still a
-recursive call $\kpl$ under the union in the then-branch.  This
+(rather than just an arbitary Agda function), there is still a
+recursive call $\kpl$ in the then-branch which is not at top-level,
+but under the union-operator.  This
 problem is usually fixed by defining a scheme for corecursion up to
-union, however, looking at the involved sizes we can accept the
+union.  However, looking at the involved sizes we can accept the
 definition as-is as an instance of well-founded corecursion.
-The size-preserving typing of union
-\(
-  \forall\{i\} (k\, l : \Lang\,i) \to \Lang\,i
-\)
-is crucial here.
+Crucial here is the sized typing of the union
+\[
+  \_\tcup\_ : \forall\{i\} (k\, l : \Lang\,i) \to \Lang\,i
+\]
+which asserts that the argument are no deeper analyzed than the
+definedness depth of the result.  If we make all hidden size arguments
+visible---having to switch to prefix operators instead of infix ones---%
+we can see the propagation of definedness depth levels to the
+recursive call $\kpl$.
+\aconcatexpl%
+Since the recursive call happens at smaller index $j < i$, it is justified.
+Note also that in the definition of $\kpl$, last letter, $l : \Lang\,i$ is
+casted to $\Lang\,j$ which is valid since $j < i$.
 
-\astar
+The iteration $l^*$ of a language $l$, aka \emph{Kleene star}, can be
+informally described as ``zero or more repetitions of $l$''.  If for
+some $n \geq 0$ we have words $\vas_1, \dots \vas_n \in l$, then
+$(\vas_1 \oapp \dots \oapp \vas_n) \in l$.  In terms of tries, $l^*$
+is obtained from $l$ by making the root accepting and unioning any
+subtree of $l$ with accepting root with $l$.  This means that at each
+accepting node we may jump back to the root.  The corecursive definition
+\astar%
+relies on the sized typing of concatenation to justify the recursive call.
 
+\section{Proving the Kleene Algebra Laws}
+\label{sec:kleene}
 
 
 \section{Constructing Automata}

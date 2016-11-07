@@ -19,9 +19,10 @@ pdflatex=pdflatex
 bibliography=all.bib
 sedfile=postprocess.sed
 stdlib=$(HOME)/agda-master/std-lib/src
+agda=agda-2.5.2
 
 stylefile=src/latex/agda.sty
-files=byhand.bib $(stylefile) macros.tex latex/Language.tex
+files=$(bibliography) byhand.bib $(stylefile) macros.tex latex/Language.tex
 
 default : jlamp17.pdf
 
@@ -46,7 +47,7 @@ latex/%.tex : src/latex/%.tex $(sedfile)
 	sed --file=$(sedfile) < $< > $@
 
 src/latex/%.tex : src/%.lagda
-	cd src; agda --latex $*.lagda
+	cd src; $(agda) --latex $*.lagda
 #	agda --latex -i. -i$(stdlib) $<
 
 # jlamp17.pdf : jlamp17a.lagda

@@ -156,7 +156,27 @@ _∪_ : ∀{i} (k l : Lang i) → Lang i
 \end{code}
 }
 
+\AgdaHide{
+\begin{code}
+module ConcatExpl where
+\end{code}
+}
 
+\newcommand{\aconcatexpl}{
+\begin{code}
+  _·_ : ∀{i} (k l : Lang i) → Lang i
+
+  δ (_·_ {i} k l) {j} x  =  if  ν k  then  _∪_ {j} k′l (δ l {j} x)  else  k′l
+    where
+    k′l : Lang j
+    k′l = _·_ {j} (δ k {j} x) l
+\end{code}
+}
+\AgdaHide{
+\begin{code}
+  ν (_·_ {j} k l)        =  ν k ∧ ν l
+\end{code}
+}
 % concatenation of languages
 
 \newcommand{\aconcat}{
@@ -174,8 +194,6 @@ _·_ : ∀{i} (k l : Lang i) → Lang i
 -- δ (k · l) x = if ν k then k′l ∪ δ l x else k′l
 --   where k′l = δ k x · l
 -- OR: δ (k · l) x = (δ k x · l) ∪ (if ν k then δ l x else ∅)
-
--- Kleene star
 
 \end{code}
 }
