@@ -166,10 +166,10 @@ module ConcatExpl where
 \begin{code}
   _·_ : ∀{i} (k l : Lang i) → Lang i
 
-  δ (_·_ {i} k l) {j} x  =  if  ν k  then  _∪_ {j} k′l (δ l {j} x)  else  k′l
+  δ (_·_{i} k l) {j} x  =  if ν k then _∪_{j} k′l (δ l {j} x) else k′l
     where
     k′l : Lang j
-    k′l = _·_ {j} (δ k {j} x) l
+    k′l = _·_{j} (δ k {j} x) l
 \end{code}
 }
 \AgdaHide{
@@ -255,152 +255,218 @@ thenbs : ∀{i} (a b : A) (n : ℕ) → Lang i
 aⁿbⁿ : ∀{i} (a b : A) → Lang i
 aⁿbⁿ a b = thenbs a b zero
 
--- Language equality
+\end{code}
+}
 
+
+% -- Language equality
+
+\newcommand{\abisim}{
+\begin{code}
 record _≅⟨_⟩≅_ (l : Lang ∞) i (k : Lang ∞) : Set where
   coinductive
-  field
-    ≅ν : ν l ≡ ν k
-    ≅δ : ∀{j : Size< i} (a : A) → δ l a ≅⟨ j ⟩≅ δ k a
+  field  ≅ν  :  ν l ≡ ν k
+         ≅δ  :  ∀{j : Size< i} (a : A) → δ l a ≅⟨ j ⟩≅ δ k a
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 open _≅⟨_⟩≅_ public
 
 _≅_ : ∀ (l k : Lang ∞) → Set
 l ≅ k = l ≅⟨ ∞ ⟩≅ k
 
--- Equivalence relation laws
+\end{code}
+}
 
+% -- Equivalence relation laws
+
+\newcommand{\aeqlaws}{
+\begin{code}
 ≅refl : ∀{i} {l : Lang ∞} → l ≅⟨ i ⟩≅ l
-≅ν ≅refl   = refl
-≅δ ≅refl a = ≅refl
+≅ν  ≅refl    =  refl
+≅δ  ≅refl a  =  ≅refl
 
 ≅sym : ∀{i} {k l : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → k ≅⟨ i ⟩≅ l
-≅ν (≅sym p)   = sym (≅ν p)
-≅δ (≅sym p) a = ≅sym (≅δ p a)
+≅ν  (≅sym p)    =  sym (≅ν p)
+≅δ  (≅sym p) a  =  ≅sym (≅δ p a)
 
-≅trans : ∀{i} {k l m : Lang ∞} (p : k ≅⟨ i ⟩≅ l) (q : l ≅⟨ i ⟩≅ m) → k ≅⟨ i ⟩≅ m
-≅ν (≅trans p q)   = trans (≅ν p) (≅ν q)
-≅δ (≅trans p q) a = ≅trans (≅δ p a) (≅δ q a)
+≅trans : ∀{i} {k l m : Lang ∞}
+  (p : k ≅⟨ i ⟩≅ l) (q : l ≅⟨ i ⟩≅ m) → k ≅⟨ i ⟩≅ m
+≅ν  (≅trans p q)    =  trans (≅ν p) (≅ν q)
+≅δ  (≅trans p q) a  =  ≅trans (≅δ p a) (≅δ q a)
+\end{code}
+}
+
+\AgdaHide{
+\begin{code}
 
 -- Congruence law (UNPROVABLE)
 
 -- ≅cong : ∀{i} (f : Lang ∞ → Lang ∞) {k l : Lang ∞} (p : l ≅⟨ i ⟩≅ k) →
 --   f l ≅⟨ i ⟩≅ f k
--- ≅ν (≅cong f p) = {!≅ν p!}
--- ≅δ (≅cong f p) a = {!!}
+-- ≅ν (≅cong f p)  =  {!≅ν p!}
+-- ≅δ (≅cong f p) a  =  {!!}
 
 -- Setoid
+\end{code}
+}
 
-≅isEquivalence : (i : Size) → IsEquivalence (λ l l′ → l ≅⟨ i ⟩≅ l′)
-IsEquivalence.refl  (≅isEquivalence i) = ≅refl
-IsEquivalence.sym   (≅isEquivalence i) = ≅sym
-IsEquivalence.trans (≅isEquivalence i) = ≅trans
+% IsEquivalence.refl   (≅isEquivalence i)  =  ≅refl
+% IsEquivalence.sym    (≅isEquivalence i)  =  ≅sym
+% IsEquivalence.trans  (≅isEquivalence i)  =  ≅trans
+
+\newcommand{\asetoid}{
+\begin{code}
+≅isEquivalence : ∀(i : Size) → IsEquivalence (λ l l′ → l ≅⟨ i ⟩≅ l′)
+≅isEquivalence i = record { refl = ≅refl; sym = ≅sym; trans = ≅trans }
 
 Bis : ∀(i : Size) → Setoid lzero lzero
-Setoid.Carrier       (Bis i) = Lang ∞
-Setoid._≈_           (Bis i) = λ l k → l ≅⟨ i ⟩≅ k
-Setoid.isEquivalence (Bis i) = ≅isEquivalence i
+Setoid.Carrier        (Bis i)  =  Lang ∞
+Setoid._≈_            (Bis i)  =  λ l k → l ≅⟨ i ⟩≅ k
+Setoid.isEquivalence  (Bis i)  =  ≅isEquivalence i
+\end{code}
+}
+
+\AgdaHide{
+\begin{code}
 
 -- Complement laws
 
 compl-empty : ∀{i} → compl ∅ ≅⟨ i ⟩≅ all
-≅ν compl-empty   = refl
-≅δ compl-empty a = compl-empty
+≅ν  compl-empty    =  refl
+≅δ  compl-empty a  =  compl-empty
 
 compl-top : ∀{i} → compl all ≅⟨ i ⟩≅ ∅
-≅ν compl-top   = refl
-≅δ compl-top a = compl-top
+≅ν  compl-top    =  refl
+≅δ  compl-top a  =  compl-top
 
 compl-cong : ∀{i}{l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → compl l ≅⟨ i ⟩≅ compl k
-≅ν (compl-cong p) rewrite ≅ν p = refl
-≅δ (compl-cong p) a = compl-cong (≅δ p a)
+≅ν  (compl-cong p) rewrite ≅ν p  =  refl
+≅δ  (compl-cong p) a             =  compl-cong (≅δ p a)
 
 -- Intersection laws
 
 inter-assoc : ∀{i} (k {l m} : Lang ∞) → (k ∩ l) ∩ m ≅⟨ i ⟩≅ k ∩ (l ∩ m)
-≅ν (inter-assoc k)   =  ∧-assoc (ν k) _ _
-≅δ (inter-assoc k) a = inter-assoc _
+≅ν  (inter-assoc k)    =   ∧-assoc (ν k) _ _
+≅δ  (inter-assoc k) a  =  inter-assoc _
 
 inter-comm : ∀{i} (l {k} : Lang ∞) → l ∩ k ≅⟨ i ⟩≅ k ∩ l
-≅ν (inter-comm l)   = ∧-comm (ν l) _
-≅δ (inter-comm l) a = inter-comm (δ l a)
+≅ν  (inter-comm l)    =  ∧-comm (ν l) _
+≅δ  (inter-comm l) a  =  inter-comm (δ l a)
 
 inter-idem : ∀{i} (l : Lang ∞) → l ∩ l ≅⟨ i ⟩≅ l
-≅ν (inter-idem l)   = ∧-idempotent (ν l)
-≅δ (inter-idem l) a = inter-idem (δ l a)
+≅ν  (inter-idem l)    =  ∧-idempotent (ν l)
+≅δ  (inter-idem l) a  =  inter-idem (δ l a)
 
 inter-empty : ∀{i} {l : Lang ∞} → ∅ ∩ l ≅⟨ i ⟩≅ ∅
-≅ν inter-empty   = refl
-≅δ inter-empty a = inter-empty
+≅ν  inter-empty    =  refl
+≅δ  inter-empty a  =  inter-empty
 
 inter-top : ∀{i} {l : Lang ∞} → all ∩ l ≅⟨ i ⟩≅ l
-≅ν inter-top   = refl
-≅δ inter-top a = inter-top
+≅ν  inter-top    =  refl
+≅δ  inter-top a  =  inter-top
 
 inter-congˡ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → l ∩ m ≅⟨ i ⟩≅ k ∩ m
-≅ν (inter-congˡ p) rewrite ≅ν p = refl
-≅δ (inter-congˡ p) a = inter-congˡ (≅δ p a)
+≅ν  (inter-congˡ p) rewrite ≅ν p  =  refl
+≅δ  (inter-congˡ p) a  =  inter-congˡ (≅δ p a)
 
 inter-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m ∩ l ≅⟨ i ⟩≅ m ∩ l
-≅ν (inter-congʳ p) rewrite ≅ν p = refl
-≅δ (inter-congʳ p) a = inter-congʳ (≅δ p a)
+≅ν  (inter-congʳ p) rewrite ≅ν p  =  refl
+≅δ  (inter-congʳ p) a  =  inter-congʳ (≅δ p a)
+\end{code}
+}
 
--- Union laws
+% -- Union laws
 
+\newcommand{\aunionassoc}{
+\begin{code}
 union-assoc : ∀{i} (k {l m} : Lang ∞) → (k ∪ l) ∪ m ≅⟨ i ⟩≅ k ∪ (l ∪ m)
-≅ν (union-assoc k)   = ∨-assoc (ν k) _ _
-≅δ (union-assoc k) a = union-assoc _
+≅ν  (union-assoc k)    =  ∨-assoc (ν k) _ _
+≅δ  (union-assoc k) a  =  union-assoc _
+\end{code}
+}
 
+% -- Union laws
+
+\newcommand{\aunioncomm}{
+\begin{code}
 union-comm : ∀{i} (l k : Lang ∞) → l ∪ k ≅⟨ i ⟩≅ k ∪ l
-≅ν (union-comm l k)   = ∨-comm (ν l) _
-≅δ (union-comm l k) a = union-comm (δ l a) (δ k a)
+≅ν  (union-comm l k)    =  ∨-comm (ν l) _
+≅δ  (union-comm l k) a  =  union-comm (δ l a) (δ k a)
+\end{code}
+}
 
+% -- Union laws
+
+\newcommand{\aunionidem}{
+\begin{code}
 union-idem : ∀{i} {l : Lang ∞} → l ∪ l ≅⟨ i ⟩≅ l
-≅ν union-idem   = ∨-idempotent _
-≅δ union-idem a = union-idem
+≅ν  union-idem    =  ∨-idempotent _
+≅δ  union-idem a  =  union-idem
+\end{code}
+}
 
-union-empty : ∀{i} {l : Lang ∞} → ∅ ∪ l ≅⟨ i ⟩≅ l
-≅ν union-empty   = refl
-≅δ union-empty a = union-empty
+% -- Union laws
 
+\newcommand{\aunionemptyl}{
+\begin{code}
+union-emptyˡ : ∀{i} {l : Lang ∞} → ∅ ∪ l ≅⟨ i ⟩≅ l
+≅ν  union-emptyˡ    =  refl
+≅δ  union-emptyˡ a  =  union-emptyˡ
+\end{code}
+}
+
+% -- Union laws
+
+\newcommand{\aunionemptyr}{
+\begin{code}
 union-emptyʳ : ∀{i} {l : Lang ∞} → l ∪ ∅ ≅⟨ i ⟩≅ l
-≅ν union-emptyʳ   = ∨-false _
-≅δ union-emptyʳ a = union-emptyʳ
+≅ν  union-emptyʳ    =  ∨-false _
+≅δ  union-emptyʳ a  =  union-emptyʳ
+\end{code}
+}
+
+% -- Union laws
+
+\AgdaHide{
+\begin{code}
 
 union-top : ∀{i} {l : Lang ∞} → all ∪ l ≅⟨ i ⟩≅ all
-≅ν union-top   = refl
-≅δ union-top a = union-top
+≅ν  union-top    =  refl
+≅δ  union-top a  =  union-top
 
 union-congˡ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → l ∪ m ≅⟨ i ⟩≅ k ∪ m
-≅ν (union-congˡ p) rewrite ≅ν p = refl
-≅δ (union-congˡ p) a = union-congˡ (≅δ p a)
+≅ν  (union-congˡ p) rewrite ≅ν p  =  refl
+≅δ  (union-congˡ p) a  =  union-congˡ (≅δ p a)
 
 union-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m ∪ l ≅⟨ i ⟩≅ m ∪ k
-≅ν (union-congʳ p) rewrite ≅ν p = refl
-≅δ (union-congʳ p) a = union-congʳ (≅δ p a)
+≅ν  (union-congʳ p) rewrite ≅ν p  =  refl
+≅δ  (union-congʳ p) a  =  union-congʳ (≅δ p a)
 
 union-cong : ∀{i}{k k′ l l′ : Lang ∞} (p : k ≅⟨ i ⟩≅ k′) (q : l ≅⟨ i ⟩≅ l′) → k ∪ l ≅⟨ i ⟩≅ k′ ∪ l′
-≅ν (union-cong p q) rewrite ≅ν p | ≅ν q = refl
-≅δ (union-cong p q) a = union-cong (≅δ p a) (≅δ q a)
+≅ν  (union-cong p q) rewrite ≅ν p | ≅ν q  =  refl
+≅δ  (union-cong p q) a  =  union-cong (≅δ p a) (≅δ q a)
 
 -- Language union forms an idempotent commutative monoid.
 
 union-icm : (i : Size) → IdempotentCommutativeMonoid _ _
 union-icm i = record
-  { Carrier = Lang ∞
-  ; _≈_ = λ l l′ → l ≅⟨ i ⟩≅ l′
-  ; _∙_ = _∪_
-  ; ε = ∅
+  { Carrier  =  Lang ∞
+  ; _≈_      =  λ l l′ → l ≅⟨ i ⟩≅ l′
+  ; _∙_      =  _∪_
+  ; ε        =  ∅
   ; isIdempotentCommutativeMonoid = record
     { isCommutativeMonoid = record
       { isSemigroup = record
-        { isEquivalence = ≅isEquivalence i
-        ; assoc = λ x y z → union-assoc x
-        ; ∙-cong = union-cong
+        { isEquivalence  =  ≅isEquivalence i
+        ; assoc          =  λ x y z → union-assoc x
+        ; ∙-cong         =  union-cong
         }
-      ; identityˡ = λ l → union-empty
-      ; comm = union-comm
+      ; identityˡ  =  λ l → union-emptyˡ
+      ; comm       =  union-comm
       }
-    ; idem = λ l → union-idem
+    ; idem  =  λ l → union-idem
     }
   }
 
@@ -411,28 +477,28 @@ union-swap23 : ∀{i} (k {l m} : Lang ∞) →
 union-swap23 {i} k {l} {m} = prove 3 ((x ⊕ y) ⊕ z) ((x ⊕ z) ⊕ y) (k ∷ l ∷ m ∷ [])
   where
   open ICMSolver (union-icm i)
-  x = var zero
-  y = var (suc zero)
-  z = var (suc (suc zero))
+  x  =  var zero
+  y  =  var (suc zero)
+  z  =  var (suc (suc zero))
 
 union-swap24 : ∀{i} {k l m n : Lang ∞} →
   (k ∪ l) ∪ (m ∪ n) ≅⟨ i ⟩≅ (k ∪ m) ∪ (l ∪ n)
 union-swap24 {i} {k} {l} {m} {n} = prove 4 ((x ⊕ y) ⊕ (z ⊕ u)) ((x ⊕ z) ⊕ (y ⊕ u)) (k ∷ l ∷ m ∷ n ∷ [])
   where
   open ICMSolver (union-icm i)
-  x = var zero
-  y = var (suc zero)
-  z = var (suc (suc zero))
-  u = var (suc (suc (suc zero)))
+  x  =  var zero
+  y  =  var (suc zero)
+  z  =  var (suc (suc zero))
+  u  =  var (suc (suc (suc zero)))
 
 union-union-distr : ∀{i} (k {l m} : Lang ∞) →
   (k ∪ l) ∪ m ≅⟨ i ⟩≅ (k ∪ m) ∪ (l ∪ m)
 union-union-distr {i} k {l} {m} = prove 3 ((x ⊕ y) ⊕ z) ((x ⊕ z) ⊕ (y ⊕ z)) (k ∷ l ∷ m ∷ [])
   where
   open ICMSolver (union-icm i)
-  x = var zero
-  y = var (suc zero)
-  z = var (suc (suc zero))
+  x  =  var zero
+  y  =  var (suc zero)
+  z  =  var (suc (suc zero))
 
 -- Long manual proof:
 
@@ -627,24 +693,24 @@ star-rec : ∀{i} (l : Lang ∞) → l * ≅⟨ i ⟩≅ ε ∪ (l · l *)
     δ l a · l *
   ≈⟨ ≅sym union-idem ⟩
     (δ l a · l * ∪ δ l a · l *)
-  ≈⟨ ≅sym union-empty ⟩
+  ≈⟨ ≅sym union-emptyˡ ⟩
     ∅ ∪ (δ l a · l * ∪ δ l a · l *)
   ∎
   where open EqR (Bis _)
-... | false = ≅sym union-empty
+... | false = ≅sym union-emptyˡ
 
 -- Kleene star absorbs ε
 
 unit-union-star : ∀{i} (l : Lang ∞) → ε ∪ (l *) ≅⟨ i ⟩≅ (l *)
 ≅ν (unit-union-star l)   = refl
-≅δ (unit-union-star l) a = union-empty
+≅δ (unit-union-star l) a = union-emptyˡ
 
 star-union-unit : ∀{i} (l : Lang ∞) → (l *) ∪ ε ≅⟨ i ⟩≅ (l *)
 star-union-unit l = ≅trans (union-comm (l *) ε) (unit-union-star _)
 
 empty-star-union-star : ∀{i} (l : Lang ∞) → (∅ *) ∪ (l *) ≅⟨ i ⟩≅ (l *)
 ≅ν (empty-star-union-star l)   = refl
-≅δ (empty-star-union-star l) a =  ≅trans (union-congˡ (concat-emptyˡ _)) union-empty
+≅δ (empty-star-union-star l) a =  ≅trans (union-congˡ (concat-emptyˡ _)) union-emptyˡ
 
 star-union-empty-star : ∀{i} (l : Lang ∞) → (l *) ∪ (∅ *) ≅⟨ i ⟩≅ (l *)
 star-union-empty-star l = ≅trans (union-comm (l *) (∅ *)) (empty-star-union-star _)

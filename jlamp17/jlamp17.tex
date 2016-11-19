@@ -521,7 +521,7 @@ recursive call $\kpl$ in the then-branch which is not at top-level,
 but under the union-operator.  This
 problem is usually fixed by defining a scheme for corecursion up to
 union.  However, looking at the involved sizes we can accept the
-definition as-is as an instance of well-founded corecursion.
+definition in the present form as an instance of well-founded corecursion.
 Crucial here is the sized typing of the union
 \[
   \_\tcup\_ : \forall\{i\} (k\, l : \Lang\,i) \to \Lang\,i
@@ -538,16 +538,23 @@ casted to $\Lang\,j$ which is valid since $j < i$.
 
 The iteration $l^*$ of a language $l$, aka \emph{Kleene star}, can be
 informally described as ``zero or more repetitions of $l$''.  If for
-some $n \geq 0$ we have words $\vas_1, \dots \vas_n \in l$, then
-$(\vas_1 \oapp \dots \oapp \vas_n) \in l$.  In terms of tries, $l^*$
-is obtained from $l$ by making the root accepting and unioning any
-subtree of $l$ with accepting root with $l$.  This means that at each
-accepting node we may jump back to the root.  The corecursive definition
+some $n \geq 0$ we have words $\vas_1, \vas_2, \dots \vas_n \in l$, then
+$(\vas_1 \oapp \vas_2 \oapp \dots \oapp \vas_n) \in l$.  In terms of tries, $l^*$
+is obtained from $l$ by making the root accepting and unioning $l$
+with any
+subtree of $l$ that has an accepting root.  Intuitively, this means that at each
+accepting node we may ``jump back'' to the root.  The corecursive definition
 \astar%
 relies on the sized typing of concatenation to justify the recursive call.
 
 \section{Proving the Kleene Algebra Laws}
 \label{sec:kleene}
+
+\abisim
+
+\aeqlaws
+
+\asetoid
 
 
 \section{Constructing Automata}
