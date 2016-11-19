@@ -17,6 +17,7 @@ _∘_ : L → L → L
 (f ∘ g) []       = ν f ∧ ν g
 (f ∘ g) (x ∷ xs) = (δ f x ∘ g) xs ∨ (ν f ∧ g xs)
 
+{-# TERMINATING #-}
 _* : L → L
 (f *) []       = true
 (f *) (x ∷ xs) = (δ f x ∘ (f *)) xs

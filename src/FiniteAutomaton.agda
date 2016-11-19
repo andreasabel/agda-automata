@@ -4,7 +4,7 @@ module _
   (decA : DecSetoid lzero lzero)
   (open DecSetoid decA using (_≟_) renaming (Carrier to A)) where
 
-open import Language decA
+open import Language decA hiding (ν; δ)
 
 -- Automaton
 

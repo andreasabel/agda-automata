@@ -1,10 +1,12 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 open import Library
 
 module Automaton
   (decA : DecSetoid lzero lzero)
   (open DecSetoid decA using (_≟_) renaming (Carrier to A)) where
 
-open import Language decA
+open import Language decA hiding (ν; δ)
 
 -- Automaton
 

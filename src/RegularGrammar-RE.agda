@@ -1,7 +1,8 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 
 open import Library
 
-module RegularGrammar
+module RegularGrammar-RE
   (decA : DecSetoid lzero lzero)
   (open DecSetoid decA using (_≟_) renaming (Carrier to A)) where
 
