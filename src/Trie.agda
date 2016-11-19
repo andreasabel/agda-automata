@@ -311,9 +311,9 @@ union-idem : ∀{i} {l : Trie ∞} → l ∪ l ≅⟨ i ⟩≅ l
 ≅ν union-idem   = ∨-idempotent _
 ≅δ union-idem a = union-idem
 
-union-empty : ∀{i} {l : Trie ∞} → ∅ ∪ l ≅⟨ i ⟩≅ l
-≅ν union-empty   = refl
-≅δ union-empty a = union-empty
+union-emptyˡ : ∀{i} {l : Trie ∞} → ∅ ∪ l ≅⟨ i ⟩≅ l
+≅ν union-emptyˡ   = refl
+≅δ union-emptyˡ a = union-emptyˡ
 
 union-top : ∀{i} {l : Trie ∞} → all ∪ l ≅⟨ i ⟩≅ all
 ≅ν union-top   = refl
@@ -346,7 +346,7 @@ union-icm i = record
         ; assoc = λ x y z → union-assoc x
         ; ∙-cong = union-cong
         }
-      ; identityˡ = λ l → union-empty
+      ; identityˡ = λ l → union-emptyˡ
       ; comm = union-comm
       }
     ; idem = λ l → union-idem
@@ -557,24 +557,24 @@ star-rec : ∀{i} (l : Trie ∞) → l * ≅⟨ i ⟩≅ ε ∪ (l · l *)
     δ l a · l *
   ≈⟨ ≅sym union-idem ⟩
     (δ l a · l * ∪ δ l a · l *)
-  ≈⟨ ≅sym union-empty ⟩
+  ≈⟨ ≅sym union-emptyˡ ⟩
     ∅ ∪ (δ l a · l * ∪ δ l a · l *)
   ∎
   where open EqR (Bis _)
-... | false = ≅sym union-empty
+... | false = ≅sym union-emptyˡ
 
 -- Kleene star absorbs ε
 
 unit-union-star : ∀{i} (l : Trie ∞) → ε ∪ (l *) ≅⟨ i ⟩≅ (l *)
 ≅ν (unit-union-star l)   = refl
-≅δ (unit-union-star l) a = union-empty
+≅δ (unit-union-star l) a = union-emptyˡ
 
 star-union-unit : ∀{i} (l : Trie ∞) → (l *) ∪ ε ≅⟨ i ⟩≅ (l *)
 star-union-unit l = ≅trans (union-comm (l *) ε) (unit-union-star _)
 
 empty-star-union-star : ∀{i} (l : Trie ∞) → (∅ *) ∪ (l *) ≅⟨ i ⟩≅ (l *)
 ≅ν (empty-star-union-star l)   = refl
-≅δ (empty-star-union-star l) a =  ≅trans (union-congˡ (concat-emptyˡ _)) union-empty
+≅δ (empty-star-union-star l) a =  ≅trans (union-congˡ (concat-emptyˡ _)) union-emptyˡ
 
 star-union-empty-star : ∀{i} (l : Trie ∞) → (l *) ∪ (∅ *) ≅⟨ i ⟩≅ (l *)
 star-union-empty-star l = ≅trans (union-comm (l *) (∅ *)) (empty-star-union-star _)

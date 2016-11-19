@@ -44,7 +44,7 @@ Setoid._≈_           REq = _≅ʳ_
 Setoid.isEquivalence REq = ≅ʳisEquivalence
 
 plus-empty : ∀ r → (r +ʳ 0ʳ) ≅ʳ r
-plus-empty r = ≅trans (union-comm _ _) union-empty
+plus-empty r = ≅trans (union-comm _ _) union-emptyˡ
 
 plus-assoc : ∀ r s t → ((r +ʳ s) +ʳ t) ≅ʳ (r +ʳ (s +ʳ t))
 plus-assoc r s t = union-assoc _
@@ -74,7 +74,7 @@ plus-icm =  record
         ; assoc = plus-assoc
         ; ∙-cong = union-cong
         }
-      ; identityˡ = λ r → union-empty
+      ; identityˡ = λ r → union-emptyˡ
       ; comm = plus-comm
       }
     ; idem = plus-idem
@@ -137,8 +137,8 @@ r *ˢ = r *ʳ
 -- Correctness proofs of simplified regular expressions.
 
 plus-correct : ∀{i} r s → ⟦ r +ˢ s ⟧ ≅⟨ i ⟩≅ ⟦ r +ʳ s ⟧
-plus-correct 0ʳ s                = ≅sym union-empty
-plus-correct 1ʳ 0ʳ               = ≅trans (≅sym union-empty) (union-comm _ _)
+plus-correct 0ʳ s                = ≅sym union-emptyˡ
+plus-correct 1ʳ 0ʳ               = ≅trans (≅sym union-emptyˡ) (union-comm _ _)
 plus-correct 1ʳ (chʳ a)          = ≅refl
 plus-correct 1ʳ (s +ʳ s₁)        = ≅refl
 plus-correct 1ʳ (s ∙ʳ s₁)        = ≅refl
@@ -147,25 +147,25 @@ plus-correct 1ʳ (chʳ a *ʳ) = ≅sym (empty-star-union-star _)
 plus-correct 1ʳ ((s +ʳ s₁) *ʳ) = ≅sym (empty-star-union-star _)
 plus-correct 1ʳ ((s ∙ʳ s₁) *ʳ) = ≅sym (empty-star-union-star _)
 plus-correct 1ʳ ((s *ʳ) *ʳ) = ≅sym (empty-star-union-star _)
-plus-correct (chʳ a) 0ʳ          = ≅trans (≅sym union-empty) (union-comm _ _)
+plus-correct (chʳ a) 0ʳ          = ≅trans (≅sym union-emptyˡ) (union-comm _ _)
 plus-correct (chʳ a) 1ʳ          = ≅refl
 plus-correct (chʳ a) (chʳ a₁)    = ≅refl
 plus-correct (chʳ a) (s +ʳ s₁)   = ≅refl
 plus-correct (chʳ a) (s ∙ʳ s₁)   = ≅refl
 plus-correct (chʳ a) (s *ʳ)      = ≅refl
-plus-correct (r +ʳ r₁) 0ʳ        = ≅trans (≅sym union-empty) (union-comm _ _)
+plus-correct (r +ʳ r₁) 0ʳ        = ≅trans (≅sym union-emptyˡ) (union-comm _ _)
 plus-correct (r +ʳ r₁) 1ʳ        = ≅sym (union-assoc _)
 plus-correct (r +ʳ r₁) (chʳ a)   = ≅sym (union-assoc _)
 plus-correct (r +ʳ r₁) (s +ʳ s₁) = ≅sym (union-assoc _)
 plus-correct (r +ʳ r₁) (s ∙ʳ s₁) = ≅sym (union-assoc _)
 plus-correct (r +ʳ r₁) (s *ʳ)    = ≅sym (union-assoc _)
-plus-correct (r ∙ʳ r₁) 0ʳ        = ≅trans (≅sym union-empty) (union-comm _ _)
+plus-correct (r ∙ʳ r₁) 0ʳ        = ≅trans (≅sym union-emptyˡ) (union-comm _ _)
 plus-correct (r ∙ʳ r₁) 1ʳ        = ≅refl
 plus-correct (r ∙ʳ r₁) (chʳ a)   = ≅refl
 plus-correct (r ∙ʳ r₁) (s +ʳ s₁) = ≅refl
 plus-correct (r ∙ʳ r₁) (s ∙ʳ s₁) = ≅refl
 plus-correct (r ∙ʳ r₁) (s *ʳ)    = ≅refl
-plus-correct (r *ʳ) 0ʳ           = ≅trans (≅sym union-empty) (union-comm _ _)
+plus-correct (r *ʳ) 0ʳ           = ≅trans (≅sym union-emptyˡ) (union-comm _ _)
 plus-correct (r *ʳ) (chʳ a)      = ≅refl
 plus-correct (r *ʳ) (s +ʳ s₁)    = ≅refl
 plus-correct (r *ʳ) (s ∙ʳ s₁)    = ≅refl

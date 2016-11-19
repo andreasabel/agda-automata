@@ -479,7 +479,7 @@ eval ((a ∷ v) +ᶜ c) (r ∷ rs) = (re a ∙ʳ r) +ʳ eval (v +ᶜ c) rs
 
 eval-plus : ∀{n} (v w : LinComb n) (ρ  : Vec RE (pred n)) →
   eval (v +ᵛ w) ρ ≅ʳ (eval v ρ +ʳ eval w ρ)
-eval-plus [] [] _ =  ≅sym union-empty
+eval-plus [] [] _ =  ≅sym union-emptyˡ
 eval-plus (a ∷ []) (b ∷ []) [] =  ≅refl
 eval-plus (a ∷ a' ∷ v) (b ∷ b' ∷ w) (r ∷ ρ) = begin
 

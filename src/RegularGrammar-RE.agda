@@ -142,7 +142,7 @@ sound-scale a (b ∷ c ∷ w) (l ∷ ρ) = begin
 
 sound-plus : ∀{i n} (v w : LinComb n) (ρ  : Vec (Lang ∞) (pred n)) →
   ⟦ v +ᵛ w ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ v ⟧ᵛ ρ ∪ ⟦ w ⟧ᵛ ρ
-sound-plus [] [] _ = ≅sym union-empty
+sound-plus [] [] _ = ≅sym union-emptyˡ
 sound-plus (a ∷ []) (b ∷ []) [] = den-plus a b
 sound-plus (a ∷ a' ∷ v') (b ∷ b' ∷ w') (l ∷ ρ) = begin
 
@@ -326,7 +326,7 @@ eval (a ∷ (b ∷ bs)) (r ∷ rs) = (a ∙ʳ r) +ʳ eval (b ∷ bs) rs
 
 eval-plus : ∀{n} (v w : LinComb n) (ρ  : Vec RE (pred n)) →
   eval (v +ᵛ w) ρ ≅ʳ (eval v ρ +ʳ eval w ρ)
-eval-plus [] [] _ =  ≅sym union-empty
+eval-plus [] [] _ =  ≅sym union-emptyˡ
 eval-plus (a ∷ []) (b ∷ []) [] =  ≅refl
 eval-plus (a ∷ a' ∷ v) (b ∷ b' ∷ w) (r ∷ ρ) = begin
 

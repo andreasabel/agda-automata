@@ -246,7 +246,7 @@ composeA-correct da₁ da₂ s₁ s₂ = begin
   acclang (composeA da₁ s₂ da₂) (s₁ , [])                 ≈⟨  composeA-gen da₁ da₂ s₁ s₂ [] ⟩
   acclang da₁ s₁ · acclang da₂ s₂ ∪ acclang (powA da₂) [] ≈⟨ union-congʳ (powA-nil da₂) ⟩
   acclang da₁ s₁ · acclang da₂ s₂ ∪ ∅                     ≈⟨ union-comm _ _ ⟩
-  ∅ ∪ acclang da₁ s₁ · acclang da₂ s₂                     ≈⟨ union-empty ⟩
+  ∅ ∪ acclang da₁ s₁ · acclang da₂ s₂                     ≈⟨ union-emptyˡ ⟩
   acclang da₁ s₁ · acclang da₂ s₂
   ∎ where open EqR (Bis _)
 

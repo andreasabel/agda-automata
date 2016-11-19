@@ -144,7 +144,7 @@ sound-scale a (b ∷ c ∷ w) (l ∷ ρ) = begin
 
 sound-plus : ∀{i n} (v w : LinComb n) (ρ  : Vec (Lang ∞) (pred n)) →
   ⟦ v +ᵛ w ⟧ᵛ ρ ≅⟨ i ⟩≅ ⟦ v ⟧ᵛ ρ ∪ ⟦ w ⟧ᵛ ρ
-sound-plus [] [] _ = ≅sym union-empty
+sound-plus [] [] _ = ≅sym union-emptyˡ
 sound-plus (a ∷ []) (b ∷ []) [] = den-plus a b
 sound-plus (a ∷ a' ∷ v') (b ∷ b' ∷ w') (l ∷ ρ) = begin
 

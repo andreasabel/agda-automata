@@ -159,7 +159,7 @@ den-unit : ⟦ 1ʳ ⟧ ≅ ε
 den-unit =  ≅refl
 
 den-plus : ∀ {i} r s → ⟦ r +ʳ s ⟧ ≅⟨ i ⟩≅ ⟦ r ⟧ ∪ ⟦ s ⟧
-den-plus 0ʳ s = ≅sym (union-empty)
+den-plus 0ʳ s = ≅sym (union-emptyˡ)
 den-plus ⌜ r ⌝ 0ʳ = ≅sym (union-emptyʳ)
 den-plus ⌜ r ⌝ ⌜ s ⌝ = ≅refl
 

@@ -103,9 +103,9 @@ union-idem : ∀{i} {l : Lang ∞} → l ∪ l ≅⟨ i ⟩≅ l
 ≅ν union-idem = ∨-idempotent _
 ≅δ union-idem a = union-idem
 
-union-empty : ∀{i} {l : Lang ∞} → ∅ ∪ l ≅⟨ i ⟩≅ l
-≅ν union-empty   = refl
-≅δ union-empty a = union-empty
+union-emptyˡ : ∀{i} {l : Lang ∞} → ∅ ∪ l ≅⟨ i ⟩≅ l
+≅ν union-emptyˡ   = refl
+≅δ union-emptyˡ a = union-emptyˡ
 
 union-congˡ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → l ∪ m ≅⟨ i ⟩≅ k ∪ m
 ≅ν (union-congˡ p) rewrite ≅ν p = refl
@@ -134,7 +134,7 @@ union-icm i = record
         ; assoc = λ x y z → union-assoc x
         ; ∙-cong = union-cong
         }
-      ; identityˡ = λ l → union-empty
+      ; identityˡ = λ l → union-emptyˡ
       ; comm = union-comm
       }
     ; idem = λ l → union-idem
@@ -288,7 +288,7 @@ star-rec : ∀{i} (l : Lang ∞) → l * ≅⟨ i ⟩≅ ε ∪ (l · l *)
 ≅δ (star-rec l) a with ν l
 ... | true  = begin
          δ l a · l *                 ≈⟨ ≅sym union-idem ⟩
-        (δ l a · l * ∪ δ l a · l *)  ≈⟨ ≅sym union-empty ⟩
+        (δ l a · l * ∪ δ l a · l *)  ≈⟨ ≅sym union-emptyˡ ⟩
     ∅ ∪ (δ l a · l * ∪ δ l a · l *)  ∎
   where open EqR (Bis _)
-... | false = ≅sym union-empty
+... | false = ≅sym union-emptyˡ
