@@ -61,6 +61,10 @@ show A proof x = x
 ∧-false true  = refl
 ∧-false false = refl
 
+∧-true : ∀ b → b ∧ true ≡ b
+∧-true true  = refl
+∧-true false = refl
+
 ∨-absorbs-∧ : ∀ b a → a ≡ (b ∧ a) ∨ a
 ∨-absorbs-∧ false a = refl
 ∨-absorbs-∧ true false = refl

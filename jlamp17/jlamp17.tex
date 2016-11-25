@@ -656,6 +656,7 @@ chain.  We consider the subcase that $k$ is nullable, and underline
 the subterms that have changed from the last line (unless the whole
 expression has changed).
 \[
+\def\arraystretch{1.5}
 \begin{array}{cl@{\qquad}r}
 \derive{(k \cdot (l \tunion m))} a
   & \cong & \mbox{by definition} \\
@@ -672,6 +673,14 @@ expression has changed).
 \derive{(k \cdot l \tunion k \cdot m)} a
 \end{array}
 \]
+This proof does not follow the scheme of (primitive) coinduction. The
+coinduction hypothesis is applied under uses of transitivity (for
+connecting the equalions) and under the congruence law for union.
+This becomes especially clear if we fully write out the
+justifications as in the corresponding Agda proof in
+Figure~\ref{fig:concatuniondistribr}.  However, the continuity of
+transitivity and $\tunioncongl$ as witnessed by the sized typing
+justifies the use of the coinduction hypothesis.
 
 % \begin{figure}[htbp]
 %   \centering
@@ -688,6 +697,32 @@ expression has changed).
   \caption{Concatenation distributes over union.}
   \label{fig:concatuniondistribr}
 \end{figure}
+
+The other distributivity law is proven by coinduction and case
+distinction over the nullability of $l$ and $k$.
+\aconcatuniondistribl
+Congruence laws for concatenation follow by coinduction and congruence
+of union.
+\aconcatcongl
+\aconcatcongr
+The coinductive proof of associativity relies on distributivity and
+congruence and associativity of union.
+\aconcatassoc
+Finally, the empty language is a zero for language composition:
+\aconcatemptyl
+\aconcatemptyr
+\aconcatunitl
+\aconcatunitr
+
+\subsection{Laws of the Kleene star}
+\label{sec:lawstar}
+
+\astarempty
+\astarconcatidem
+\astaridem
+\astarrec
+\astarconcat
+\astarfromrec
 
 \section{Constructing Automata}
 \label{sec:aut}

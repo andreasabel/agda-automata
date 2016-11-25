@@ -183,7 +183,7 @@ module ConcatExpl where
 \begin{code}
 _·_ : ∀{i} (k l : Lang i) → Lang i
 ν (k · l)    =  ν k ∧ ν l
-δ (k · l) x  =  if  ν k  then  k′l ∪ δ l x  else  k′l  where  k′l = δ k x · l
+δ (k · l) x  =  let  k′l = δ k x · l  in  if  ν k  then  k′l ∪ δ l x  else  k′l
 \end{code}
 }
 
@@ -559,6 +559,10 @@ union-union-distr {i} k {l} {m} = prove 3 ((x ⊕ y) ⊕ z) ((x ⊕ z) ⊕ (y �
 \begin{code}
 concat-union-distribˡ : ∀{i} (k {l m} : Lang ∞) →
   (k ∪ l) · m ≅⟨ i ⟩≅ (k · m) ∪ (l · m)
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 ≅ν (concat-union-distribˡ k) = ∧-∨-distribʳ _ (ν k) _
 ≅δ (concat-union-distribˡ k {l} {m}) a with ν k | ν l
 
@@ -626,12 +630,18 @@ concat-union-distribʳ : ∀{i} (k {l m} : Lang ∞) →
 ≅δ (concat-union-distribʳ k) a | false = concat-union-distribʳ (δ k a)
 \end{code}
 }
-\AgdaHide{
-\begin{code}
 
 -- Concatenation is congruence
 
-concat-congˡ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → l · m ≅⟨ i ⟩≅ k · m
+\newcommand{\aconcatcongl}{
+\begin{code}
+concat-congˡ : ∀{i}{m l k : Lang ∞}
+  → l ≅⟨ i ⟩≅ k
+  → l · m ≅⟨ i ⟩≅ k · m
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 ≅ν (concat-congˡ p) rewrite ≅ν p = refl
 ≅δ (concat-congˡ {l = l}{k = k} p) a with ν l | ν k | ≅ν p
 ≅δ (concat-congˡ p) a | false | false | refl = concat-congˡ (≅δ p a)
@@ -639,7 +649,17 @@ concat-congˡ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → l · m �
 ≅δ (concat-congˡ p) a | false | true  | ()
 ≅δ (concat-congˡ p) a | true  | false | ()
 
-concat-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m · l ≅⟨ i ⟩≅ m · k
+\end{code}
+}
+\newcommand{\aconcatcongr}{
+\begin{code}
+concat-congʳ : ∀{i}{m l k : Lang ∞}
+  → l ≅⟨ i ⟩≅ k
+  → m · l ≅⟨ i ⟩≅ m · k
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 ≅ν (concat-congʳ p) rewrite ≅ν p = refl
 ≅δ (concat-congʳ {m = m} p) a with ν m
 ≅δ (concat-congʳ p) a | false = concat-congʳ p
@@ -654,7 +674,15 @@ concat-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m · l �
 --
 -- uses concat-union-distribˡ
 
+\end{code}
+}
+\newcommand{\aconcatassoc}{
+\begin{code}
 concat-assoc : ∀{i} (k {l m} : Lang ∞) → (k · l) · m ≅⟨ i ⟩≅ k · (l · m)
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 ≅ν (concat-assoc k)   = ∧-assoc (ν k) _ _
 ≅δ (concat-assoc k) a with ν k
 ≅δ (concat-assoc k    ) a | false = concat-assoc (δ k a)
@@ -681,11 +709,27 @@ concat-assoc : ∀{i} (k {l m} : Lang ∞) → (k · l) · m ≅⟨ i ⟩≅ k �
   ∎
   where open EqR (Bis _)
 
+\end{code}
+}
+\newcommand{\aconcatemptyl}{
+\begin{code}
 concat-emptyˡ : ∀{i} l → ∅ · l ≅⟨ i ⟩≅ ∅
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 ≅ν (concat-emptyˡ l) = refl
 ≅δ (concat-emptyˡ l) a = concat-emptyˡ l
 
+\end{code}
+}
+\newcommand{\aconcatemptyr}{
+\begin{code}
 concat-emptyʳ : ∀{i} l → l · ∅ ≅⟨ i ⟩≅ ∅
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 ≅ν (concat-emptyʳ l) = ∧-false (ν l)
 ≅δ (concat-emptyʳ l) a with ν l
 ... | false = concat-emptyʳ (δ l a)
@@ -696,6 +740,46 @@ concat-emptyʳ : ∀{i} l → l · ∅ ≅⟨ i ⟩≅ ∅
   ≈⟨  concat-emptyʳ (δ l a) ⟩
     ∅
   ∎ where open EqR (Bis _)
+\end{code}
+}
+\newcommand{\aconcatunitl}{
+\begin{code}
+concat-unitˡ : ∀{i} l → ε · l ≅⟨ i ⟩≅ l
+\end{code}
+}
+\AgdaHide{
+\begin{code}
+≅ν (concat-unitˡ l) = refl
+≅δ (concat-unitˡ l) a = begin
+    ∅ · l ∪ δ l a
+  ≈⟨ union-congˡ (concat-emptyˡ l) ⟩
+    ∅  ∪ δ l a
+  ≈⟨ union-emptyˡ ⟩
+    δ l a
+  ∎ where open EqR (Bis _)
+\end{code}
+}
+\newcommand{\aconcatunitr}{
+\begin{code}
+concat-unitʳ : ∀{i} l → l · ε ≅⟨ i ⟩≅ l
+\end{code}
+}
+\AgdaHide{
+\begin{code}
+≅ν (concat-unitʳ l) = ∧-true _
+≅δ (concat-unitʳ l) a with ν l
+... | false = concat-unitʳ (δ l a)
+... | true = begin
+    δ l a · ε ∪ ∅
+  ≈⟨  union-emptyʳ ⟩
+    δ l a · ε
+  ≈⟨  concat-unitʳ (δ l a) ⟩
+    δ l a
+  ∎ where open EqR (Bis _)
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 -- Specialized laws for union and concat
 
@@ -706,15 +790,39 @@ union-concat-empty : ∀{i l l′} → ∅ · l ∪ l′ ≅⟨ i ⟩≅ l′
 
 -- Laws of the Kleene star
 
+\end{code}
+}
+\newcommand{\astarempty}{
+\begin{code}
 star-empty : ∀{i} → ∅ * ≅⟨ i ⟩≅ ε
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 ≅ν star-empty = refl
 ≅δ star-empty a = concat-emptyˡ _
 
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 star-unit : ∀{i} → ε * ≅⟨ i ⟩≅ ε
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 ≅ν star-unit = refl
 ≅δ star-unit a = concat-emptyˡ _
 
+\end{code}
+}
+\newcommand{\astarconcatidem}{
+\begin{code}
 star-concat-idem : ∀{i} (l : Lang ∞) → l * · l * ≅⟨ i ⟩≅ l *
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 ≅ν (star-concat-idem l) = refl
 ≅δ (star-concat-idem l) a = begin
     δ l a · l * · l * ∪ δ l a · l *
@@ -727,7 +835,15 @@ star-concat-idem : ∀{i} (l : Lang ∞) → l * · l * ≅⟨ i ⟩≅ l *
   ∎
   where open EqR (Bis _)
 
+\end{code}
+}
+\newcommand{\astaridem}{
+\begin{code}
 star-idem : ∀{i} (l : Lang ∞) → (l *) * ≅⟨ i ⟩≅ l *
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 ≅ν (star-idem l) = refl
 ≅δ (star-idem l) a = begin
   δ l a · l * · (l *) *  ≈⟨ concat-congʳ (star-idem l) ⟩
@@ -739,7 +855,15 @@ star-idem : ∀{i} (l : Lang ∞) → (l *) * ≅⟨ i ⟩≅ l *
 
 -- Recursion equation for the Kleene star
 
+\end{code}
+}
+\newcommand{\astarrec}{
+\begin{code}
 star-rec : ∀{i} (l : Lang ∞) → l * ≅⟨ i ⟩≅ ε ∪ (l · l *)
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 ≅ν (star-rec l) = refl
 ≅δ (star-rec l) a with ν l
 ... | true  = begin
@@ -772,7 +896,15 @@ star-union-empty-star l = ≅trans (union-comm (l *) (∅ *)) (empty-star-union-
 -- Star composed with some language
 -- r*·a = r·r*·a + a
 
+\end{code}
+}
+\newcommand{\astarconcat}{
+\begin{code}
 star-concat : ∀{i} (k {m} : Lang ∞) → k * · m ≅⟨ i ⟩≅ k · (k * · m) ∪ m
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 ≅ν (star-concat k {m}) = ∨-absorbs-∧ (ν k) (ν m) -- absorption A = (B ∧ A) ∨ A
 ≅δ (star-concat k {m}) a with ν k
 ... | false = union-congˡ (concat-assoc _)
@@ -795,10 +927,18 @@ star-concat : ∀{i} (k {m} : Lang ∞) → k * · m ≅⟨ i ⟩≅ k · (k * �
 -- Show: δ L a = δ K a ∙ K* ∙ M ∪ δ M a
 -- Hyp : δ L a = δ K a ∙ L      ∪ δ M a
 
+\end{code}
+}
+\newcommand{\astarfromrec}{
+\begin{code}
 star-from-rec : ∀{i} (k {l m} : Lang ∞)
    → ν k ≡ false
    → l ≅⟨ i ⟩≅ k · l ∪ m
    → l ≅⟨ i ⟩≅ k * · m
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 ≅ν (star-from-rec k n p) with ≅ν p
 ... | b rewrite n = b
 ≅δ (star-from-rec k {l} {m} n p) a with ≅δ p a
