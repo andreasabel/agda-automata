@@ -652,22 +652,24 @@ Naturally, we would like to prove this by coinduction.  The case for
 $\tnu$ follows by the boolean distributivity law
 $x \wedge (y \vee z) = (x \wedge y) \vee (x \wedge z)$.  In the case
 for $\tdelta$, we would like to reason by the following equality
-chain.  We consider the subcase that $k$ is nullable.
+chain.  We consider the subcase that $k$ is nullable, and underline
+the subterms that have changed from the last line (unless the whole
+expression has changed).
 \[
 \begin{array}{cl@{\qquad}r}
 \derive{(k \cdot (l \tunion m))} a
   & \cong & \mbox{by definition} \\
-\derive k a \cdot (l \tunion m) \tunion \underline{\derive{(l \tunion m)} a}
+\derive k a \cdot (l \tunion m) \tunion {\derive{(l \tunion m)} a}
   & \cong & \mbox{by definition} \\
-\underline{\derive k a \cdot (l \tunion m)} \tunion (\derive l a \tunion \derive m a)
+{\derive k a \cdot (l \tunion m)} \tunion \underline{(\derive l a \tunion \derive m a)}
   & \cong & \mbox{by coinduction hypothesis} \\
-((\derive k a \cdot l) \tunion \underline{(\derive k a \cdot m)}) \tunion (\underline{\derive l a} \tunion \derive m a)
+\underline{(\derive k a \cdot l \tunion {\derive k a \cdot m})} \tunion ({\derive l a} \tunion \derive m a)
   & \cong & \mbox{by union laws} \\
-\underline{((\derive k a \cdot l) \tunion \derive l a)} \tunion \underline{((\derive k a \cdot m) \tunion \derive m a)}
+{(\derive k a \cdot l \tunion \underline{\derive l a})} \tunion {(\underline{\derive k a \cdot m} \tunion \derive m a)}
   & \cong & \mbox{by definition} \\
-\derive{(k \cdot l)} a \tunion \derive{(k \cdot m)} a
+\underline{\derive{(k \cdot l)} a} \tunion \underline{\derive{(k \cdot m)} a}
   & \cong & \mbox{by definition} \\
-\derive{(k \cdot l) \tunion (k \cdot m)} a
+\derive{(k \cdot l \tunion k \cdot m)} a
 \end{array}
 \]
 
