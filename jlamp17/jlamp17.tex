@@ -32,6 +32,7 @@
 \usepackage{src/latex/agda}
 
 
+\DeclareUnicodeCharacter{"02E1}{\ensuremath{{}^{\mathsf{l}}}}
 \DeclareUnicodeCharacter{"02E2}{\ensuremath{{}^{\mathsf{s}}}}
 \DeclareUnicodeCharacter{"03B4}{\ensuremath{\delta}}
 \DeclareUnicodeCharacter{"03B5}{\ensuremath{\varepsilon}}
@@ -40,6 +41,7 @@
 \DeclareUnicodeCharacter{"1D9C}{\ensuremath{{}^{\mathsf{c}}}}
 %\DeclareUnicodeCharacter{"1D52}{\ensuremath{{}^{\mathrm{o}}}} % UNUSED
 \DeclareUnicodeCharacter{"1D62}{\ensuremath{{}_i}}
+\DeclareUnicodeCharacter{"2032}{\kern0.07em\ensuremath{'}}
 \DeclareUnicodeCharacter{"2092}{\ensuremath{{}_o}}
 % ALT: rm variant (Andreas: I think italics looks better)
 %\DeclareUnicodeCharacter{"1D62}{\ensuremath{{}_{\mathrm{i}}}}
@@ -48,6 +50,7 @@
 \DeclareUnicodeCharacter{"2200}{\ensuremath{\forall}}
 \DeclareUnicodeCharacter{"2205}{\ensuremath{\emptyset}}
 \DeclareUnicodeCharacter{"220B}{\ensuremath{\ni}}
+\DeclareUnicodeCharacter{"220E}{\ensuremath{\scriptstyle{\blacksquare}}}
 \DeclareUnicodeCharacter{"2237}{\ensuremath{::}}
 \DeclareUnicodeCharacter{"2227}{\ensuremath{\wedge}}
 \DeclareUnicodeCharacter{"2228}{\ensuremath{\vee}}
@@ -550,12 +553,139 @@ relies on the sized typing of concatenation to justify the recursive call.
 \section{Proving the Kleene Algebra Laws}
 \label{sec:kleene}
 
+In this section, we prove that decidable languages as introduced in
+Section~\ref{sec:lang} form a \emph{Kleene algebra}.
+
+\subsection{A Family of Equivalence Relations over Languages}
+\label{sec:fameq}
+
+Equality of tries, sometimes called \emph{strong bisimilarity} is
+defined coinductively as follows.  Two tries are strongly bisimilar if
+they have the same root and corresponding subtries are strongly
+bisimilar in turn.  In Agda, this amounts to the following coinductive
+definition:
 \abisim
+For one, note that we are relating tries $l,k : \Lang\,\tinfty$ whose
+definedness depth is unbounded ($\tinfty$).  This means that any
+subtrie such as $\tdelta\,l\,a$ is defined and in turn has type
+$\Lang\,\infty$.
 
-\aeqlaws
+However, the relation itself is indexed by a definedness depth $i$.
+In fact we are defining a family of types such that $\bisim l j k$
+is a subtype of $\bisim l i k$ whenever $i \leq j$.  The depth is a
+lower bound on how far the proof of equality of $l$ and $k$ is
+constructed.  In particular, we can only inspect the derivation
+$\cdelta\,p\,a$ of a proof $p : \bisim l i k$ if $i > 0$.  As for
+coinductive types like $\Lang\,i$, the size index $i$ is just a tool
+for the corecursive construction of derivations.  Ultimately, we are
+only interested in fully defined equality proofs $p : \bisim l \tinfty k$.
+In particular, this is not to be confused with \emph{ordered families
+  of equivalences} (OFEs) \citep{gianantonioMiculan:types02} $l \equiv_n k$
+which refine the notion of equality itself.  (There, $l \equiv_0 k$
+would hold always and $l \equiv_{n+1} k$ would hold if $l$ and $k$
+have equal roots and their immediate subtries are $\equiv_n$-related.)
+OFEs are a different approach to justifying corecursive definitions.
 
+Each of the coinductive relations forms an equivalence relation,
+proven for the whole family by coiteration.  For reflexivity, we have
+to prove that given a trie $l$, we can construct a derivation that $l$
+is strongly bisimilar to itself $l$, up to arbitrary depth $i$.
+\arefl
+The proof $\tcongrefl$ of $\bisim l i l$ is constructed lazily.  If we
+are asking for its first component $\congnu\,\tcongrefl$ we get a proof
+that the root $\tnu\,l$ is identical to itself, namely $\trefl :
+\tnu\,l \,\tequiv\, \tnu\,l$.  If we are asking for the $a$-branch of
+its second component, $\congdelta\,\tcongrefl\,a$ at depth $j < i$, it
+computes $\tcongrefl : \bisim l j l$ corecursively.
+
+Symmetry is similarly defined.  To compute a proof of $k \cong l$
+up to depth $i$, we only need a derivation of $l \cong k$ up to depth
+$i$; thus, the type of $\tcongsym$ is $\bisim l i k \to \bisim k i l$.
+\asym
+Transitivity is likewise depth preserving.  Depth-preservation is
+crucial to combine reasoning by transitivity and the coinductive
+hypothesis in a natural way, as we will see below.
+\atrans
+Taken together, each $\bisim \_ i \_$ is an equivalence relation, and
+forms a setoid $\Bis\,i$ with carrier $\Lang\,\tinfty$.
 \asetoid
+Later, we will use these setoids to reason by equality chains.
 
+\subsection{Laws of language union}
+\label{sec:lawunion}
+
+Decidable languages form an idempotent commutative monoid under
+union.  The individual laws, like associativity, commutativity,
+idempotency, and unit, follow from the corresponding laws of the
+boolean disjunction, which are pointwise applied at all the
+corresponding nodes of the involved tries.  In Agda, these are direct
+proofs by coiteration.
+\aunionassoc
+\aunioncomm
+\aunionidem
+\aunionemptyl
+% \aunionemptyr
+Finally, union preserves equality, which is again proven by
+coiteration.
+The sized typing will be crucial to apply a coinductive hypothesis
+under $\tunioncong$ later.
+\aunioncong
+A derived law we require later is that union distributes over itself.
+Now that we have established that union fullfills the laws of an
+idempotent commutative monoid, we can use a solver to prove this law
+rather automatically by reflection.
+\aunionuniondistr
+Concretely, the solver checks that both sides of the equation have the
+same set of atoms, by normalizing both sides to the set $\{k,l,m\}$.
+This solver is implemented in Agda itself, but we will not describe it
+further here.\footnote{%Implementation see
+\url{https://github.com/agda/agda-stdlib/blob/1c78e4e/src/Algebra/IdempotentCommutativeMonoidSolver.agda}
+implements this solver.
+}
+
+\subsection{Laws of language concatenation}
+\label{sec:lawcat}
+
+Concatenation distributes over union, for instance,
+$k \cdot (l \tunion m) \cong (k \cdot l) \tunion (k \cdot m)$.
+Naturally, we would like to prove this by coinduction.  The case for
+$\tnu$ follows by the boolean distributivity law
+$x \wedge (y \vee z) = (x \wedge y) \vee (x \wedge z)$.  In the case
+for $\tdelta$, we would like to reason by the following equality
+chain.  We consider the subcase that $k$ is nullable.
+\[
+\begin{array}{cl@{\qquad}r}
+\derive{(k \cdot (l \tunion m))} a
+  & \cong & \mbox{by definition} \\
+\derive k a \cdot (l \tunion m) \tunion \underline{\derive{(l \tunion m)} a}
+  & \cong & \mbox{by definition} \\
+\underline{\derive k a \cdot (l \tunion m)} \tunion (\derive l a \tunion \derive m a)
+  & \cong & \mbox{by coinduction hypothesis} \\
+((\derive k a \cdot l) \tunion \underline{(\derive k a \cdot m)}) \tunion (\underline{\derive l a} \tunion \derive m a)
+  & \cong & \mbox{by union laws} \\
+\underline{((\derive k a \cdot l) \tunion \derive l a)} \tunion \underline{((\derive k a \cdot m) \tunion \derive m a)}
+  & \cong & \mbox{by definition} \\
+\derive{(k \cdot l)} a \tunion \derive{(k \cdot m)} a
+  & \cong & \mbox{by definition} \\
+\derive{(k \cdot l) \tunion (k \cdot m)} a
+\end{array}
+\]
+
+% \begin{figure}[htbp]
+%   \centering
+% %\hrule width0.8\textwidth
+% \aconcatuniondistribl
+%   \caption{Concatenation distributes over union.}
+%   \label{fig:concatuniondistribl}
+% \end{figure}
+
+\begin{figure}[htbp]
+  \centering
+%\hrule width0.8\textwidth
+\aconcatuniondistribr
+  \caption{Concatenation distributes over union.}
+  \label{fig:concatuniondistribr}
+\end{figure}
 
 \section{Constructing Automata}
 \label{sec:aut}

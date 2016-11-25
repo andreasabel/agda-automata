@@ -281,20 +281,28 @@ l ≅ k = l ≅⟨ ∞ ⟩≅ k
 
 % -- Equivalence relation laws
 
-\newcommand{\aeqlaws}{
+\newcommand{\arefl}{
 \begin{code}
 ≅refl : ∀{i} {l : Lang ∞} → l ≅⟨ i ⟩≅ l
 ≅ν  ≅refl    =  refl
 ≅δ  ≅refl a  =  ≅refl
+\end{code}
+}
 
+\newcommand{\asym}{
+\begin{code}
 ≅sym : ∀{i} {k l : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → k ≅⟨ i ⟩≅ l
-≅ν  (≅sym p)    =  sym (≅ν p)
-≅δ  (≅sym p) a  =  ≅sym (≅δ p a)
+≅ν  (≅sym p)    =  sym   (≅ν p)
+≅δ  (≅sym p) a  =  ≅sym  (≅δ p a)
+\end{code}
+}
 
+\newcommand{\atrans}{
+\begin{code}
 ≅trans : ∀{i} {k l m : Lang ∞}
   (p : k ≅⟨ i ⟩≅ l) (q : l ≅⟨ i ⟩≅ m) → k ≅⟨ i ⟩≅ m
-≅ν  (≅trans p q)    =  trans (≅ν p) (≅ν q)
-≅δ  (≅trans p q) a  =  ≅trans (≅δ p a) (≅δ q a)
+≅ν  (≅trans p q)    =  trans   (≅ν p)    (≅ν q)
+≅δ  (≅trans p q) a  =  ≅trans  (≅δ p a)  (≅δ q a)
 \end{code}
 }
 
@@ -318,10 +326,10 @@ l ≅ k = l ≅⟨ ∞ ⟩≅ k
 
 \newcommand{\asetoid}{
 \begin{code}
-≅isEquivalence : ∀(i : Size) → IsEquivalence (λ l l′ → l ≅⟨ i ⟩≅ l′)
+≅isEquivalence : ∀(i : Size) → IsEquivalence (λ l k → l ≅⟨ i ⟩≅ k)
 ≅isEquivalence i = record { refl = ≅refl; sym = ≅sym; trans = ≅trans }
 
-Bis : ∀(i : Size) → Setoid lzero lzero
+Bis : ∀(i : Size) → Setoid _ _
 Setoid.Carrier        (Bis i)  =  Lang ∞
 Setoid._≈_            (Bis i)  =  λ l k → l ≅⟨ i ⟩≅ k
 Setoid.isEquivalence  (Bis i)  =  ≅isEquivalence i
@@ -383,7 +391,7 @@ inter-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m ∩ l �
 \begin{code}
 union-assoc : ∀{i} (k {l m} : Lang ∞) → (k ∪ l) ∪ m ≅⟨ i ⟩≅ k ∪ (l ∪ m)
 ≅ν  (union-assoc k)    =  ∨-assoc (ν k) _ _
-≅δ  (union-assoc k) a  =  union-assoc _
+≅δ  (union-assoc k) a  =  union-assoc (δ k a)
 \end{code}
 }
 
@@ -443,10 +451,24 @@ union-congˡ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → l ∪ m �
 union-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m ∪ l ≅⟨ i ⟩≅ m ∪ k
 ≅ν  (union-congʳ p) rewrite ≅ν p  =  refl
 ≅δ  (union-congʳ p) a  =  union-congʳ (≅δ p a)
+\end{code}
+}
 
-union-cong : ∀{i}{k k′ l l′ : Lang ∞} (p : k ≅⟨ i ⟩≅ k′) (q : l ≅⟨ i ⟩≅ l′) → k ∪ l ≅⟨ i ⟩≅ k′ ∪ l′
+% union congruence
+
+\newcommand{\aunioncong}{
+\begin{code}
+union-cong : ∀{i}{k k′ l l′ : Lang ∞}
+  (p : k ≅⟨ i ⟩≅ k′) (q : l ≅⟨ i ⟩≅ l′) → k ∪ l ≅⟨ i ⟩≅ k′ ∪ l′
 ≅ν  (union-cong p q) rewrite ≅ν p | ≅ν q  =  refl
 ≅δ  (union-cong p q) a  =  union-cong (≅δ p a) (≅δ q a)
+\end{code}
+}
+
+
+\AgdaHide{
+\begin{code}
+
 
 -- Language union forms an idempotent commutative monoid.
 
@@ -490,9 +512,16 @@ union-swap24 {i} {k} {l} {m} {n} = prove 4 ((x ⊕ y) ⊕ (z ⊕ u)) ((x ⊕ z) 
   y  =  var (suc zero)
   z  =  var (suc (suc zero))
   u  =  var (suc (suc (suc zero)))
-
+\end{code}
+}
+\newcommand{\aunionuniondistr}{
+\begin{code}
 union-union-distr : ∀{i} (k {l m} : Lang ∞) →
   (k ∪ l) ∪ m ≅⟨ i ⟩≅ (k ∪ m) ∪ (l ∪ m)
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 union-union-distr {i} k {l} {m} = prove 3 ((x ⊕ y) ⊕ z) ((x ⊕ z) ⊕ (y ⊕ z)) (k ∷ l ∷ m ∷ [])
   where
   open ICMSolver (union-icm i)
@@ -524,8 +553,12 @@ union-union-distr {i} k {l} {m} = prove 3 ((x ⊕ y) ⊕ z) ((x ⊕ z) ⊕ (y �
 -- Concatenation laws
 
 -- Concatenation distributes over union
-
-concat-union-distribˡ : ∀{i} (k {l m} : Lang ∞) → (k ∪ l) · m ≅⟨ i ⟩≅ (k · m) ∪ (l · m)
+\end{code}
+}
+\newcommand{\aconcatuniondistribl}{
+\begin{code}
+concat-union-distribˡ : ∀{i} (k {l m} : Lang ∞) →
+  (k ∪ l) · m ≅⟨ i ⟩≅ (k · m) ∪ (l · m)
 ≅ν (concat-union-distribˡ k) = ∧-∨-distribʳ _ (ν k) _
 ≅δ (concat-union-distribˡ k {l} {m}) a with ν k | ν l
 
@@ -536,8 +569,7 @@ concat-union-distribˡ : ∀{i} (k {l m} : Lang ∞) → (k ∪ l) · m ≅⟨ i
     (δ k a · m ∪ δ l a · m) ∪ δ m a
   ≈⟨ union-union-distr _ ⟩
     (δ k a · m ∪ δ m a) ∪ (δ l a · m ∪ δ m a)
-  ∎
-  where open EqR (Bis _)
+  ∎ where open EqR (Bis _)
 
 ... | true | false = begin
 
@@ -546,8 +578,7 @@ concat-union-distribˡ : ∀{i} (k {l m} : Lang ∞) → (k ∪ l) · m ≅⟨ i
     (δ k a · m ∪ δ l a · m) ∪ δ m a
   ≈⟨ union-swap23 _ ⟩
     δ k a · m ∪ δ m a ∪ δ l a · m
-  ∎
-  where open EqR (Bis _)
+  ∎ where open EqR (Bis _)
 
 ... | false | true =  begin
 
@@ -556,15 +587,33 @@ concat-union-distribˡ : ∀{i} (k {l m} : Lang ∞) → (k ∪ l) · m ≅⟨ i
     (δ k a · m ∪ δ l a · m) ∪ δ m a
   ≈⟨ union-assoc _ ⟩
     δ k a · m ∪ (δ l a · m ∪ δ m a)
-  ∎
-  where open EqR (Bis _)
+  ∎ where open EqR (Bis _)
 
 ... | false | false = concat-union-distribˡ (δ k a)
+\end{code}
+}
 
+% ≅δ (concat-union-distribʳ k {l} {m}) a | true = begin
+%   --   δ (k · (l ∪ m)) a
+%   -- ≡⟨⟩
+%     δ k a · (l ∪ m) ∪ (δ l a ∪ δ m a)
+%   ≈⟨ union-congˡ (concat-union-distribʳ (δ k a)) ⟩
+%     (δ k a · l ∪ δ k a · m) ∪ (δ l a ∪ δ m a)
+%   ≈⟨ union-swap24 ⟩
+%     (δ k a · l ∪ δ l a) ∪ (δ k a · m ∪ δ m a)
+%   -- ≡⟨⟩
+%   --   δ ((k · l) ∪ (k · m)) a
+%   ∎
+%   where open EqR (Bis _)
 
-concat-union-distribʳ : ∀{i} (k {l m} : Lang ∞) → k · (l ∪ m) ≅⟨ i ⟩≅ (k · l) ∪ (k · m)
+\newcommand{\aconcatuniondistribr}{
+\begin{code}
+concat-union-distribʳ : ∀{i} (k {l m} : Lang ∞) →
+  k · (l ∪ m) ≅⟨ i ⟩≅ (k · l) ∪ (k · m)
+
 ≅ν (concat-union-distribʳ k) = ∧-∨-distribˡ (ν k) _ _
 ≅δ (concat-union-distribʳ k) a with ν k
+
 ≅δ (concat-union-distribʳ k {l} {m}) a | true = begin
     δ k a · (l ∪ m) ∪ (δ l a ∪ δ m a)
   ≈⟨ union-congˡ (concat-union-distribʳ (δ k a)) ⟩
@@ -575,6 +624,10 @@ concat-union-distribʳ : ∀{i} (k {l m} : Lang ∞) → k · (l ∪ m) ≅⟨ i
   where open EqR (Bis _)
 
 ≅δ (concat-union-distribʳ k) a | false = concat-union-distribʳ (δ k a)
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 -- Concatenation is congruence
 

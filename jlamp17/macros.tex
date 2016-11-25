@@ -186,6 +186,7 @@
 
 
 % CMCS 16 talk
+% JLAMP 17 article
 
 \newcommand{\tcongnu}{\AgdaField{\ensuremath{\cong\nu}}}
 \newcommand{\tcongdelta}{\AgdaField{\ensuremath{\cong\delta}}}
@@ -232,6 +233,17 @@
 \newcommand{\vcs}{\mathit{cs}}
 \newcommand{\imp}{\Longrightarrow}
 \newcommand{\tcup}{\AgdaFunction{\ensuremath{\cup}}}
+\newcommand{\tinfty}{\AgdaFunction{\ensuremath{\infty}}}
+\newcommand{\bisim}[3]{#1\,\AgdaFunction{\ensuremath{\cong\langle}}\,#2\,\AgdaFunction{\ensuremath{\rangle\cong}}\,#3}
+\newcommand{\cdelta}{\AgdaField{\ensuremath{\cong\delta}}}
+\newcommand{\congnu}{\AgdaField{\ensuremath{\cong\nu}}}
+\newcommand{\congdelta}{\AgdaField{\ensuremath{\cong\delta}}}
+% \newcommand{\congrefl}{\AgdaField{\ensuremath{\cong}refl}}
+% \newcommand{\congsym}{\AgdaField{\ensuremath{\cong}sym}}
+% \newcommand{\congtrans}{\AgdaField{\ensuremath{\cong}trans}}
+\newcommand{\tequiv}{\AgdaDatatype{\ensuremath{\equiv}}}
+\newcommand{\Bis}{\agda{Bis}}
+\newcommand{\tunioncong}{\agda{union-cong}}
 
 % ICFP 13 talk
 \newcommand{\tbla}{\mathsf{bla}}
@@ -423,7 +435,7 @@
 \newcommand{\mdelta}{\prequote\delta}
 \newcommand{\MType}{\mathsf{MType}}
 \newcommand{\Block}{\mathsf{Block}}
-\newcommand{\trefl}{\mathsf{refl}}
+\newcommand{\trefl}{\AgdaInductiveConstructor{\ensuremath{\mathsf{refl}}}}
 
 \newcommand{\relR}[1][]{\mathrel{R#1}}
 \newcommand{\relS}[1][]{\mathrel{S#1}}
