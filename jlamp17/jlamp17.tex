@@ -30,7 +30,7 @@
 \usepackage{textgreek}
 \usepackage[utf8x]{inputenc}
 \usepackage{src/latex/agda}
-
+\AgdaNoSpaceAroundCode{}
 
 \DeclareUnicodeCharacter{"02E1}{\ensuremath{{}^{\mathsf{l}}}}
 \DeclareUnicodeCharacter{"02E2}{\ensuremath{{}^{\mathsf{s}}}}
@@ -318,9 +318,10 @@ If a trie $t : \Lang\,i$ can be defined by reference to tries of type
 $\Lang\,j$ for $j<i$, written $j : \SizeLt i$, then
 $t : \forall\{i\} \to \Lang\,i$ by well-founded recursion on ordinals,
 which is our incarnation of a corecursive definition.
-%
-\aLang{}
-%
+
+\aLang
+
+\noindent
 As typing of the projections from tries we get
 \[
 \begin{array}{lll}
@@ -708,7 +709,8 @@ of union.
 The coinductive proof of associativity relies on distributivity and
 congruence and associativity of union.
 \aconcatassoc
-Finally, the empty language is a zero for language composition:
+Finally, the empty language is a zero and the language of the empty
+word a unit for language composition:
 \aconcatemptyl
 \aconcatemptyr
 \aconcatunitl
@@ -717,12 +719,45 @@ Finally, the empty language is a zero for language composition:
 \subsection{Laws of the Kleene star}
 \label{sec:lawstar}
 
+The language of the empty word is the iteration of the empty language.
+
 \astarempty
+
+\noindent
+To prove that iteration is idempotent, we first prove that
+concatenation of iterated languages is idempotent.
+
 \astarconcatidem
+
+\noindent
+This lets us prove idempotency of the Kleene star:
+
 \astaridem
+
+\noindent
+The Kleene star obeys the following recursive equation:
+
 \astarrec
-\astarconcat
+
+\noindent
+Finally, we prove Arden's rule (which would allow us to solve linear
+equations over regular expressions).
+%\astarconcat
 \astarfromrec
+
+All the proofs about decidable languages in this section
+could be carried out rather mechanically using:
+\begin{enumerate}\setlength{\itemsep}{0ex}
+\item coinduction,
+\item equality chains,
+\item already proven lemmata.
+\end{enumerate}
+We did not require any up-to techniques or creative insight such as
+finding bisimulation relations to carry out our proofs.
+% that is closed under $\tcongnu$ and $\tcongdelta$.
+Thus, it is likely that after initiating coinduction, standard
+first-order theorem provers could fill in the remaining steps.
+
 
 \section{Constructing Automata}
 \label{sec:aut}

@@ -40,10 +40,12 @@ infixr 15 _*
 }
 \newcommand{\aLang}{
 \begin{code}
+
 record Lang i : Set where
   coinductive
   field  ν  :  Bool
          δ  :  ∀{j : Size< i} → A → Lang j
+
 \end{code}
 }
 \AgdaHide{
@@ -66,9 +68,11 @@ open Lang
 
 \newcommand{\ani}{
 \begin{code}
+
 _∋_ : ∀{i} → Lang i → List i A → Bool
 l  ∋  []      =  ν l
 l  ∋  a ∷ as  =  δ l a ∋ as
+
 \end{code}
 }
 
@@ -76,9 +80,11 @@ l  ∋  a ∷ as  =  δ l a ∋ as
 
 \newcommand{\alang}{
 \begin{code}
+
 lang : ∀{i} (f : List i A → Bool) → Lang i
 ν (lang f)    =  f []
 δ (lang f) a  =  lang λ as → f (a ∷ as)
+
 \end{code}
 }
 
@@ -90,9 +96,11 @@ lang : ∀{i} (f : List i A → Bool) → Lang i
 
 \newcommand{\aempty}{
 \begin{code}
+
 ∅ : ∀{i} → Lang i
 ν ∅    =  false
 δ ∅ x  =  ∅
+
 \end{code}
 }
 
@@ -100,9 +108,11 @@ lang : ∀{i} (f : List i A → Bool) → Lang i
 
 \newcommand{\aeps}{
 \begin{code}
+
 ε : ∀{i} → Lang i
 ν ε    =  true
 δ ε x  =  ∅
+
 \end{code}
 }
 
@@ -110,12 +120,14 @@ lang : ∀{i} (f : List i A → Bool) → Lang i
 
 \newcommand{\achar}{
 \begin{code}
+
 char : ∀{i} (a : A) → Lang i
 
 ν (char a)    =  false
 δ (char a) x  with a ≟ x
-... | yes _  =  ε
-... | no  _  =  ∅
+... | yes _   =  ε
+... | no  _   =  ∅
+
 \end{code}
 }
 
@@ -123,9 +135,11 @@ char : ∀{i} (a : A) → Lang i
 
 \newcommand{\acompl}{
 \begin{code}
+
 compl : ∀{i} (l : Lang i) → Lang i
 ν (compl l)    =  not    (ν l)
 δ (compl l) x  =  compl  (δ l x)
+
 \end{code}
 }
 
@@ -150,9 +164,11 @@ _∩_ : ∀{i} (k l : Lang i) → Lang i
 
 \newcommand{\aunion}{
 \begin{code}
+
 _∪_ : ∀{i} (k l : Lang i) → Lang i
 ν (k ∪ l)    =  ν k    ∨  ν l
 δ (k ∪ l) x  =  δ k x  ∪  δ l x
+
 \end{code}
 }
 
@@ -164,12 +180,14 @@ module ConcatExpl where
 
 \newcommand{\aconcatexpl}{
 \begin{code}
+
   _·_ : ∀{i} (k l : Lang i) → Lang i
 
-  δ (_·_{i} k l) {j} x  =  if ν k then _∪_{j} k′l (δ l {j} x) else k′l
-    where
-    k′l : Lang j
-    k′l = _·_{j} (δ k {j} x) l
+  δ (_·_{i} k l) {j} x =
+    let  k′l : Lang j
+         k′l = _·_{j} (δ k {j} x) l
+    in   if ν k then _∪_{j} k′l (δ l {j} x) else k′l
+
 \end{code}
 }
 \AgdaHide{
@@ -181,9 +199,11 @@ module ConcatExpl where
 
 \newcommand{\aconcat}{
 \begin{code}
+
 _·_ : ∀{i} (k l : Lang i) → Lang i
 ν (k · l)    =  ν k ∧ ν l
 δ (k · l) x  =  let  k′l = δ k x · l  in  if  ν k  then  k′l ∪ δ l x  else  k′l
+
 \end{code}
 }
 
@@ -202,9 +222,11 @@ _·_ : ∀{i} (k l : Lang i) → Lang i
 
 \newcommand{\astar}{
 \begin{code}
+
 _* : ∀{i} (l : Lang i) → Lang i
 ν (l *)    =  true
 δ (l *) x  =  δ l x · (l *)
+
 \end{code}
 }
 
@@ -263,10 +285,12 @@ aⁿbⁿ a b = thenbs a b zero
 
 \newcommand{\abisim}{
 \begin{code}
+
 record _≅⟨_⟩≅_ (l : Lang ∞) i (k : Lang ∞) : Set where
   coinductive
   field  ≅ν  :  ν l ≡ ν k
          ≅δ  :  ∀{j : Size< i} (a : A) → δ l a ≅⟨ j ⟩≅ δ k a
+
 \end{code}
 }
 \AgdaHide{
@@ -283,26 +307,32 @@ l ≅ k = l ≅⟨ ∞ ⟩≅ k
 
 \newcommand{\arefl}{
 \begin{code}
+
 ≅refl : ∀{i} {l : Lang ∞} → l ≅⟨ i ⟩≅ l
 ≅ν  ≅refl    =  refl
 ≅δ  ≅refl a  =  ≅refl
+
 \end{code}
 }
 
 \newcommand{\asym}{
 \begin{code}
+
 ≅sym : ∀{i} {k l : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → k ≅⟨ i ⟩≅ l
 ≅ν  (≅sym p)    =  sym   (≅ν p)
 ≅δ  (≅sym p) a  =  ≅sym  (≅δ p a)
+
 \end{code}
 }
 
 \newcommand{\atrans}{
 \begin{code}
+
 ≅trans : ∀{i} {k l m : Lang ∞}
   (p : k ≅⟨ i ⟩≅ l) (q : l ≅⟨ i ⟩≅ m) → k ≅⟨ i ⟩≅ m
 ≅ν  (≅trans p q)    =  trans   (≅ν p)    (≅ν q)
 ≅δ  (≅trans p q) a  =  ≅trans  (≅δ p a)  (≅δ q a)
+
 \end{code}
 }
 
@@ -326,6 +356,7 @@ l ≅ k = l ≅⟨ ∞ ⟩≅ k
 
 \newcommand{\asetoid}{
 \begin{code}
+
 ≅isEquivalence : ∀(i : Size) → IsEquivalence (λ l k → l ≅⟨ i ⟩≅ k)
 ≅isEquivalence i = record { refl = ≅refl; sym = ≅sym; trans = ≅trans }
 
@@ -333,6 +364,7 @@ Bis : ∀(i : Size) → Setoid _ _
 Setoid.Carrier        (Bis i)  =  Lang ∞
 Setoid._≈_            (Bis i)  =  λ l k → l ≅⟨ i ⟩≅ k
 Setoid.isEquivalence  (Bis i)  =  ≅isEquivalence i
+
 \end{code}
 }
 
@@ -389,6 +421,7 @@ inter-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m ∩ l �
 
 \newcommand{\aunionassoc}{
 \begin{code}
+
 union-assoc : ∀{i} (k {l m} : Lang ∞) → (k ∪ l) ∪ m ≅⟨ i ⟩≅ k ∪ (l ∪ m)
 ≅ν  (union-assoc k)    =  ∨-assoc (ν k) _ _
 ≅δ  (union-assoc k) a  =  union-assoc (δ k a)
@@ -399,6 +432,7 @@ union-assoc : ∀{i} (k {l m} : Lang ∞) → (k ∪ l) ∪ m ≅⟨ i ⟩≅ k 
 
 \newcommand{\aunioncomm}{
 \begin{code}
+
 union-comm : ∀{i} (l k : Lang ∞) → l ∪ k ≅⟨ i ⟩≅ k ∪ l
 ≅ν  (union-comm l k)    =  ∨-comm (ν l) _
 ≅δ  (union-comm l k) a  =  union-comm (δ l a) (δ k a)
@@ -409,6 +443,7 @@ union-comm : ∀{i} (l k : Lang ∞) → l ∪ k ≅⟨ i ⟩≅ k ∪ l
 
 \newcommand{\aunionidem}{
 \begin{code}
+
 union-idem : ∀{i} {l : Lang ∞} → l ∪ l ≅⟨ i ⟩≅ l
 ≅ν  union-idem    =  ∨-idempotent _
 ≅δ  union-idem a  =  union-idem
@@ -419,9 +454,11 @@ union-idem : ∀{i} {l : Lang ∞} → l ∪ l ≅⟨ i ⟩≅ l
 
 \newcommand{\aunionemptyl}{
 \begin{code}
+
 union-emptyˡ : ∀{i} {l : Lang ∞} → ∅ ∪ l ≅⟨ i ⟩≅ l
 ≅ν  union-emptyˡ    =  refl
 ≅δ  union-emptyˡ a  =  union-emptyˡ
+
 \end{code}
 }
 
@@ -429,9 +466,11 @@ union-emptyˡ : ∀{i} {l : Lang ∞} → ∅ ∪ l ≅⟨ i ⟩≅ l
 
 \newcommand{\aunionemptyr}{
 \begin{code}
+
 union-emptyʳ : ∀{i} {l : Lang ∞} → l ∪ ∅ ≅⟨ i ⟩≅ l
 ≅ν  union-emptyʳ    =  ∨-false _
 ≅δ  union-emptyʳ a  =  union-emptyʳ
+
 \end{code}
 }
 
@@ -458,10 +497,12 @@ union-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m ∪ l �
 
 \newcommand{\aunioncong}{
 \begin{code}
+
 union-cong : ∀{i}{k k′ l l′ : Lang ∞}
   (p : k ≅⟨ i ⟩≅ k′) (q : l ≅⟨ i ⟩≅ l′) → k ∪ l ≅⟨ i ⟩≅ k′ ∪ l′
 ≅ν  (union-cong p q) rewrite ≅ν p | ≅ν q  =  refl
 ≅δ  (union-cong p q) a  =  union-cong (≅δ p a) (≅δ q a)
+
 \end{code}
 }
 
@@ -516,8 +557,10 @@ union-swap24 {i} {k} {l} {m} {n} = prove 4 ((x ⊕ y) ⊕ (z ⊕ u)) ((x ⊕ z) 
 }
 \newcommand{\aunionuniondistr}{
 \begin{code}
+
 union-union-distr : ∀{i} (k {l m} : Lang ∞) →
   (k ∪ l) ∪ m ≅⟨ i ⟩≅ (k ∪ m) ∪ (l ∪ m)
+
 \end{code}
 }
 \AgdaHide{
@@ -557,8 +600,10 @@ union-union-distr {i} k {l} {m} = prove 3 ((x ⊕ y) ⊕ z) ((x ⊕ z) ⊕ (y �
 }
 \newcommand{\aconcatuniondistribl}{
 \begin{code}
+
 concat-union-distribˡ : ∀{i} (k {l m} : Lang ∞) →
   (k ∪ l) · m ≅⟨ i ⟩≅ (k · m) ∪ (l · m)
+
 \end{code}
 }
 \AgdaHide{
@@ -631,10 +676,11 @@ concat-union-distribʳ : ∀{i} (k {l m} : Lang ∞) →
 \end{code}
 }
 
--- Concatenation is congruence
+% -- Concatenation is congruence
 
 \newcommand{\aconcatcongl}{
 \begin{code}
+
 concat-congˡ : ∀{i}{m l k : Lang ∞}
   → l ≅⟨ i ⟩≅ k
   → l · m ≅⟨ i ⟩≅ k · m
@@ -656,6 +702,7 @@ concat-congˡ : ∀{i}{m l k : Lang ∞}
 concat-congʳ : ∀{i}{m l k : Lang ∞}
   → l ≅⟨ i ⟩≅ k
   → m · l ≅⟨ i ⟩≅ m · k
+
 \end{code}
 }
 \AgdaHide{
@@ -678,7 +725,9 @@ concat-congʳ : ∀{i}{m l k : Lang ∞}
 }
 \newcommand{\aconcatassoc}{
 \begin{code}
+
 concat-assoc : ∀{i} (k {l m} : Lang ∞) → (k · l) · m ≅⟨ i ⟩≅ k · (l · m)
+
 \end{code}
 }
 \AgdaHide{
@@ -713,7 +762,8 @@ concat-assoc : ∀{i} (k {l m} : Lang ∞) → (k · l) · m ≅⟨ i ⟩≅ k �
 }
 \newcommand{\aconcatemptyl}{
 \begin{code}
-concat-emptyˡ : ∀{i} l → ∅ · l ≅⟨ i ⟩≅ ∅
+
+concat-emptyˡ  : ∀{i} l → ∅ · l ≅⟨ i ⟩≅ ∅
 \end{code}
 }
 \AgdaHide{
@@ -725,7 +775,7 @@ concat-emptyˡ : ∀{i} l → ∅ · l ≅⟨ i ⟩≅ ∅
 }
 \newcommand{\aconcatemptyr}{
 \begin{code}
-concat-emptyʳ : ∀{i} l → l · ∅ ≅⟨ i ⟩≅ ∅
+concat-emptyʳ  : ∀{i} l → l · ∅ ≅⟨ i ⟩≅ ∅
 \end{code}
 }
 \AgdaHide{
@@ -744,7 +794,8 @@ concat-emptyʳ : ∀{i} l → l · ∅ ≅⟨ i ⟩≅ ∅
 }
 \newcommand{\aconcatunitl}{
 \begin{code}
-concat-unitˡ : ∀{i} l → ε · l ≅⟨ i ⟩≅ l
+
+concat-unitˡ   : ∀{i} l → ε · l ≅⟨ i ⟩≅ l
 \end{code}
 }
 \AgdaHide{
@@ -761,15 +812,15 @@ concat-unitˡ : ∀{i} l → ε · l ≅⟨ i ⟩≅ l
 }
 \newcommand{\aconcatunitr}{
 \begin{code}
-concat-unitʳ : ∀{i} l → l · ε ≅⟨ i ⟩≅ l
+concat-unitʳ   : ∀{i} l → l · ε ≅⟨ i ⟩≅ l
 \end{code}
 }
 \AgdaHide{
 \begin{code}
-≅ν (concat-unitʳ l) = ∧-true _
-≅δ (concat-unitʳ l) a with ν l
-... | false = concat-unitʳ (δ l a)
-... | true = begin
+≅ν (concat-unitʳ l)    = ∧-true _
+≅δ (concat-unitʳ l) a  with ν l
+... | false  =  concat-unitʳ (δ l a)
+... | true   =  begin
     δ l a · ε ∪ ∅
   ≈⟨  union-emptyʳ ⟩
     δ l a · ε
@@ -794,7 +845,9 @@ union-concat-empty : ∀{i l l′} → ∅ · l ∪ l′ ≅⟨ i ⟩≅ l′
 }
 \newcommand{\astarempty}{
 \begin{code}
+
 star-empty : ∀{i} → ∅ * ≅⟨ i ⟩≅ ε
+
 \end{code}
 }
 \AgdaHide{
@@ -816,15 +869,16 @@ star-unit : ∀{i} → ε * ≅⟨ i ⟩≅ ε
 
 \end{code}
 }
-\newcommand{\astarconcatidem}{
-\begin{code}
-star-concat-idem : ∀{i} (l : Lang ∞) → l * · l * ≅⟨ i ⟩≅ l *
-\end{code}
-}
 \AgdaHide{
 \begin{code}
-≅ν (star-concat-idem l) = refl
-≅δ (star-concat-idem l) a = begin
+\end{code}
+}
+\newcommand{\astarconcatidem}{
+\begin{code}
+
+star-concat-idem : ∀{i} (l : Lang ∞) → l * · l * ≅⟨ i ⟩≅ l *
+≅ν (star-concat-idem l)    =  refl
+≅δ (star-concat-idem l) a  =  begin
     δ l a · l * · l * ∪ δ l a · l *
   ≈⟨ union-congˡ (concat-assoc _) ⟩
     δ l a · (l * · l *) ∪ δ l a · l *
@@ -832,34 +886,36 @@ star-concat-idem : ∀{i} (l : Lang ∞) → l * · l * ≅⟨ i ⟩≅ l *
     δ l a · l * ∪ δ l a · l *
   ≈⟨ union-idem ⟩
     δ l a · l *
-  ∎
-  where open EqR (Bis _)
+  ∎ where open EqR (Bis _)
 
-\end{code}
-}
-\newcommand{\astaridem}{
-\begin{code}
-star-idem : ∀{i} (l : Lang ∞) → (l *) * ≅⟨ i ⟩≅ l *
 \end{code}
 }
 \AgdaHide{
 \begin{code}
-≅ν (star-idem l) = refl
-≅δ (star-idem l) a = begin
+\end{code}
+}
+\newcommand{\astaridem}{
+\begin{code}
+
+star-idem : ∀{i} (l : Lang ∞) → (l *) * ≅⟨ i ⟩≅ l *
+≅ν (star-idem l)    =  refl
+≅δ (star-idem l) a  =  begin
   δ l a · l * · (l *) *  ≈⟨ concat-congʳ (star-idem l) ⟩
   δ l a · l * · l *      ≈⟨ concat-assoc (δ l a) ⟩
   δ l a · (l * · l *)    ≈⟨ concat-congʳ (star-concat-idem l) ⟩
   δ l a · l *
-  ∎
-  where open EqR (Bis _)
-
--- Recursion equation for the Kleene star
+  ∎ where open EqR (Bis _)
 
 \end{code}
 }
+
+% -- Recursion equation for the Kleene star
+
 \newcommand{\astarrec}{
 \begin{code}
+
 star-rec : ∀{i} (l : Lang ∞) → l * ≅⟨ i ⟩≅ ε ∪ (l · l *)
+
 \end{code}
 }
 \AgdaHide{
@@ -931,20 +987,19 @@ star-concat : ∀{i} (k {m} : Lang ∞) → k * · m ≅⟨ i ⟩≅ k · (k * �
 }
 \newcommand{\astarfromrec}{
 \begin{code}
+
 star-from-rec : ∀{i} (k {l m} : Lang ∞)
    → ν k ≡ false
    → l ≅⟨ i ⟩≅ k · l ∪ m
    → l ≅⟨ i ⟩≅ k * · m
-\end{code}
-}
-\AgdaHide{
-\begin{code}
+
 ≅ν (star-from-rec k n p) with ≅ν p
 ... | b rewrite n = b
+
 ≅δ (star-from-rec k {l} {m} n p) a with ≅δ p a
 ... | q rewrite n = begin
      (δ l a)
-  ≈⟨  q ⟩
+  ≈⟨ q ⟩
      δ k a · l ∪ δ m a
   ≈⟨ union-congˡ (concat-congʳ (star-from-rec k {l} {m} n p)) ⟩
      (δ k a · (k * · m) ∪ δ m a)
