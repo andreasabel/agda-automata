@@ -55,9 +55,17 @@ show A proof x = x
 ∨-false true  = refl
 ∨-false false = refl
 
+∨-true : ∀ b → b ∨ true ≡ true
+∨-true true  = refl
+∨-true false = refl
+
 ∧-false : ∀ b → b ∧ false ≡ false
 ∧-false true  = refl
 ∧-false false = refl
+
+∧-true : ∀ b → b ∧ true ≡ b
+∧-true true  = refl
+∧-true false = refl
 
 ∨-absorbs-∧ : ∀ b a → a ≡ (b ∧ a) ∨ a
 ∨-absorbs-∧ false a = refl
@@ -76,6 +84,19 @@ module List where
     foldl f a (map g cs) ≡ foldl (λ a c → f a (g c)) a cs
   foldl-map [] = refl
   foldl-map (c ∷ cs) = foldl-map cs
+
+  any-∨ : ∀{A : Set} (f g : A → Bool) (as : List A) →
+   any (λ a → f a ∨ g a) as ≡ any f as ∨ any g as
+  any-∨ f g [] = refl
+  any-∨ f g (a ∷ as) = begin
+      (f a ∨ g a) ∨ any (λ a → f a ∨ g a) as
+    ≡⟨ cong (λ z → (f a ∨ g a) ∨ z) (any-∨ f g as) ⟩
+      (f a ∨ g a) ∨ (any f as ∨ any g as)
+    ≡⟨ TODO ⟩
+      (f a ∨ any f as) ∨ (g a ∨ any g as)
+    ∎ where
+      open ≡-Reasoning
+      open ICMSolver -- use ∨ as icm
 
 module Vec where
 

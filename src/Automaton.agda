@@ -140,6 +140,40 @@ DAut.δ (composeA' da₁ s₀ da₂) (s₁ , ss₂) a = DAut.δ da₁ s₁ a , D
 -- DAut.δ (composeA' da₁ s₀ da₂) (inj₁ s₁) a = if DAut.ν da₁ s₁ then inj₂ (DAut.δ da₁ s₁ a , s₀) else inj₁ (DAut.δ da₁ s₁ a)
 -- DAut.δ (composeA' da₁ s₀ da₂) (inj₂ (s₁ , s₂)) a = inj₂ (DAut.δ da₁ s₁ a , DAut.δ da₂ s₂ a)
 
+
+-- Kleene star
+
+-- 1. add initial state to the final states
+-- 2. from each final state we can also make the transitions from the initial state
+
+module Star (decS : DecSetoid lzero lzero) where
+  open DecSetoid decS public using () renaming (Carrier to S) -- ; _≟_ to
+  open DecSetoid decS renaming (_≟_ to _==_; refl to reflS)
+
+  _≡ˢ_ : (s₁ s₂ : S) → Bool
+  s₁ ≡ˢ s₂ = ⌊  s₁ == s₂ ⌋
+
+  -- diag' : ∀ s → (s == s) ≡ yes reflS
+  -- diag' s with s == s
+  -- ... | yes q = {!q!}
+  -- ... | no q = ⊥-elim (q reflS)
+
+--  diag : ∀ s → (s ≡ˢ s) ≡ true
+--  diag s = cong ⌊_⌋ (diag' s)
+
+  diag : ∀ s → (s ≡ˢ s) ≡ true
+  diag s with s == s
+  ... | yes q = refl
+  ... | no  q = ⊥-elim (q reflS)
+
+  starA : (s₀ : S) (da : DAut S) → DAut (List S)
+  DAut.ν (starA s₀ da) ss   = List.any (λ s → (s ≡ˢ s₀) ∨ DAut.ν da s) ss
+  DAut.δ (starA s₀ da) ss a =
+    let ss' = List.map (λ s → DAut.δ da s a) ss
+    in  if List.any (DAut.ν da) ss then DAut.δ da s₀ a ∷ ss' else ss'
+
+
+
 -- Finite automata
 
 DFAut : (n : ℕ) → Set
@@ -251,6 +285,80 @@ composeA-correct da₁ da₂ s₁ s₂ = begin
   ∅ ∪ acclang da₁ s₁ · acclang da₂ s₂                     ≈⟨ union-emptyˡ ⟩
   acclang da₁ s₁ · acclang da₂ s₂
   ∎ where open EqR (Bis _)
+
+
+module StarCorrect (decS : DecSetoid lzero lzero) where
+  open Star decS
+
+  -- Power automaton with additional final state
+
+  powA' : ∀(s₀ : S) (da : DAut S) → DAut (List S)
+  DAut.ν (powA' s₀ da) ss   = List.any (λ s → s ≡ˢ s₀) ss ∨ DAut.νs da ss
+  DAut.δ (powA' s₀ da) ss a = DAut.δs da ss a
+
+
+  -- Precondition needed on final states?  (s ≡ˢ s₀) ≡ false
+  powA'-cons : ∀{i} (s₀ : S) (da : DAut S) {s : S} {ss : List S} →
+    acclang (powA' s₀ da) (s ∷ ss) ≅⟨ i ⟩≅ acclang da s ∪ acclang (powA' s₀ da) ss
+  ≅ν (powA'-cons s₀ da)   = {!!}
+  ≅δ (powA'-cons s₀ da) a = powA'-cons s₀ da -- (DAut.δ da s a) (DAut.δ (powA' s₀ da) ss a)
+
+  starA-lemma :  ∀{i} (da : DAut S) (s₀ : S) (ss : List S) →
+
+    acclang (starA s₀ da) ss ≅⟨ i ⟩≅ acclang (powA' s₀ da) ss · (acclang da s₀) *
+
+  ≅ν (starA-lemma da s₀ ss) rewrite List.any-∨ (_≡ˢ s₀) (DAut.ν da) ss = sym (∧-true _)
+  ≅δ (starA-lemma da s₀ ss) a with List.any (DAut.ν da) ss | List.any (_≡ˢ s₀) ss
+  ≅δ (starA-lemma da s₀ ss) a | false | false = starA-lemma da s₀ (DAut.δs da ss a)
+  ≅δ (starA-lemma da s₀ ss) a | false | true = begin
+
+      acclang (starA s₀ da) (DAut.δs da ss a)
+
+    ≈⟨ starA-lemma da s₀ (DAut.δs da ss a) ⟩
+
+      acclang (powA' s₀ da) (DAut.δs da ss a) · acclang da s₀ *
+
+    ≈⟨ concat-congˡ {!!} ⟩  -- true since s₀ ∈ ss
+
+      (acclang (powA' s₀ da) (DAut.δs da ss a) ∪ acclang da (DAut.δ da s₀ a))
+        · acclang da s₀ *
+
+    ≈⟨ concat-union-distribˡ (acclang (powA' s₀ da) (DAut.δs da ss a)) ⟩
+
+      acclang (powA' s₀ da) (DAut.δs da ss a) · acclang da s₀ *
+                ∪ acclang da (DAut.δ da s₀ a) · acclang da s₀ *
+
+    ∎ where open EqR (Bis _)
+
+  ≅δ (starA-lemma da s₀ ss) a | true  | q rewrite ∨-true q = begin
+
+      acclang (starA s₀ da) (DAut.δ da s₀ a ∷ DAut.δs da ss a)
+
+    ≈⟨ starA-lemma da s₀ (DAut.δ da s₀ a ∷ δs da ss a) ⟩
+
+      acclang (powA' s₀ da) (DAut.δ da s₀ a ∷ DAut.δs da ss a) · acclang da s₀ *
+
+    ≈⟨ concat-congˡ {!!} ⟩  -- powA'-cons ??
+
+      (acclang (powA' s₀ da) (DAut.δs da ss a) ∪ acclang da (DAut.δ da s₀ a))
+        · acclang da s₀ *
+
+    ≈⟨ concat-union-distribˡ (acclang (powA' s₀ da) (DAut.δs da ss a)) ⟩
+
+      acclang (powA' s₀ da) (DAut.δs da ss a) · acclang da s₀ *
+                ∪ acclang da (DAut.δ da s₀ a) · acclang da s₀ *
+
+    ∎ where open EqR (Bis _)
+
+
+
+  starA-correct : ∀{i} (da : DAut S) (s₀ : S) →
+    acclang (starA s₀ da) (s₀ ∷ []) ≅⟨ i ⟩≅ (acclang da s₀) *
+
+  ≅ν (starA-correct da s)   rewrite diag s = refl
+  ≅δ (starA-correct da s) a with DAut.ν da s
+  ... | true = {! starA-correct da (DAut.δ da s a) !}
+  ... | false = {!!}
 
 -- Conversion
 ------------------------------------------------------------------------
