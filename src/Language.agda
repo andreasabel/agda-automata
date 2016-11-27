@@ -560,6 +560,17 @@ empty-star-union-star : ∀{i} (l : Lang ∞) → (∅ *) ∪ (l *) ≅⟨ i ⟩
 star-union-empty-star : ∀{i} (l : Lang ∞) → (l *) ∪ (∅ *) ≅⟨ i ⟩≅ (l *)
 star-union-empty-star l = ≅trans (union-comm (l *) (∅ *)) (empty-star-union-star _)
 
+-- specialized law used for power automaton construction
+
+concat-maybe-star : ∀{i} (l : Lang ∞) →  (ε ∪ l) · l * ≅⟨ i ⟩≅ l *
+≅ν (concat-maybe-star l) = refl
+≅δ (concat-maybe-star l) a = begin
+    (∅ ∪ δ l a) · l * ∪ δ l a · l *
+  ≈⟨ union-congˡ (concat-congˡ union-emptyˡ) ⟩
+    δ l a · l * ∪ δ l a · l *
+  ≈⟨ union-idem ⟩
+    δ l a · l *
+  ∎ where open EqR (Bis _)
 
 -- Star composed with some language
 -- r*·a = r·r*·a + a

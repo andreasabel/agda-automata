@@ -153,14 +153,6 @@ module Star (decS : DecSetoid lzero lzero) where
   _≡ˢ_ : (s₁ s₂ : S) → Bool
   s₁ ≡ˢ s₂ = ⌊  s₁ == s₂ ⌋
 
-  -- diag' : ∀ s → (s == s) ≡ yes reflS
-  -- diag' s with s == s
-  -- ... | yes q = {!q!}
-  -- ... | no q = ⊥-elim (q reflS)
-
---  diag : ∀ s → (s ≡ˢ s) ≡ true
---  diag s = cong ⌊_⌋ (diag' s)
-
   diag : ∀ s → (s ≡ˢ s) ≡ true
   diag s with s == s
   ... | yes q = refl
@@ -183,23 +175,6 @@ module Star (decS : DecSetoid lzero lzero) where
   starA : (s₀ : S) (da : DAut S) → DAut (List (Maybe S))
   starA s₀ da = finalToInitial (acceptingInitial s₀ da)
 
-  -- DAut.ν (starA s₀ da) ss   = List.any (λ s → (s ≡ˢ s₀) ∨ DAut.ν da s) ss
-  -- DAut.δ (starA s₀ da) ss a =
-  --   let ss' = List.map (λ s → DAut.δ da s a) ss
-  --   in  if List.any (DAut.ν da) ss then DAut.δ da s₀ a ∷ ss' else ss'
-
-
-
--- Finite automata
-
-DFAut : (n : ℕ) → Set
-DFAut n = DAut (Fin n)
-
--- Powerset automaton
-
-powDFA : ∀{n} (dfa : DFAut n) → DAut (Vec Bool n)
-DAut.ν (powDFA dfa) s = Vec.any (Vec.zipWith _∧_ s (Vec.tabulate (DAut.ν dfa)))
-DAut.δ (powDFA dfa) s a = Vec.∨-permute s (λ i → DAut.δ dfa i a)
 
 ------------------------------------------------------------------------
 -- Proofs
@@ -306,24 +281,32 @@ composeA-correct da₁ da₂ s₁ s₂ = begin
 module StarCorrect (decS : DecSetoid lzero lzero) where
   open Star decS
 
-  -- Power automaton with additional final state
-
-  powA' : ∀(s₀ : S) (da : DAut S) → DAut (List S)
-  DAut.ν (powA' s₀ da) ss   = List.any (λ s → s ≡ˢ s₀) ss ∨ DAut.νs da ss
-  DAut.δ (powA' s₀ da) ss a = DAut.δs da ss a
-
-
-  -- Precondition needed on final states?  (s ≡ˢ s₀) ≡ false
-  powA'-cons : ∀{i} (s₀ : S) (da : DAut S) {s : S} {ss : List S} →
-    acclang (powA' s₀ da) (s ∷ ss) ≅⟨ i ⟩≅ acclang da s ∪ acclang (powA' s₀ da) ss
-  ≅ν (powA'-cons s₀ da)   = {!!}
-  ≅δ (powA'-cons s₀ da) a = powA'-cons s₀ da -- (DAut.δ da s a) (DAut.δ (powA' s₀ da) ss a)
-
 
   acceptingInitial-just : ∀{i} (s₀ : S) (da : DAut S) {s : S} →
+
     acclang (acceptingInitial s₀ da) (just s) ≅⟨ i ⟩≅ acclang da s
+
   ≅ν (acceptingInitial-just s₀ da) = refl
   ≅δ (acceptingInitial-just s₀ da) a = acceptingInitial-just s₀ da
+
+  acceptingInitial-nothing :  ∀{i} (s₀ : S) (da : DAut S) →
+
+    acclang (acceptingInitial s₀ da) nothing ≅⟨ i ⟩≅ ε ∪ acclang da s₀
+
+  ≅ν (acceptingInitial-nothing s₀ da)   = refl
+  ≅δ (acceptingInitial-nothing s₀ da) a = begin
+
+      acclang (acceptingInitial s₀ da) (just (DAut.δ da s₀ a))
+
+    ≈⟨ acceptingInitial-just _ _ ⟩
+
+      acclang da (DAut.δ da s₀ a)
+
+    ≈⟨ ≅sym union-emptyˡ ⟩
+
+      ∅ ∪ acclang da (DAut.δ da s₀ a)
+
+    ∎ where open EqR (Bis _)
 
   starA-lemma :  ∀{i} (da : DAut S) (s₀ : S) (ss : List (Maybe S)) →
 
@@ -378,58 +361,33 @@ module StarCorrect (decS : DecSetoid lzero lzero) where
         open EqR (Bis _)
         ss' = (just (DAut.δ da s₀ a) ∷ DAut.δs (acceptingInitial s₀ da) ss a)
 
-  -- ≅ν (starA-lemma da s₀ ss) rewrite List.any-∨ (_≡ˢ s₀) (DAut.ν da) ss = sym (∧-true _)
-  -- ≅δ (starA-lemma da s₀ ss) a with List.any (DAut.ν da) ss | List.any (_≡ˢ s₀) ss
-  -- ≅δ (starA-lemma da s₀ ss) a | false | false = starA-lemma da s₀ (DAut.δs da ss a)
-  -- ≅δ (starA-lemma da s₀ ss) a | false | true = begin
+  starA-correct : ∀{i} (da : DAut S) (s₀ : S) →
+    acclang (starA s₀ da) (nothing ∷ []) ≅⟨ i ⟩≅ (acclang da s₀) *
 
-  --     acclang (starA s₀ da) (DAut.δs da ss a)
+  starA-correct da s₀ = begin
 
-  --   ≈⟨ starA-lemma da s₀ (DAut.δs da ss a) ⟩
+      acclang (starA s₀ da) (nothing ∷ [])
 
-  --     acclang (powA' s₀ da) (DAut.δs da ss a) · acclang da s₀ *
+    ≈⟨  starA-lemma da s₀ (nothing ∷ []) ⟩
 
-  --   ≈⟨ concat-congˡ {!!} ⟩  -- true since s₀ ∈ ss
+      acclang (powA (acceptingInitial s₀ da)) (nothing ∷ [])
+        · acclang da s₀ *
 
-  --     (acclang (powA' s₀ da) (DAut.δs da ss a) ∪ acclang da (DAut.δ da s₀ a))
-  --       · acclang da s₀ *
+    ≈⟨ concat-congˡ (powA-correct _ _) ⟩
 
-  --   ≈⟨ concat-union-distribˡ (acclang (powA' s₀ da) (DAut.δs da ss a)) ⟩
+      acclang (acceptingInitial s₀ da) nothing
+        · acclang da s₀ *
 
-  --     acclang (powA' s₀ da) (DAut.δs da ss a) · acclang da s₀ *
-  --               ∪ acclang da (DAut.δ da s₀ a) · acclang da s₀ *
+    ≈⟨ concat-congˡ (acceptingInitial-nothing _ _) ⟩
 
-  --   ∎ where open EqR (Bis _)
+      (ε ∪ acclang da s₀) · acclang da s₀ *
 
-  -- ≅δ (starA-lemma da s₀ ss) a | true  | q rewrite ∨-true q = begin
+    ≈⟨ concat-maybe-star _ ⟩
 
-  --     acclang (starA s₀ da) (DAut.δ da s₀ a ∷ DAut.δs da ss a)
+      acclang da s₀ *
 
-  --   ≈⟨ starA-lemma da s₀ (DAut.δ da s₀ a ∷ δs da ss a) ⟩
+    ∎ where open EqR (Bis _)
 
-  --     acclang (powA' s₀ da) (DAut.δ da s₀ a ∷ DAut.δs da ss a) · acclang da s₀ *
-
-  --   ≈⟨ concat-congˡ {!!} ⟩  -- powA'-cons ??  (any ν ss == true)
-
-  --     (acclang (powA' s₀ da) (DAut.δs da ss a) ∪ acclang da (DAut.δ da s₀ a))
-  --       · acclang da s₀ *
-
-  --   ≈⟨ concat-union-distribˡ (acclang (powA' s₀ da) (DAut.δs da ss a)) ⟩
-
-  --     acclang (powA' s₀ da) (DAut.δs da ss a) · acclang da s₀ *
-  --               ∪ acclang da (DAut.δ da s₀ a) · acclang da s₀ *
-
-  --   ∎ where open EqR (Bis _)
-
-
-
-  -- starA-correct : ∀{i} (da : DAut S) (s₀ : S) →
-  --   acclang (starA s₀ da) (s₀ ∷ []) ≅⟨ i ⟩≅ (acclang da s₀) *
-
-  -- ≅ν (starA-correct da s)   rewrite diag s = refl
-  -- ≅δ (starA-correct da s) a with DAut.ν da s
-  -- ... | true = {! starA-correct da (DAut.δ da s a) !}
-  -- ... | false = {!!}
 
 -- Conversion
 ------------------------------------------------------------------------
@@ -451,11 +409,3 @@ convA-correct : ∀{i S S'} (iso : S ↔ S') (da : DAut S) (let da' = convA iso 
   = refl
 ≅δ (convA-correct iso da s) a rewrite _InverseOf_.left-inverse-of (Inverse.inverse-of iso) s
   = convA-correct iso da (DAut.δ da s a)
-
-
--- Finite automata
-
-powDFA-correct : ∀{i n} (da : DFAut n) (ss : List (Fin n)) →
-  acclang (powDFA da) (Vec.elemSet ss) ≅⟨ i ⟩≅ acclang (powA da) ss
-≅ν (powDFA-correct da ss) = {!!}
-≅δ (powDFA-correct da ss) a = {!!}
