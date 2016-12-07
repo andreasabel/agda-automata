@@ -788,10 +788,157 @@ step to a new list of states by pointwise applying the transition function.
 \aDA
 
 The initial state is not
-contained in the automaton definition; each state induces a language
-accepted by this automaton.
+contained in the automaton definition; each state $s$
+induces a language $\tlang\,\vda\,s$
+accepted by an automaton $\vda$, which can be defined by simple coiteration:
 
 \aacclang
+
+\subsection{Simple Constructions on Automata}
+\label{sec:simpleaut}
+
+An automaton for the empty language can be constructed with a single
+non-accepting state inhabiting Agda's unit type $\top$.
+
+\begin{minipage}{0.5\linewidth}
+\aemptyA
+\end{minipage}
+\begin{minipage}{0.5\linewidth}
+\[
+\xymatrix{
+  \bullet \ar@(dr,ur)
+}
+\]
+\end{minipage}
+
+To recognize the language of the empty word, we take need two states,
+accepting $\ttrue$ and non-accepting $\tfalse : \Bool$.
+
+\begin{minipage}{0.5\linewidth}
+\aepsA
+\end{minipage}
+\begin{minipage}{0.5\linewidth}
+\[
+\xymatrix{
+  *++[o][F=]{\ttrue } \ar[r] &
+  *++[o][F-]{\tfalse} \ar@(ur,ul)
+}
+\]
+\end{minipage}
+
+For accepting a the single letter word $a$, we have three states: an
+initial state $\tinit$, an accepting state $\tacc$, and a rejecting
+error state $\terr$.
+
+\begin{minipage}{0.5\linewidth}
+\acharA
+\end{minipage}
+\begin{minipage}{0.5\linewidth}
+\[
+\xymatrix{
+  *++[o][F-]{\tinit } \ar[r]^{a} \ar[dr]_{\neg a} &
+  *++[o][F=]{\tacc } \ar[d] \\
+&
+  *++[o][F-]{\terr} \ar@(dr,dl)
+}
+\]
+\end{minipage}
+
+Given an automaton $\vda$, we construct the automaton $\tcomplA\,\vda$
+for the complement language by switching accepting and non-accepting states.
+
+\acomplA
+
+Given an automaton $\vda_1$ over state set $S_1$ accepting language $\ell_1$ and an
+automaton $\vda_2$ over $S_2$ for $l_2$, we can recognize the union $\ell_1
+\tunion \ell_2$ by the following \emph{product} automaton $\vda_1
+\toplus \vda_2$ over state set $S_1 \times S_2$.  A state in the
+product automaton is a pair of states $(s_1, s_2)$, one from each
+original automaton.  Transitions are done in lock-step, and for
+acceptance at least one of the original automata must be in a final
+state.
+
+\aunionA
+
+\subsection{Automaton Composition for Language Concatenation}
+\label{sec:compaut}
+
+In preparation for automaton constructions for language concatenation
+and iteration, we define the power automaton, which allows us to be in
+a set of states at the same time.  It is actually sufficient to
+consider finite sets of states, which we represent a bit redundantly
+as lists.
+
+\apowA
+
+If we start the power automaton in state $[s_1,\dots,s_n]$, the
+accepted language will be the $\bigcup_{i=1}^n \tlang\,\vda\,s_i$.  We
+prove this in two steps:
+First, if we start out in no states, the accepted language is empty.
+
+\apowAnil
+
+If we start in the non-empty list $s :: \vss$, we accept the union of
+the accepted language of $\vda$ from $s$ and the accepted language of
+$\tpowA\,\vda$ from $\vss$.
+
+\apowAcons
+
+For language concatenation, given two automata $\vda_1$ and $\vda_2$,
+we will construct a composition automaton
+$\tcomposeA\,\vda_1\,s_2\,\vda_2$ such that its accepted language from
+state $s_1$ is the language concatenation
+$\tlang\,\vda_1\,s_1 \cdot \tlang\,\vda_2\,s_2$.
+The key insight is that whenever we reach a final state in $\vda_1$, we
+non-deterministically jump to the initial state $s_2$ of $\vda_2$.
+This means we are in one state of $\vda_1$ and in zero or more states
+of $\vda_2$ at the same time.  Thus, the type of states is
+$S_1 \times \List\,\tinfty\,S_2$ and we consider the power of the
+second automaton.
+
+\acomposeA
+
+A state $(s_1, \vss_2)$ of the composition automation is final if any
+of $\vss_2$ is final, or if $s_1$ is final and the initial state $s_2$
+of $\vda_2$ is also a final state.  (The latter means that the second
+language is nullable, so any word of the first language is contained
+in the composition.)
+
+\acomposeAnu
+
+To step from state $(s_1, \vss_2)$ we consider two cases.  First, if
+$s_1$ is not final, we simply transition pointwise, from $s_1$ with
+$\tdelta\, \vda_1$, and from each state in $\vss_2$ with $\tdelta\,\vda_2$.
+However, if $s_1$ is final, we consider us to be also in the initial
+state $s_2$ of $\vda_2$, thus, we add to this the transition we can
+make from $s_2$ in the second automaton.
+
+\acomposeAdelta
+
+The composition automaton is a non-trivial construction, thus, it
+makes sense to look at its correctness proof.  We have to generalize
+the correctness statement to arbitrary initial states $(s_1, \vss)$ in
+the composition automaton.  If $\vss$ is not empty, the accepted
+language of the composition automaton
+contains the union of the accepted languages from each state
+in $\vss$ as well.
+
+\acomposeAgen
+
+The proof is by coinduction, using lemma $\tpowAcons$ in case $s_1$ is
+final.
+
+\acomposeAgenproof
+
+As a corollary for empty $\vss$, we obtain the correctness of automaton composition:
+
+\acomposeAcorrect
+
+
+\subsection{Automaton Construction for Language Iteration}
+\label{sec:staraut}
+
+
 
 \section{Conclusions}
 \label{sec:concl}

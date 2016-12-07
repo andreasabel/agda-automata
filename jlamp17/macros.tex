@@ -221,8 +221,11 @@
 \newcommand{\tempty}{\AgdaFunction{\ensuremath{\emptyset}}\xspace}
 \newcommand{\temptys}[1]{\AgdaFunction{\ensuremath{\emptyset}}\,\sizea{#1}}
 \newcommand{\agda}[1]{\AgdaFunction{#1}\xspace}
-\newcommand{\ttrue}{\agda{true}}
-\newcommand{\tfalse}{\agda{false}}
+\newcommand{\ttrue}{\AgdaInductiveConstructor{true}}
+\newcommand{\tfalse}{\AgdaInductiveConstructor{false}}
+\newcommand{\terr}{\AgdaInductiveConstructor{err}}
+\newcommand{\tacc}{\AgdaInductiveConstructor{acc}}
+\newcommand{\tinit}{\AgdaInductiveConstructor{init}}
 \newcommand{\tcoit}{\agda{coit}}
 \newcommand{\tid}{\agda{id}}
 \newcommand{\thead}{\AgdaField{head}}
@@ -232,6 +235,8 @@
 \newcommand{\vas}{\mathit{as}}
 \newcommand{\vbs}{\mathit{bs}}
 \newcommand{\vcs}{\mathit{cs}}
+\renewcommand{\vss}{\mathit{ss}}
+\newcommand{\vda}{\mathit{da}}
 \newcommand{\imp}{\Longrightarrow}
 \newcommand{\tcup}{\AgdaFunction{\ensuremath{\cup}}}
 \newcommand{\tinfty}{\AgdaFunction{\ensuremath{\infty}}}
@@ -246,6 +251,12 @@
 \newcommand{\Bis}{\agda{Bis}}
 \newcommand{\tunioncong}{\agda{union-cong}}
 \newcommand{\tunioncongl}{\agda{union-cong\ensuremath{^\mathsf{l}}}}
+\newcommand{\tcomplA}{\agda{complA}}
+\newcommand{\toplus}{\mathrel{\agda{\ensuremath{\oplus}}}}
+\newcommand{\tpowA}{\agda{powA}}
+\newcommand{\tpowAcons}{\agda{powA-cons}}
+\newcommand{\tcomposeA}{\agda{composeA}}
+
 
 % ICFP 13 talk
 \newcommand{\tbla}{\mathsf{bla}}
@@ -478,8 +489,6 @@
 \newcommand{\etacon}{\mapsto_{\mathsf{e}}}
 \newcommand{\elimp}{\mapsto_{\mathsf{p}}}
 \newcommand{\K}{\mathcal{K}}
-%\newcommand{\ttrue}{\mathsf{true}}
-%\newcommand{\tfalse}{\mathsf{false}}
 
 \newcommand{\derk}{\der_\K}
 

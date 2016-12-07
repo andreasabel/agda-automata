@@ -75,26 +75,40 @@ open DA public
 \end{code}
 }
 
--- An automaton recognizing the empty language
+% -- An automaton recognizing the empty language
 
-\AgdaHide{
+\newcommand{\aemptyA}{
 \begin{code}
 
 ∅A : DA ⊤
-ν ∅A s = false
-δ ∅A s a = _
+ν  ∅A  s     =  false
+δ  ∅A  s  a  =  s
+
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 -- An automaton recognizing the trivial language
 
 allA : DA ⊤
-ν allA s = true
-δ allA s a = _
+ν allA s    = true
+δ allA s a  = s
 
 -- An automaton recognizing only the empty word.  (Or nothing.)
+\end{code}
+}
+\newcommand{\aepsA}{
+\begin{code}
 
 εA : DA Bool
-ν εA b = b
-δ εA b a = false
+ν  εA  b     =  b
+δ  εA  b  a  =  false
+
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 -- An automaton recognizing a single word consisting of a single character.
 -- nothing is the error state, just false the initial state, just true the accepting state.
@@ -108,69 +122,141 @@ charA' : (a : A) → DA (Maybe Bool)
 δ (charA' a) (just true) x = nothing
 δ (charA' a) nothing _ = nothing
 
+\end{code}
+}
+\newcommand{\acharA}{
+\begin{code}
+
 data 3States : Set where
   init acc err : 3States
 
 charA : (a : A) → DA 3States
-ν (charA a) init = false
-ν (charA a) acc = true
-ν (charA a) err = false
-δ (charA a) init a₁ = if ⌊ a ≟ a₁ ⌋ then acc else err
-δ (charA a) acc a₁ = err
-δ (charA a) err a₁ = err
+ν  (charA a)  init     =  false
+ν  (charA a)  acc      =  true
+ν  (charA a)  err      =  false
+δ  (charA a)  init  x  =
+  if ⌊ a ≟ x ⌋ then acc else err
+δ  (charA a)  acc   x  =  err
+δ  (charA a)  err   x  =  err
 
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 -- The complement automaton
 
+\end{code}
+}
+\newcommand{\acomplA}{
+\begin{code}
+
 complA : ∀{S} (da : DA S) → DA S
-ν (complA da) s = not (ν da s)
-δ (complA da) s a = δ da s a
+ν  (complA da)  s     =  not (ν da s)
+δ  (complA da)  s  a  =  δ da s a
+
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 -- A product automaton recognizing intersection
 
 _⊗_ : ∀{S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) → DA (S₁ × S₂)
-ν (da₁ ⊗ da₂) (s₁ , s₂)   = ν da₁ s₁ ∧ ν da₂ s₂
-δ (da₁ ⊗ da₂) (s₁ , s₂) a = δ da₁ s₁ a , δ da₂ s₂ a
+ν  (da₁ ⊗ da₂) (s₁ , s₂)   = ν da₁ s₁ ∧ ν da₂ s₂
+δ  (da₁ ⊗ da₂) (s₁ , s₂) a = δ da₁ s₁ a , δ da₂ s₂ a
 
 -- A product automaton recognizing union
 
+\end{code}
+}
+\newcommand{\aunionA}{
+\begin{code}
+
 _⊕_ : ∀{S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) → DA (S₁ × S₂)
-ν (da₁ ⊕ da₂) (s₁ , s₂)   = ν da₁ s₁ ∨ ν da₂ s₂
-δ (da₁ ⊕ da₂) (s₁ , s₂) a = δ da₁ s₁ a , δ da₂ s₂ a
+ν  (da₁ ⊕ da₂)  (s₁ , s₂)     =  ν da₁ s₁    ∨  ν da₂ s₂
+δ  (da₁ ⊕ da₂)  (s₁ , s₂)  a  =  δ da₁ s₁ a  ,  δ da₂ s₂ a
+
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 -- Automaton composition is not trivial for DFAs.
 -- It is easy for NFAs.  It is also easy to compose a DFA with an NFA.
 
 -- Abstract automaton composition
 
-acomposeA : ∀{S₁ S₂} (da₁ : DA S₁) (f : S₂ → S₂) (da₂ : DA S₂) → DA (S₁ × S₂)
-ν (acomposeA da₁ f da₂) (s₁ , s₂)   = ν da₁ s₁ ∧ ν da₂ (f s₂) ∨ ν da₂ s₂
-δ (acomposeA da₁ f da₂) (s₁ , s₂) a = δ da₁ s₁ a , δ da₂ s₂' a
+\end{code}
+}
+\AgdaHide{
+\begin{code}
+
+acomposeA' : ∀{S₁ S₂} (da₁ : DA S₁) (f : S₂ → S₂) (da₂ : DA S₂) → DA (S₁ × S₂)
+ν (acomposeA' da₁ f da₂) (s₁ , s₂)   = ν da₁ s₁ ∧ ν da₂ (f s₂) ∨ ν da₂ s₂
+δ (acomposeA' da₁ f da₂) (s₁ , s₂) a = δ da₁ s₁ a , δ da₂ s₂' a
   where s₂' = if ν da₁ s₁ then f s₂ else s₂
+
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 -- Finite powerset automaton with lists (alt: finite sets).
 
+\end{code}
+}
+\newcommand{\apowA}{
+\begin{code}
+
 powA : ∀{S} (da : DA S) → DA (List ∞ S)
-ν (powA da) ss   = νs da ss
-δ (powA da) ss a = δs da ss a
+ν  (powA da)  ss     =  νs da ss
+δ  (powA da)  ss  a  =  δs da ss a
+
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 -- Automaton composition
 -- We need an initial state of the second automaton to glue them together.
 -- We could also allow a list of initial states of the second automaton.
 
-composeA : ∀{S₁ S₂} (da₁ : DA S₁) (s₀ : S₂) (da₂ : DA S₂) → DA (S₁ × List ∞ S₂)
-composeA da₁ s₀ da₂ = acomposeA da₁ (_∷_ s₀) (powA da₂)
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 composeA' : ∀{S₁ S₂} (da₁ : DA S₁) (s₀ : S₂) (da₂ : DA S₂) → DA (S₁ × List ∞ S₂)
-ν (composeA' da₁ s₀ da₂) (s₁ , ss₂)   = (ν da₁ s₁ ∧ ν da₂ s₀) ∨ νs da₂ ss₂
-δ (composeA' da₁ s₀ da₂) (s₁ , ss₂) a = δ da₁ s₁ a , δs da₂ (if ν da₁ s₁ then s₀ ∷ ss₂ else ss₂) a
+composeA' da₁ s₀ da₂ = acomposeA' da₁ (_∷_ s₀) (powA da₂)
 
+\end{code}
+}
+\newcommand{\acomposeA}{
+\begin{code}
 
--- WRONG:
--- composeA' : ∀{S₁ S₂} (da₁ : DA S₁) (s₀ : S₂) (da₂ : DA S₂) → DA (S₁ ⊎ (S₁ × S₂))
--- ν (composeA' da₁ s₀ da₂) (inj₁ s₁) = ν da₁ s₁
--- ν (composeA' da₁ s₀ da₂) (inj₂ (s₁ , s₂)) = ν da₁ s₁ ∨ ν da₂ s₂
--- δ (composeA' da₁ s₀ da₂) (inj₁ s₁) a = if ν da₁ s₁ then inj₂ (δ da₁ s₁ a , s₀) else inj₁ (δ da₁ s₁ a)
--- δ (composeA' da₁ s₀ da₂) (inj₂ (s₁ , s₂)) a = inj₂ (δ da₁ s₁ a , δ da₂ s₂ a)
+composeA : ∀{S₁ S₂}
+  (da₁ : DA S₁) (s₂ : S₂) (da₂ : DA S₂) → DA (S₁ × List ∞ S₂)
+
+\end{code}
+}
+\newcommand{\acomposeAnu}{
+\begin{code}
+
+ν  (composeA da₁ s₂ da₂)  (s₁ , ss₂)     =
+  (ν da₁ s₁ ∧ ν da₂ s₂) ∨ νs da₂ ss₂
+
+\end{code}
+}
+\newcommand{\acomposeAdelta}{
+\begin{code}
+
+δ  (composeA da₁ s₂ da₂)  (s₁ , ss₂)  a  =
+  δ da₁ s₁ a , δs da₂ (if ν da₁ s₁ then s₂ ∷ ss₂ else ss₂) a
+
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 
 -- Kleene star
@@ -243,20 +329,45 @@ unionA-correct : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) (s₁ : S�
 
 -- Power construction preserves semantics
 
-powA-nil : ∀{i S} (da : DA S) → lang (powA da) [] ≅⟨ i ⟩≅ ∅
-≅ν (powA-nil da)   = refl
-≅δ (powA-nil da) a = powA-nil da
+\end{code}
+}
+\newcommand{\apowAnil}{
+\begin{code}
+
+powA-nil : ∀{i S} (da : DA S) →
+
+  lang (powA da) [] ≅⟨ i ⟩≅ ∅
+
+≅ν  (powA-nil da)     = refl
+≅δ  (powA-nil da)  a  = powA-nil da
+
+\end{code}
+}
+\newcommand{\apowAcons}{
+\begin{code}
 
 powA-cons : ∀{i S} (da : DA S) {s : S} {ss : List ∞ S} →
+
   lang (powA da) (s ∷ ss) ≅⟨ i ⟩≅ lang da s ∪ lang (powA da) ss
-≅ν (powA-cons da) = refl
-≅δ (powA-cons da) a = powA-cons da -- (δ da s a) (δ (powA da) ss a)
+
+≅ν  (powA-cons da)     = refl
+≅δ  (powA-cons da)  a  = powA-cons da
+
+\end{code}
+}
+\newcommand{\apowAcorrect}{
+\begin{code}
 
 powA-correct : ∀{i S} (da : DA S) (s : S) → lang (powA da) (s ∷ []) ≅⟨ i ⟩≅ lang da s
 ≅ν (powA-correct da s) with ν da s
 ... | true = refl
 ... | false = refl
 ≅δ (powA-correct da s) a = powA-correct da (δ da s a)
+
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 fact : ∀ a {b c} → (a ∧ (b ∨ c)) ∨ c ≡ (a ∧ b) ∨ c
 fact a {b} {c} = begin
@@ -267,14 +378,75 @@ fact a {b} {c} = begin
   (a ∧ b) ∨ c
   ∎ where open ≡-Reasoning
 
-composeA-gen : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) (s₁ : S₁) (s₂ : S₂) (ss : List ∞ S₂) →
-  lang (composeA da₁ s₂ da₂) (s₁ , ss) ≅⟨ i ⟩≅ lang da₁ s₁ · lang da₂ s₂ ∪ lang (powA da₂) ss
-≅ν (composeA-gen da₁ da₂ s₁ s₂ ss) = fact (ν da₁ s₁)
-≅δ (composeA-gen da₁ da₂ s₁ s₂ ss) a with ν da₁ s₁
+composeA'-gen : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) (s₁ : S₁) (s₂ : S₂) (ss : List ∞ S₂) →
+  lang (composeA' da₁ s₂ da₂) (s₁ , ss) ≅⟨ i ⟩≅ lang da₁ s₁ · lang da₂ s₂ ∪ lang (powA da₂) ss
+≅ν (composeA'-gen da₁ da₂ s₁ s₂ ss) = fact (ν da₁ s₁)
+≅δ (composeA'-gen da₁ da₂ s₁ s₂ ss) a with ν da₁ s₁
 
 ... | true  = begin
 
-    lang (acomposeA da₁ (_∷_ s₂) (powA da₂))
+    lang (acomposeA' da₁ (_∷_ s₂) (powA da₂))
+      (δ da₁ s₁ a , δ da₂ s₂ a ∷ δs da₂ ss a)
+
+  ≈⟨  composeA'-gen da₁ da₂ (δ da₁ s₁ a) s₂ (δs da₂ (s₂ ∷ ss) a) ⟩
+
+    lang da₁ (δ da₁ s₁ a) · lang da₂ s₂ ∪
+      lang (powA da₂) (δs da₂ (s₂ ∷ ss) a)
+
+  ≈⟨  union-congʳ (powA-cons da₂) ⟩
+
+     lang da₁ (δ da₁ s₁ a) · lang da₂ s₂ ∪
+      (lang da₂ (δ da₂ s₂ a) ∪ lang (powA da₂) (δs da₂ ss a))
+
+  ≈⟨  ≅sym (union-assoc _) ⟩
+
+     lang da₁ (δ da₁ s₁ a) · lang da₂ s₂ ∪
+      lang da₂ (δ da₂ s₂ a) ∪ lang (powA da₂) (δs da₂ ss a)
+
+  ∎ where open EqR (Bis _)
+
+... | false = composeA'-gen da₁ da₂ (δ da₁ s₁ a) s₂ (δs da₂ ss a)
+
+
+composeA'-correct : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) (s₁ : S₁) (s₂ : S₂) →
+
+  lang (composeA' da₁ s₂ da₂) (s₁ , []) ≅⟨ i ⟩≅ lang da₁ s₁ · lang da₂ s₂
+
+composeA'-correct da₁ da₂ s₁ s₂ = begin
+  lang (composeA' da₁ s₂ da₂) (s₁ , [])                 ≈⟨  composeA'-gen da₁ da₂ s₁ s₂ [] ⟩
+  lang da₁ s₁ · lang da₂ s₂ ∪ lang (powA da₂) [] ≈⟨ union-congʳ (powA-nil da₂) ⟩
+  lang da₁ s₁ · lang da₂ s₂ ∪ ∅                     ≈⟨ union-comm _ _ ⟩
+  ∅ ∪ lang da₁ s₁ · lang da₂ s₂                     ≈⟨ union-emptyˡ ⟩
+  lang da₁ s₁ · lang da₂ s₂
+  ∎ where open EqR (Bis _)
+
+
+-- correctness of composition
+
+\end{code}
+}
+\newcommand{\acomposeAgen}{
+\begin{code}
+
+composeA-gen : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) →
+  ∀ (s₁ : S₁) (s₂ : S₂) (ss : List ∞ S₂) →
+
+    lang (composeA da₁ s₂ da₂) (s₁ , ss)
+  ≅⟨ i ⟩≅
+    lang da₁ s₁ · lang da₂ s₂ ∪ lang (powA da₂) ss
+
+\end{code}
+}
+\newcommand{\acomposeAgenproof}{
+\begin{code}
+
+≅ν (composeA-gen da₁ da₂ s₁ s₂ ss) = refl
+≅δ (composeA-gen da₁ da₂ s₁ s₂ ss) a with ν da₁ s₁
+... | false = composeA-gen da₁ da₂ (δ da₁ s₁ a) s₂ (δs da₂ ss a)
+
+... | true  = begin
+
+    lang (composeA da₁ s₂ da₂)
       (δ da₁ s₁ a , δ da₂ s₂ a ∷ δs da₂ ss a)
 
   ≈⟨  composeA-gen da₁ da₂ (δ da₁ s₁ a) s₂ (δs da₂ (s₂ ∷ ss) a) ⟩
@@ -294,20 +466,35 @@ composeA-gen : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) (s₁ : S₁
 
   ∎ where open EqR (Bis _)
 
-... | false = composeA-gen da₁ da₂ (δ da₁ s₁ a) s₂ (δs da₂ ss a)
+\end{code}
+}
 
+% composeA-correct : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) (s₁ : S₁) (s₂ : S₂) →
 
-composeA-correct : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) (s₁ : S₁) (s₂ : S₂) →
+\newcommand{\acomposeAcorrect}{
+\begin{code}
+
+composeA-correct : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) s₁ s₂ →
 
   lang (composeA da₁ s₂ da₂) (s₁ , []) ≅⟨ i ⟩≅ lang da₁ s₁ · lang da₂ s₂
 
+\end{code}
+}
+\AgdaHide{
+\begin{code}
+
 composeA-correct da₁ da₂ s₁ s₂ = begin
-  lang (composeA da₁ s₂ da₂) (s₁ , [])                 ≈⟨  composeA-gen da₁ da₂ s₁ s₂ [] ⟩
-  lang da₁ s₁ · lang da₂ s₂ ∪ lang (powA da₂) [] ≈⟨ union-congʳ (powA-nil da₂) ⟩
-  lang da₁ s₁ · lang da₂ s₂ ∪ ∅                     ≈⟨ union-comm _ _ ⟩
-  ∅ ∪ lang da₁ s₁ · lang da₂ s₂                     ≈⟨ union-emptyˡ ⟩
-  lang da₁ s₁ · lang da₂ s₂
+    lang (composeA da₁ s₂ da₂) (s₁ , [])            ≈⟨  composeA-gen da₁ da₂ s₁ s₂ [] ⟩
+    lang da₁ s₁ · lang da₂ s₂ ∪ lang (powA da₂) []  ≈⟨ union-congʳ (powA-nil da₂) ⟩
+    lang da₁ s₁ · lang da₂ s₂ ∪ ∅                   ≈⟨ union-comm _ _ ⟩
+    ∅ ∪ lang da₁ s₁ · lang da₂ s₂                   ≈⟨ union-emptyˡ ⟩
+    lang da₁ s₁ · lang da₂ s₂
   ∎ where open EqR (Bis _)
+
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 
 module StarCorrect (decS : DecSetoid lzero lzero) where
