@@ -31,9 +31,9 @@ module _ {S} (da : DAut S) (open DAut da) where
   -- Language accepted by a state.
   -- The terminal morphism.
 
-  acclang : ∀{i} (s : S) → Lang i
-  Lang.ν (acclang s) = ν s
-  Lang.δ (acclang s) a = acclang (δ s a)
+  lang : ∀{i} (s : S) → Lang i
+  Lang.ν (lang s) = ν s
+  Lang.δ (lang s) a = lang (δ s a)
 
 -- An automaton recognizing the empty language
 
@@ -141,6 +141,6 @@ DAut.ν (powDFA dfa) s = Vec.any (Vec.zipWith _∧_ s (Vec.tabulate (DAut.ν dfa
 DAut.δ (powDFA dfa) s a = Vec.∨-permute s (λ i → DAut.δ dfa i a)
 
 powDFA-correct : ∀{i n} (da : DFAut n) (ss : List (Fin n)) →
-  acclang (powDFA da) (Vec.elemSet ss) ≅⟨ i ⟩≅ acclang (powA da) ss
+  lang (powDFA da) (Vec.elemSet ss) ≅⟨ i ⟩≅ lang (powA da) ss
 ≅ν (powDFA-correct da ss) = {!!}
 ≅δ (powDFA-correct da ss) a = {!!}
