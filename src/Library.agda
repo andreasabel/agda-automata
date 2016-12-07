@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module Library where
 
 open import Level public using (Level) renaming (zero to lzero; suc to lsuc; _⊔_ to _l⊔_)
@@ -40,7 +42,7 @@ open import Algebra.Properties.DistributiveLattice (record { isDistributiveLatti
 import Algebra.IdempotentCommutativeMonoidSolver
 module ICMSolver = Algebra.IdempotentCommutativeMonoidSolver
 
-postulate TODO : ∀{a}{A : Set a} → A
+-- postulate TODO : ∀{a}{A : Set a} → A
 
 -- Goals
 show_proof_ : ∀{a} (A : Set a) → A → A
@@ -92,7 +94,7 @@ module List where
       (f a ∨ g a) ∨ any (λ a → f a ∨ g a) as
     ≡⟨ cong (λ z → (f a ∨ g a) ∨ z) (any-∨ f g as) ⟩
       (f a ∨ g a) ∨ (any f as ∨ any g as)
-    ≡⟨ TODO ⟩
+    ≡⟨ ? ⟩
       (f a ∨ any f as) ∨ (g a ∨ any g as)
     ∎ where
       open ≡-Reasoning
