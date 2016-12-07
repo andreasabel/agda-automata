@@ -1009,3 +1009,20 @@ star-from-rec : ∀{i} (k {l m} : Lang ∞)
 
 \end{code}
 }
+
+
+%  -- specialized law used for power automaton construction
+
+\AgdaHide{
+\begin{code}
+concat-maybe-star : ∀{i} (l : Lang ∞) →  (ε ∪ l) · l * ≅⟨ i ⟩≅ l *
+≅ν (concat-maybe-star l) = refl
+≅δ (concat-maybe-star l) a = begin
+    (∅ ∪ δ l a) · l * ∪ δ l a · l *
+  ≈⟨ union-congˡ (concat-congˡ union-emptyˡ) ⟩
+    δ l a · l * ∪ δ l a · l *
+  ≈⟨ union-idem ⟩
+    δ l a · l *
+  ∎ where open EqR (Bis _)
+\end{code}
+}

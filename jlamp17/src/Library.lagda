@@ -57,6 +57,10 @@ show A proof x = x
 ∨-false true  = refl
 ∨-false false = refl
 
+∨-true : ∀ b → b ∨ true ≡ true
+∨-true true  = refl
+∨-true false = refl
+
 ∧-false : ∀ b → b ∧ false ≡ false
 ∧-false true  = refl
 ∧-false false = refl
@@ -84,6 +88,10 @@ module List where
   map f []        =  []
   map f (x ∷ xs)  =  f x ∷ map f xs
 
+  foldr : ∀ {i} {A B : Set} → (A → B → B) → B → List i A → B
+  foldr c n []       = n
+  foldr c n (x ∷ xs) = c x (foldr c n xs)
+
 --   foldl : ∀{i A} (B : Size → Set) (f : ∀{i} → B i → A → B (↑ i)) (b : ∀{i} → B i)
   foldl : ∀{i}{A B : Set} (f : B → A → B) (b : B)
     → List i A → B
@@ -94,6 +102,12 @@ module List where
   --   foldl f a (map g cs) ≡ foldl (λ a c → f a (g c)) a cs
   -- foldl-map [] = refl
   -- foldl-map (c ∷ cs) = foldl-map cs
+
+  or : ∀{i} → List i Bool → Bool
+  or = foldr _∨_ false
+
+  any : ∀{i} {A : Set} → (A → Bool) → List i A → Bool
+  any p xs = or (map p xs)
 
 open List public using (List; []; _∷_) hiding (module List)
 

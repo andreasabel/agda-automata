@@ -762,6 +762,35 @@ first-order theorem provers could fill in the remaining steps.
 \section{Constructing Automata}
 \label{sec:aut}
 
+\input{latex/Automaton}
+
+In this section, we show that deterministic automata form a Kleene
+algebra like decidable languages do.  We show how to construct union,
+concatenation, and Kleene star of automata, in a recapitulation of
+the classic theory of formal languages.  Our message is that the
+corresponding correctness proofs can be carried out by the same means
+as in the last section: coinduction and equational reasoning.
+
+In out presentation of deterministic automata (DA) we follow
+\cite{rutten:concur98}:  A not necessarily finite automaton over a
+state set $S$ is given by a transition function
+$\tdelta : S \to A \to S$ and a characteristic function
+$\tnu : S \to \Bool$ for the
+set of accepting (or final) states.  These two functions could also be
+bundled as $S \to \Bool \times (A \to S)$, making the coalgebra
+structure apparent.
+
+In anticipation of power automata we lift the coalgebra to lists of
+states $\List\,i\,S \to \Bool \times (A \to \List\,i\,S)$.  A lists of
+states is accepting if it contains at least one final state.  And we
+step to a new list of states by pointwise applying the transition function.
+
+\aDA
+
+The initial state is not
+contained in the automaton definition; each state induces a language
+accepted by this automaton.
+
 \section{Conclusions}
 \label{sec:concl}
 
