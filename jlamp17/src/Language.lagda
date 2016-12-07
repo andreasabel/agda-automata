@@ -81,9 +81,9 @@ l  ∋  a ∷ as  =  δ l a ∋ as
 \newcommand{\alang}{
 \begin{code}
 
-lang : ∀{i} (f : List i A → Bool) → Lang i
-ν (lang f)    =  f []
-δ (lang f) a  =  lang λ as → f (a ∷ as)
+trie : ∀{i} (f : List i A → Bool) → Lang i
+ν (trie f)    =  f []
+δ (trie f) a  =  trie λ as → f (a ∷ as)
 
 \end{code}
 }

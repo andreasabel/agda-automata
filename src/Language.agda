@@ -54,9 +54,9 @@ a ∷ as ∈ l = as ∈ δ l a
 
 -- Language from word membership
 
-lang : ∀{i} (mem : List A → Bool) → Lang i
-ν (lang mem)   = mem []
-δ (lang mem) a = lang λ as → mem (a ∷ as)
+trie : ∀{i} (mem : List A → Bool) → Lang i
+ν (trie mem)   = mem []
+δ (trie mem) a = trie λ as → mem (a ∷ as)
 
 -- This makes Lang isomophic to (List A → Bool)
 

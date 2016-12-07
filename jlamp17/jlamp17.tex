@@ -360,28 +360,28 @@ derivative $\tdelta\,l\,a$.
 Visually spoken, $l \ni \vas$ returns the root label of the subtree
 selected by path $\vas$.
 
-The second function constructs a trie representation $\tlang\,f$ from
+The second function constructs a trie representation $\ttrie\,f$ from
 the functional representation $f$ of a decidable language.  The trie
 is constructed corecursively by copattern matching
 \citep{abelPientkaThibodeauSetzer:popl13}.
 \alang{}%
-The root label $\tnu\,(\tlang\,f)$
+The root label $\tnu\,(\ttrie\,f)$
 is determined by whether $f$ accepts the empty word $[\,]$.
-The $a$-derivative $\tdelta\,(\tlang\,f)\,a$ is constructed by
+The $a$-derivative $\tdelta\,(\ttrie\,f)\,a$ is constructed by
 corecursion on the $a$-derivative of $f$.  The justification of the
-recursive call to $\tlang$ is apparent once we make the hidden size
+recursive call to $\ttrie$ is apparent once we make the hidden size
 arguments visible:
 \[
-  \tdelta\;\{i\}\;(\tlang\,\{i\}\,f)\;\{j\}\;a = \tlang\;\{j\}\;\lambda \vas \to f\,(a :: \vas)
+  \tdelta\;\{i\}\;(\ttrie\,\{i\}\,f)\;\{j\}\;a = \ttrie\;\{j\}\;\lambda \vas \to f\,(a :: \vas)
 \]
 By typing of the projection $\tdelta$, we have $j : \SizeLt i$, thus,
-the definition of $\tlang\,\{i\}$ only rests on $\tlang\,\{j\}$ with a
+the definition of $\ttrie\,\{i\}$ only rests on $\ttrie\,\{j\}$ with a
 smaller size index.  Well-founded induction on sizes guarantees that
 the equation system has a unique solution.
 
 The corecursive definition by copattern matching is sometimes likened
 to differential equations \citep{hansenKupkeRutten}.  In the definition of
-$\tlang$, the second equation ($\tdelta$) is the differential equation, and the
+$\ttrie$, the second equation ($\tdelta$) is the differential equation, and the
 first equation ($\tnu$) determines the initial value.
 
 \subsection{Constructing decidable languages by coiteration}

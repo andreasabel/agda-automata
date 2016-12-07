@@ -39,9 +39,9 @@ l ∋ a ∷ as = δ l a ∋ as
 
 -- Language from word membership (by coinduction)
 
-lang : (List A → Bool) → Lang
-ν (lang mem)   = mem []
-δ (lang mem) a = lang λ as → mem (a ∷ as)
+trie : (List A → Bool) → Lang
+ν (trie mem)   = mem []
+δ (trie mem) a = trie λ as → mem (a ∷ as)
 
 -- This makes Lang isomophic to (List A → Bool)
 
