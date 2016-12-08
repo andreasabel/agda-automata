@@ -889,9 +889,31 @@ we will construct a composition automaton
 $\tcomposeA\,\vda_1\,s_2\,\vda_2$ such that its accepted language from
 state $s_1$ is the language concatenation
 $\tlang\,\vda_1\,s_1 \cdot \tlang\,\vda_2\,s_2$.
-The key insight is that whenever we reach a final state in $\vda_1$, we
+The key insight is that whenever we reach a final state $s_f$ in $\vda_1$, we
 non-deterministically jump to the initial state $s_2$ of $\vda_2$.
-This means we are in one state of $\vda_1$ and in zero or more states
+In some formulations of non-deterministic automata this would be an
+$\varepsilon$-transition from $s_f$ to $s_2$, consuming no input.
+We will instead add transitions from $s_f$ to the successor states of $s_2$.
+\[
+\xymatrix{
+\bullet & & & & \bullet \\
+\vda_1 % \ar@{.>}[r]
+& *++[o][F=]{s_f}
+   \ar[ul]_a
+   \ar[dl]^b
+   \ar@{.>}[rr]^{\varepsilon}
+   \ar@{.>}@/^/[rrru]^a
+   \ar@{.>}@/_/[rrrd]_b
+&
+& *++[o][F-]{s_2} \ar[ur]^a \ar[dr]_b
+& \vda_2 % \ar@{.>}[l]
+\\
+\bullet & & & & \bullet \\
+}
+\]
+
+This means for the composition that
+we are in one state of $\vda_1$ and in zero or more states
 of $\vda_2$ at the same time.  Thus, the type of states is
 $S_1 \times \List\,\tinfty\,S_2$ and we consider the power of the
 second automaton.
@@ -938,7 +960,57 @@ As a corollary for empty $\vss$, we obtain the correctness of automaton composit
 \subsection{Automaton Construction for Language Iteration}
 \label{sec:staraut}
 
+Finally, we construct from an automaton $\vda$ accepting language
+$\ell$ from state $s_0 : S$ an
+automaton $\tstarA\,\vda$ for the iterated language $\ell^*$.
+We do this in two steps:
+\begin{enumerate}
+\item $\tacceptingInitial$: Add a new final state $\tnothing : \Maybe\,S$ with the same successors as
+  $s_0$.  State $\tnothing$ will serve as the new initial state.  Its
+  finality guarantees that the empty word is accepted.
+\item $\tfinalToInitial$: Add the successors of $s_0$ to each final state.  This enables
+  iteration.  At this point, the automaton becomes
+  ``non-deterministic'', \ie, we switch to $\List\,\tinfty\,(\Maybe\,S)$.
+\end{enumerate}
+\[
+\xymatrix{
+&&&& \bullet
+\\
+\ar@{.>}[r]
+&*++[o][F=]{\tnothing}
+  \ar@{.>}@/^/[rrru]^a
+  \ar@{.>}@/_/[rrd]_b
+&
+& *++[o][F-]{s_0}
+  \ar[ur]^a
+  \ar[d]_b
+& \vda~~~~~
+& *++[o][F=]{}
+  \ar@{.>}@/_/[ul]_a
+  \ar@{.>}[dll]^b
+\\
+&&& \bullet
+&& *++[o][F=]{}
+  \ar@{.>}@(ul,d)[uul]_>>>>>>{a}
+  \ar@{.>}[ll]^b
+\\
+}
+\]
 
+\noindent
+The first step embeds states $s : S$ of $\vda$ as $\tjust\,s : \Maybe\,S$.
+
+\aaccinit
+
+\noindent
+It then adds the new accepting state $\tnothing : \Maybe\,S$ with the
+successors of $s_0$.
+
+\aaccinitnothing
+
+\afinalinit
+
+\astarA
 
 \section{Conclusions}
 \label{sec:concl}

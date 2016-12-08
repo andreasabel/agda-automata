@@ -276,22 +276,66 @@ module Star (decS : DecSetoid lzero lzero) where
   ... | yes q = refl
   ... | no  q = ⊥-elim (q reflS)
 
-  -- Make a new initial state which is also final.
-  -- The new accepting state is `nothing` and has the transitions from s₀.
-  acceptingInitial : (s₀ : S) (da : DA S) → DA (Maybe S)
-  ν (acceptingInitial s₀ da) nothing      =  true
-  ν (acceptingInitial s₀ da) (just s)     =  ν da s
-  δ (acceptingInitial s₀ da) nothing   a  =  just (δ da s₀ a)
-  δ (acceptingInitial s₀ da) (just s)  a  =  just (δ da s a)
+\end{code}
+}
 
-  finalToInitial : (da : DA (Maybe S)) → DA (List ∞ (Maybe S))
-  ν (finalToInitial da) ss   = νs da ss
-  δ (finalToInitial da) ss a =
-    let ss' = δs da ss a
-    in  if νs da ss then δ da nothing a ∷ ss' else ss'
+% -- Make a new initial state which is also final.
+% -- The new accepting state is `nothing` and has the transitions from s₀.
 
-  starA : (s₀ : S) (da : DA S) → DA (List ∞ (Maybe S))
-  starA s₀ da = finalToInitial (acceptingInitial s₀ da)
+\newcommand{\aaccinit}{
+\begin{code}
+
+acceptingInitial : ∀{S} (s₀ : S) (da : DA S) → DA (Maybe S)
+ν  (acceptingInitial s₀ da)  (just s)     =  ν da s
+δ  (acceptingInitial s₀ da)  (just s)  a  =  just (δ da s a)
+
+\end{code}
+}
+
+\newcommand{\aaccinitnothing}{
+\begin{code}
+
+ν  (acceptingInitial s₀ da)  nothing      =  true
+δ  (acceptingInitial s₀ da)  nothing   a  =  just (δ da s₀ a)
+
+\end{code}
+}
+
+\newcommand{\afinalinit}{
+\begin{code}
+
+finalToInitial : ∀{S} (da : DA (Maybe S)) → DA (List ∞ (Maybe S))
+ν  (finalToInitial da)  ss     =  νs da ss
+δ  (finalToInitial da)  ss  a  =
+  let  ss' = δs da ss a
+  in   if νs da ss then δ da nothing a ∷ ss' else ss'
+
+\end{code}
+}
+
+\newcommand{\astarAopt}{
+\begin{code}
+
+starAopt : ∀{S} (s₀ : S) (da : DA S) → DA (List ∞ (Maybe S))
+ν (starAopt s₀ da) ss   = List.any (maybe′ (ν da) true) ss
+δ (starAopt s₀ da) ss a =
+  let  sₐ   =  just (δ da s₀ a)
+       ss'  =  List.map (maybe′ (λ s → just (δ da s a)) sₐ) ss
+  in   if List.any (maybe′ (ν da) false) ss then sₐ ∷ ss' else ss'
+
+\end{code}
+}
+
+\newcommand{\astarA}{
+\begin{code}
+
+starA : ∀{S} (s₀ : S) (da : DA S) → DA (List ∞ (Maybe S))
+starA s₀ da = finalToInitial (acceptingInitial s₀ da)
+
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 
 ------------------------------------------------------------------------
@@ -497,114 +541,139 @@ composeA-correct da₁ da₂ s₁ s₂ = begin
 \begin{code}
 
 
-module StarCorrect (decS : DecSetoid lzero lzero) where
-  open Star decS
+-- module StarCorrect (decS : DecSetoid lzero lzero) where
+--   open Star decS
 
-  acceptingInitial-just : ∀{i} (s₀ : S) (da : DA S) {s : S} →
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
-    lang (acceptingInitial s₀ da) (just s) ≅⟨ i ⟩≅ lang da s
+acceptingInitial-just : ∀{i S} (s₀ : S) (da : DA S) {s : S} →
 
-  ≅ν (acceptingInitial-just s₀ da) = refl
-  ≅δ (acceptingInitial-just s₀ da) a = acceptingInitial-just s₀ da
+  lang (acceptingInitial s₀ da) (just s) ≅⟨ i ⟩≅ lang da s
 
-  acceptingInitial-nothing :  ∀{i} (s₀ : S) (da : DA S) →
+≅ν (acceptingInitial-just s₀ da) = refl
+≅δ (acceptingInitial-just s₀ da) a = acceptingInitial-just s₀ da
 
-    lang (acceptingInitial s₀ da) nothing ≅⟨ i ⟩≅ ε ∪ lang da s₀
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
-  ≅ν (acceptingInitial-nothing s₀ da)   = refl
-  ≅δ (acceptingInitial-nothing s₀ da) a = begin
+acceptingInitial-nothing :  ∀{i S} (s₀ : S) (da : DA S) →
 
-      lang (acceptingInitial s₀ da) (just (δ da s₀ a))
+  lang (acceptingInitial s₀ da) nothing ≅⟨ i ⟩≅ ε ∪ lang da s₀
 
-    ≈⟨ acceptingInitial-just _ _ ⟩
+≅ν (acceptingInitial-nothing s₀ da)   = refl
+≅δ (acceptingInitial-nothing s₀ da) a = begin
 
-      lang da (δ da s₀ a)
+    lang (acceptingInitial s₀ da) (just (δ da s₀ a))
 
-    ≈⟨ ≅sym union-emptyˡ ⟩
+  ≈⟨ acceptingInitial-just _ _ ⟩
 
-      ∅ ∪ lang da (δ da s₀ a)
+    lang da (δ da s₀ a)
 
-    ∎ where open EqR (Bis _)
+  ≈⟨ ≅sym union-emptyˡ ⟩
 
-  starA-lemma :  ∀{i} (da : DA S) (s₀ : S) (ss : List ∞ (Maybe S)) →
+    ∅ ∪ lang da (δ da s₀ a)
 
-    lang (starA s₀ da) ss ≅⟨ i ⟩≅ lang (powA (acceptingInitial s₀ da)) ss · (lang da s₀) *
+  ∎ where open EqR (Bis _)
 
-  ≅ν (starA-lemma da s₀ ss) = sym (∧-true _)
-  ≅δ (starA-lemma da s₀ ss) a with νs (acceptingInitial s₀ da) ss
-  ≅δ (starA-lemma da s₀ ss) a | false = starA-lemma da s₀ (δs (acceptingInitial s₀ da) ss a)
-  ≅δ (starA-lemma da s₀ ss) a | true = begin
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
-        lang (starA s₀ da) ss'
+starA-lemma :  ∀{i S} (da : DA S) (s₀ : S) (ss : List ∞ (Maybe S)) →
 
-      ≈⟨ starA-lemma da s₀ ss' ⟩
+  lang (starA s₀ da) ss ≅⟨ i ⟩≅ lang (powA (acceptingInitial s₀ da)) ss · (lang da s₀) *
 
-        lang (powA (acceptingInitial s₀ da)) ss' · lang da s₀ *
+≅ν (starA-lemma da s₀ ss) = sym (∧-true _)
+≅δ (starA-lemma da s₀ ss) a with νs (acceptingInitial s₀ da) ss
+≅δ (starA-lemma da s₀ ss) a | false = starA-lemma da s₀ (δs (acceptingInitial s₀ da) ss a)
+≅δ (starA-lemma da s₀ ss) a | true = begin
 
-      ≈⟨ concat-congˡ (begin
+      lang (starA s₀ da) ss'
 
-          lang (powA (acceptingInitial s₀ da)) ss'
+    ≈⟨ starA-lemma da s₀ ss' ⟩
 
-        ≈⟨ powA-cons _ ⟩
+      lang (powA (acceptingInitial s₀ da)) ss' · lang da s₀ *
 
-          lang (acceptingInitial s₀ da) (just (δ da s₀ a))
-            ∪
-          lang (powA (acceptingInitial s₀ da)) (δs (acceptingInitial s₀ da) ss a)
+    ≈⟨ concat-congˡ (begin
 
-        ≈⟨ union-congˡ (acceptingInitial-just _ _) ⟩
+        lang (powA (acceptingInitial s₀ da)) ss'
 
-          lang da (δ da s₀ a)
-            ∪
-          lang (powA (acceptingInitial s₀ da)) (δs (acceptingInitial s₀ da) ss a)
+      ≈⟨ powA-cons _ ⟩
 
-        ≈⟨ union-comm _ _ ⟩
+        lang (acceptingInitial s₀ da) (just (δ da s₀ a))
+          ∪
+        lang (powA (acceptingInitial s₀ da)) (δs (acceptingInitial s₀ da) ss a)
 
-          lang (powA (acceptingInitial s₀ da)) (δs (acceptingInitial s₀ da) ss a)
-            ∪
-          lang da (δ da s₀ a)
+      ≈⟨ union-congˡ (acceptingInitial-just _ _) ⟩
 
-        ∎ ) ⟩
+        lang da (δ da s₀ a)
+          ∪
+        lang (powA (acceptingInitial s₀ da)) (δs (acceptingInitial s₀ da) ss a)
 
-        (lang (powA (acceptingInitial s₀ da)) (δs (acceptingInitial s₀ da) ss a)
-          ∪ lang da (δ da s₀ a)) · lang da s₀ *
-
-      ≈⟨ concat-union-distribˡ _ ⟩
+      ≈⟨ union-comm _ _ ⟩
 
         lang (powA (acceptingInitial s₀ da)) (δs (acceptingInitial s₀ da) ss a)
-          · lang da s₀ *
-        ∪ lang da (δ da s₀ a)
-          · lang da s₀ *
+          ∪
+        lang da (δ da s₀ a)
 
-      ∎ where
-        open EqR (Bis _)
-        ss' = (just (δ da s₀ a) ∷ δs (acceptingInitial s₀ da) ss a)
+      ∎ ) ⟩
 
-  starA-correct : ∀{i} (da : DA S) (s₀ : S) →
-    lang (starA s₀ da) (nothing ∷ []) ≅⟨ i ⟩≅ (lang da s₀) *
+      (lang (powA (acceptingInitial s₀ da)) (δs (acceptingInitial s₀ da) ss a)
+        ∪ lang da (δ da s₀ a)) · lang da s₀ *
 
-  starA-correct da s₀ = begin
+    ≈⟨ concat-union-distribˡ _ ⟩
 
-      lang (starA s₀ da) (nothing ∷ [])
-
-    ≈⟨  starA-lemma da s₀ (nothing ∷ []) ⟩
-
-      lang (powA (acceptingInitial s₀ da)) (nothing ∷ [])
+      lang (powA (acceptingInitial s₀ da)) (δs (acceptingInitial s₀ da) ss a)
+        · lang da s₀ *
+      ∪ lang da (δ da s₀ a)
         · lang da s₀ *
 
-    ≈⟨ concat-congˡ (powA-correct _ _) ⟩
+    ∎ where
+      open EqR (Bis _)
+      ss' = (just (δ da s₀ a) ∷ δs (acceptingInitial s₀ da) ss a)
 
-      lang (acceptingInitial s₀ da) nothing
-        · lang da s₀ *
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
-    ≈⟨ concat-congˡ (acceptingInitial-nothing _ _) ⟩
+starA-correct : ∀{i S} (da : DA S) (s₀ : S) →
+  lang (starA s₀ da) (nothing ∷ []) ≅⟨ i ⟩≅ (lang da s₀) *
 
-      (ε ∪ lang da s₀) · lang da s₀ *
+starA-correct da s₀ = begin
 
-    ≈⟨ concat-maybe-star _ ⟩
+    lang (starA s₀ da) (nothing ∷ [])
 
-      lang da s₀ *
+  ≈⟨  starA-lemma da s₀ (nothing ∷ []) ⟩
 
-    ∎ where open EqR (Bis _)
+    lang (powA (acceptingInitial s₀ da)) (nothing ∷ [])
+      · lang da s₀ *
+
+  ≈⟨ concat-congˡ (powA-correct _ _) ⟩
+
+    lang (acceptingInitial s₀ da) nothing
+      · lang da s₀ *
+
+  ≈⟨ concat-congˡ (acceptingInitial-nothing _ _) ⟩
+
+    (ε ∪ lang da s₀) · lang da s₀ *
+
+  ≈⟨ concat-maybe-star _ ⟩
+
+    lang da s₀ *
+
+  ∎ where open EqR (Bis _)
+
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 
 -- Conversion

@@ -9,7 +9,7 @@ open import Data.Bool.Base public using (Bool; true; false; if_then_else_; not; 
 open import Data.Empty public using (⊥; ⊥-elim)
 -- open import Data.List.Base public using (List; []; _∷_; _++_) hiding (module List)
 
-open import Data.Maybe public using (Maybe; nothing; just)
+open import Data.Maybe.Base public using (Maybe; nothing; just; maybe′)
 open import Data.Nat.Base public using (ℕ; zero; suc; _+_; pred)
 open import Data.Product public using (_×_; _,_; proj₁; proj₂)
 open import Data.Sum public using (_⊎_; inj₁; inj₂)
