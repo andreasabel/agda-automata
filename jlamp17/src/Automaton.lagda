@@ -113,14 +113,14 @@ allA : DA ⊤
 -- An automaton recognizing a single word consisting of a single character.
 -- nothing is the error state, just false the initial state, just true the accepting state.
 
-charA' : (a : A) → DA (Maybe Bool)
-ν (charA' a) (just b) = b
-ν (charA' a) nothing = false
-δ (charA' a) (just false) x with a ≟ x
-δ (charA' a) (just false) x | yes p = just true
-δ (charA' a) (just false) x | no ¬p = nothing
-δ (charA' a) (just true) x = nothing
-δ (charA' a) nothing _ = nothing
+charA′ : (a : A) → DA (Maybe Bool)
+ν (charA′ a) (just b) = b
+ν (charA′ a) nothing = false
+δ (charA′ a) (just false) x with a ≟ x
+δ (charA′ a) (just false) x | yes p = just true
+δ (charA′ a) (just false) x | no ¬p = nothing
+δ (charA′ a) (just true) x = nothing
+δ (charA′ a) nothing _ = nothing
 
 \end{code}
 }
@@ -191,10 +191,10 @@ _⊕_ : ∀{S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) → DA (S₁ × S₂)
 \AgdaHide{
 \begin{code}
 
-acomposeA' : ∀{S₁ S₂} (da₁ : DA S₁) (f : S₂ → S₂) (da₂ : DA S₂) → DA (S₁ × S₂)
-ν (acomposeA' da₁ f da₂) (s₁ , s₂)   = ν da₁ s₁ ∧ ν da₂ (f s₂) ∨ ν da₂ s₂
-δ (acomposeA' da₁ f da₂) (s₁ , s₂) a = δ da₁ s₁ a , δ da₂ s₂' a
-  where s₂' = if ν da₁ s₁ then f s₂ else s₂
+acomposeA′ : ∀{S₁ S₂} (da₁ : DA S₁) (f : S₂ → S₂) (da₂ : DA S₂) → DA (S₁ × S₂)
+ν (acomposeA′ da₁ f da₂) (s₁ , s₂)   = ν da₁ s₁ ∧ ν da₂ (f s₂) ∨ ν da₂ s₂
+δ (acomposeA′ da₁ f da₂) (s₁ , s₂) a = δ da₁ s₁ a , δ da₂ s₂′ a
+  where s₂′ = if ν da₁ s₁ then f s₂ else s₂
 
 \end{code}
 }
@@ -226,8 +226,8 @@ powA : ∀{S} (da : DA S) → DA (List ∞ S)
 \AgdaHide{
 \begin{code}
 
-composeA' : ∀{S₁ S₂} (da₁ : DA S₁) (s₀ : S₂) (da₂ : DA S₂) → DA (S₁ × List ∞ S₂)
-composeA' da₁ s₀ da₂ = acomposeA' da₁ (_∷_ s₀) (powA da₂)
+composeA′ : ∀{S₁ S₂} (da₁ : DA S₁) (s₀ : S₂) (da₂ : DA S₂) → DA (S₁ × List ∞ S₂)
+composeA′ da₁ s₀ da₂ = acomposeA′ da₁ (_∷_ s₀) (powA da₂)
 
 \end{code}
 }
@@ -307,8 +307,8 @@ acceptingInitial : ∀{S} (s₀ : S) (da : DA S) → DA (Maybe S)
 finalToInitial : ∀{S} (da : DA (Maybe S)) → DA (List ∞ (Maybe S))
 ν  (finalToInitial da)  ss     =  νs da ss
 δ  (finalToInitial da)  ss  a  =
-  let  ss' = δs da ss a
-  in   if νs da ss then δ da nothing a ∷ ss' else ss'
+  let  ss′ = δs da ss a
+  in   if νs da ss then δ da nothing a ∷ ss′ else ss′
 
 \end{code}
 }
@@ -320,8 +320,8 @@ starAopt : ∀{S} (s₀ : S) (da : DA S) → DA (List ∞ (Maybe S))
 ν (starAopt s₀ da) ss   = List.any (maybe′ (ν da) true) ss
 δ (starAopt s₀ da) ss a =
   let  sₐ   =  just (δ da s₀ a)
-       ss'  =  List.map (maybe′ (λ s → just (δ da s a)) sₐ) ss
-  in   if List.any (maybe′ (ν da) false) ss then sₐ ∷ ss' else ss'
+       ss′  =  List.map (maybe′ (λ s → just (δ da s a)) sₐ) ss
+  in   if List.any (maybe′ (ν da) false) ss then sₐ ∷ ss′ else ss′
 
 \end{code}
 }
@@ -422,17 +422,17 @@ fact a {b} {c} = begin
   (a ∧ b) ∨ c
   ∎ where open ≡-Reasoning
 
-composeA'-gen : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) (s₁ : S₁) (s₂ : S₂) (ss : List ∞ S₂) →
-  lang (composeA' da₁ s₂ da₂) (s₁ , ss) ≅⟨ i ⟩≅ lang da₁ s₁ · lang da₂ s₂ ∪ lang (powA da₂) ss
-≅ν (composeA'-gen da₁ da₂ s₁ s₂ ss) = fact (ν da₁ s₁)
-≅δ (composeA'-gen da₁ da₂ s₁ s₂ ss) a with ν da₁ s₁
+composeA′-gen : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) (s₁ : S₁) (s₂ : S₂) (ss : List ∞ S₂) →
+  lang (composeA′ da₁ s₂ da₂) (s₁ , ss) ≅⟨ i ⟩≅ lang da₁ s₁ · lang da₂ s₂ ∪ lang (powA da₂) ss
+≅ν (composeA′-gen da₁ da₂ s₁ s₂ ss) = fact (ν da₁ s₁)
+≅δ (composeA′-gen da₁ da₂ s₁ s₂ ss) a with ν da₁ s₁
 
 ... | true  = begin
 
-    lang (acomposeA' da₁ (_∷_ s₂) (powA da₂))
+    lang (acomposeA′ da₁ (_∷_ s₂) (powA da₂))
       (δ da₁ s₁ a , δ da₂ s₂ a ∷ δs da₂ ss a)
 
-  ≈⟨  composeA'-gen da₁ da₂ (δ da₁ s₁ a) s₂ (δs da₂ (s₂ ∷ ss) a) ⟩
+  ≈⟨  composeA′-gen da₁ da₂ (δ da₁ s₁ a) s₂ (δs da₂ (s₂ ∷ ss) a) ⟩
 
     lang da₁ (δ da₁ s₁ a) · lang da₂ s₂ ∪
       lang (powA da₂) (δs da₂ (s₂ ∷ ss) a)
@@ -449,15 +449,15 @@ composeA'-gen : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) (s₁ : S�
 
   ∎ where open EqR (Bis _)
 
-... | false = composeA'-gen da₁ da₂ (δ da₁ s₁ a) s₂ (δs da₂ ss a)
+... | false = composeA′-gen da₁ da₂ (δ da₁ s₁ a) s₂ (δs da₂ ss a)
 
 
-composeA'-correct : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) (s₁ : S₁) (s₂ : S₂) →
+composeA′-correct : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) (s₁ : S₁) (s₂ : S₂) →
 
-  lang (composeA' da₁ s₂ da₂) (s₁ , []) ≅⟨ i ⟩≅ lang da₁ s₁ · lang da₂ s₂
+  lang (composeA′ da₁ s₂ da₂) (s₁ , []) ≅⟨ i ⟩≅ lang da₁ s₁ · lang da₂ s₂
 
-composeA'-correct da₁ da₂ s₁ s₂ = begin
-  lang (composeA' da₁ s₂ da₂) (s₁ , [])                 ≈⟨  composeA'-gen da₁ da₂ s₁ s₂ [] ⟩
+composeA′-correct da₁ da₂ s₁ s₂ = begin
+  lang (composeA′ da₁ s₂ da₂) (s₁ , [])                 ≈⟨  composeA′-gen da₁ da₂ s₁ s₂ [] ⟩
   lang da₁ s₁ · lang da₂ s₂ ∪ lang (powA da₂) [] ≈⟨ union-congʳ (powA-nil da₂) ⟩
   lang da₁ s₁ · lang da₂ s₂ ∪ ∅                     ≈⟨ union-comm _ _ ⟩
   ∅ ∪ lang da₁ s₁ · lang da₂ s₂                     ≈⟨ union-emptyˡ ⟩
@@ -546,24 +546,34 @@ composeA-correct da₁ da₂ s₁ s₂ = begin
 
 \end{code}
 }
-\AgdaHide{
+\newcommand{\aacceptingInitialjust}{
 \begin{code}
 
 acceptingInitial-just : ∀{i S} (s₀ : S) (da : DA S) {s : S} →
 
   lang (acceptingInitial s₀ da) (just s) ≅⟨ i ⟩≅ lang da s
 
-≅ν (acceptingInitial-just s₀ da) = refl
-≅δ (acceptingInitial-just s₀ da) a = acceptingInitial-just s₀ da
-
 \end{code}
 }
 \AgdaHide{
 \begin{code}
 
+≅ν (acceptingInitial-just s₀ da) = refl
+≅δ (acceptingInitial-just s₀ da) a = acceptingInitial-just s₀ da
+
+\end{code}
+}
+\newcommand{\aacceptingInitialnothing}{
+\begin{code}
+
 acceptingInitial-nothing :  ∀{i S} (s₀ : S) (da : DA S) →
 
   lang (acceptingInitial s₀ da) nothing ≅⟨ i ⟩≅ ε ∪ lang da s₀
+
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 ≅ν (acceptingInitial-nothing s₀ da)   = refl
 ≅δ (acceptingInitial-nothing s₀ da) a = begin
@@ -582,27 +592,34 @@ acceptingInitial-nothing :  ∀{i S} (s₀ : S) (da : DA S) →
 
 \end{code}
 }
-\AgdaHide{
+\newcommand{\astarAlemma}{
 \begin{code}
 
 starA-lemma :  ∀{i S} (da : DA S) (s₀ : S) (ss : List ∞ (Maybe S)) →
 
-  lang (starA s₀ da) ss ≅⟨ i ⟩≅ lang (powA (acceptingInitial s₀ da)) ss · (lang da s₀) *
+    lang (starA s₀ da) ss
+  ≅⟨ i ⟩≅
+    lang (powA (acceptingInitial s₀ da)) ss · (lang da s₀) *
+
+\end{code}
+}
+\AgdaHide{
+\begin{code}
 
 ≅ν (starA-lemma da s₀ ss) = sym (∧-true _)
 ≅δ (starA-lemma da s₀ ss) a with νs (acceptingInitial s₀ da) ss
 ≅δ (starA-lemma da s₀ ss) a | false = starA-lemma da s₀ (δs (acceptingInitial s₀ da) ss a)
 ≅δ (starA-lemma da s₀ ss) a | true = begin
 
-      lang (starA s₀ da) ss'
+      lang (starA s₀ da) ss′
 
-    ≈⟨ starA-lemma da s₀ ss' ⟩
+    ≈⟨ starA-lemma da s₀ ss′ ⟩
 
-      lang (powA (acceptingInitial s₀ da)) ss' · lang da s₀ *
+      lang (powA (acceptingInitial s₀ da)) ss′ · lang da s₀ *
 
     ≈⟨ concat-congˡ (begin
 
-        lang (powA (acceptingInitial s₀ da)) ss'
+        lang (powA (acceptingInitial s₀ da)) ss′
 
       ≈⟨ powA-cons _ ⟩
 
@@ -625,7 +642,8 @@ starA-lemma :  ∀{i S} (da : DA S) (s₀ : S) (ss : List ∞ (Maybe S)) →
       ∎ ) ⟩
 
       (lang (powA (acceptingInitial s₀ da)) (δs (acceptingInitial s₀ da) ss a)
-        ∪ lang da (δ da s₀ a)) · lang da s₀ *
+        ∪ lang da (δ da s₀ a))
+      · lang da s₀ *
 
     ≈⟨ concat-union-distribˡ _ ⟩
 
@@ -636,21 +654,28 @@ starA-lemma :  ∀{i S} (da : DA S) (s₀ : S) (ss : List ∞ (Maybe S)) →
 
     ∎ where
       open EqR (Bis _)
-      ss' = (just (δ da s₀ a) ∷ δs (acceptingInitial s₀ da) ss a)
+      ss′ = (just (δ da s₀ a) ∷ δs (acceptingInitial s₀ da) ss a)
+
+\end{code}
+}
+
+\newcommand{\astarAcorrect}{
+\begin{code}
+
+starA-correct : ∀{i S} (da : DA S) (s₀ : S) →
+
+  lang (starA s₀ da) (nothing ∷ []) ≅⟨ i ⟩≅ (lang da s₀) *
 
 \end{code}
 }
 \AgdaHide{
 \begin{code}
 
-starA-correct : ∀{i S} (da : DA S) (s₀ : S) →
-  lang (starA s₀ da) (nothing ∷ []) ≅⟨ i ⟩≅ (lang da s₀) *
-
 starA-correct da s₀ = begin
 
     lang (starA s₀ da) (nothing ∷ [])
 
-  ≈⟨  starA-lemma da s₀ (nothing ∷ []) ⟩
+  ≈⟨ starA-lemma da s₀ (nothing ∷ []) ⟩
 
     lang (powA (acceptingInitial s₀ da)) (nothing ∷ [])
       · lang da s₀ *
@@ -681,17 +706,17 @@ starA-correct da s₀ = begin
 
 -- We can convert the state set to an isomorphic one.
 
-convA : ∀{S S'} (iso : S ↔ S') (da : DA S) → DA S'
-ν (convA iso da) s' = ν da (Inverse.from iso Π.⟨$⟩ s' )
-δ (convA iso da) s' a = Inverse.to iso Π.⟨$⟩ (δ da) (Inverse.from iso Π.⟨$⟩ s') a
+convA : ∀{S S′} (iso : S ↔ S′) (da : DA S) → DA S′
+ν (convA iso da) s′ = ν da (Inverse.from iso Π.⟨$⟩ s′ )
+δ (convA iso da) s′ a = Inverse.to iso Π.⟨$⟩ (δ da) (Inverse.from iso Π.⟨$⟩ s′) a
 
 -- Conversion does not change the semantics.
 
 -- The recognized language from each state is still the same
 -- (when starting from the corresponding state).
 
-convA-correct : ∀{i S S'} (iso : S ↔ S') (da : DA S) (let da' = convA iso da) (s : S)
-  → lang da s ≅⟨ i ⟩≅ lang da' (Inverse.to iso Π.⟨$⟩ s)
+convA-correct : ∀{i S S′} (iso : S ↔ S′) (da : DA S) (let da′ = convA iso da) (s : S)
+  → lang da s ≅⟨ i ⟩≅ lang da′ (Inverse.to iso Π.⟨$⟩ s)
 ≅ν (convA-correct iso da s)   rewrite _InverseOf_.left-inverse-of (Inverse.inverse-of iso) s
   = refl
 ≅δ (convA-correct iso da s) a rewrite _InverseOf_.left-inverse-of (Inverse.inverse-of iso) s

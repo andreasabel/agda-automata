@@ -156,9 +156,244 @@ to prove correctness of the usual automata constructions.
 \section{Preliminaries: Type Theory and Agda}
 \label{sec:prelim}
 
-Sized inductive types: $\List$.
+\input{latex/Agda}
 
-Hidden arguments.
+The results definitions and theorems of this article are formulated in
+Dependent Type Theory \`a la \cite{martinlof:predicative75}, in
+particular, in the Agda \citep{agdawiki} language.  Agda is an
+implementation of Type Theory with several extensions; we will most
+notably make use of \emph{sized types}
+\citep{hughesParetoSabry:popl96,abelPientka:icfp13} to express
+coinductive types and definitions by coinduction.
+
+On the one hand, Agda is a dependently-typed purely functional programming
+language, and on the other hand, thanks to the Curry-Howard
+correspondence, a proof assistant for constructive logic.  In the
+following, we will briefly introduce the syntax of Agda by example.
+The experienced Agda user can safely skip the remainder of this section.
+
+% - Curry-Howard isomorphism
+% - function computable
+
+\subsection{Agda as a dependently-typed functional language}
+
+The core features of Agda are inductive families
+\citep{dybjer:inductivefamilies} and functions defined by pattern
+matching.  A very simple inductive family is the enumeration type
+$\Bool$ with two constructors $\ttrue$ and $\tfalse$.
+
+\abool
+
+\noindent
+$\Bool$ itself has type $\Set$, which is universe or a type of types, but not all
+types, to avoid vicious cycles.  For instance $\Set$ itself does not
+have type $\Set$, but inhabits the next universe $\agda{Set\ensuremath{_1}}$.
+Boolean negation can be defined by simple pattern matching.
+\anot
+
+%\begin{minipage}{0.5\linewidth}
+%\end{minipage}
+%\begin{minipage}{0.5\linewidth}
+%\end{minipage}
+
+\noindent
+Agda also supports Unicode and infix and mixfix operators.
+For example, we can define boolean disjunction like this:
+
+\avee
+
+The notation $(a\;b : \Bool) \to \Bool$ is short
+for $(a : \Bool) (b : \Bool) \to \Bool$
+or $(a : \Bool) \to (b : \Bool) \to \Bool$,
+which is the syntax for dependent function types.
+In this case, there is no actual dependency,
+since the bound variables $a$ and $b$ are not
+subsequently used in the type.
+
+
+Data types can be parameterized over other types $A$.  For instance
+$\Maybe\,A$ embeds an arbitrary type $A$ via $\tjust$ and extends it
+by a new value $\tnothing$.
+
+\amaybe
+
+Data types can be recursive, such as $\List\,i\,A$ parameterized by a
+size $i$ and a type $A$.  The size $i : \Size$ acts as an upper
+bound on the length of the list.  The special size $\tinfty : \Size$
+means unbounded length.
+
+\alist
+
+\noindent
+A list is either empty (constructor $\tnil$); then any size $i$ is an
+upper bound on its length.  Or, the list is nonempty (\eg,
+$x \tcons \vxs$);  then, if $j$ is an upper bound on the length of
+its tail $\vxs$ and $j < i$, then $i$ is an upper bound on the length
+of $x \tcons \vxs$.  Strictly speaking, the constructor $\tconsu$
+takes three arguments: $j : \SizeLt i$ and $x : A$ and $\vxs :
+\List\,A\,j$, but the first argument $j$ is in $\{$braces$\}$ and thus
+declared as hidden.  The user does not have to write it, and its value
+will be inferred by Agda if possible.  Note that $j$ occurs in the
+type of $\vxs$, thus, this is a proper dependency.
+
+It is possible to supply a hidden argument to a function by enclosing it in
+braces.  In case of the infix operator $\tconsu$, we have to fall back
+to prefix style $\tconsu\,\{j\}\,x\,\vxs$ though.
+
+The types $\Size$ and $\SizeLt\,i$ are Agda primitives that are used
+for termination checking.  For instance, consider the mapping function
+on lists.  Note that the notation $\forall\{i\, A\, B\} \to \dots$ is
+short for $\{i : \_\} \{A : \_\} \{B : \_\} \to \dots$ and becomes
+$\{i : \Size\} \{A : \Set\} \{B : \Set\} \to \dots$ after type
+reconstruction.
+
+\amap
+
+\noindent
+Function $\tmap\,f$ takes a list of size $i$ as input and returns a list with the same
+upper bound.  We say $\tmap$ is \emph{size preserving}.  As $\tmap$ is
+defined recursively, termination is not obvious.  Agda infers from
+pattern $x \tcons \vxs : \List\,i\,A$, which is short for pattern
+$\tconsu\,\{j\}\,x\,\vxs : \List\,i\,A$ with a pattern variable $j$
+introduced by Agda, that $\vxs : \List\,j\,A$ and $j : \SizeLt i$.
+Consequently, the recursive call $\tmap\,f\,\vxs$---which internally
+expands to $\tmap\,\{j\}\,f\,\vxs$--- is justified, by the descent in
+size $j < i$.  An analogous argument assures termination of $\tfoldr$,
+the iteration principle for lists, which replaces in a list the $\tnil$
+constructor by $n : B$ and any $\tconsu$ constructor by $c : A \to B
+\to B$.
+
+\afoldr
+
+\noindent
+As an application of $\tfoldr$ and $\tmap$, we define $\tany\,p\,\vxs$
+which is $\ttrue$ if $p\,x$ is $\ttrue$ for any element $x$ of $\vxs$.
+
+\aany
+
+Finally, data types with a single constructor can alternatively be defined as
+record types.  For instance, the cartesian product $A \ttimes B$ can be
+implemented as record type with the projections
+% $\tfst : \forall\{A\,\B\} \to A \ttimes B \to A
+$\tfst : A \ttimes B \to A$ and
+$\tsnd : A \ttimes B \to B$ and
+constructor $\AgdaInductiveConstructor{\_,\_} : A \to B \to A \ttimes B$.
+
+\aprod
+
+Agda allows the projections also on the left hand sides of
+definitions by pattern matching.  In the following, we define for a
+pair $p : A \ttimes B$ is reversal $\tswap\,p : B \ttimes A$ by giving
+its value for all valid projections.  This definition form is called
+\emph{definition by copattern matching}, since we are not matching on
+a function argument, but on the possible observations on the function
+result \citep{abelPientkaThibodeauSetzer:popl13}.
+
+\aswap
+
+\noindent
+This is, of course, just one possible implementation of $\tswap$,
+which we chose to exemplify copattern matching.  A simple clause
+$\tswap\,(a\,,\,b) = (b\,,\,a)$ would have done the job, but copattern
+matching will be the definition principle of choice for coinductive
+structures in Section~\ref{sec:lang}.
+
+\subsection{Agda as a proof assistant}
+
+Martin-L\"of Type Theory allows us to reason about program via the
+propositions-as-types paradigm.  A proposition is seen as the type of
+its proofs, for instance, the absurd proposition $\tbot$
+\emph{(Falsehood)} has no proof,
+and the trivial proposition $\ttop$ \emph{(Truth)} has a proof with no
+further content.
+
+In Agda, $\tbot$ is modeled as a data type with no constructors.
+Given a proof $p : \tbot$, we can prove any proposition $A$ (populate
+any type $A$) by matching on $p$.  As there are no constructors of
+$\tbot$, there is nothing further to show, indicated in Agda by the
+absurd pattern $()$ which matches anything of empty type.
+
+\abot
+
+Truth $\ttop$ is modelled as record type with no fields.  There is no
+information to extract from a proof of $\ttop$, a proof is simply an
+empty record.
+
+\atriv
+
+Implication $A \to B$ coincides with the ordinary function space, and
+universal quantification $\forall x \to A$ with the dependent
+function space $(x : \_) \to A$.
+
+We can define our own proposition, predicates, and relation as
+inductive (or coinductive, see Section~\ref{sec:fameq}) families.  The
+prime example is \emph{propositional equality} $x \mathrel{\tequiv} y$ of
+objects $x,y : A$, which is defined as a data type with a hidden
+parameter $A : \Set$, a visible parameter $x : A$, and an index $y :
+A$.  The only constructor $\trefl$---which has no arguments---fixes
+$y$ to be identical to $x$, thus, witnesses that $x$ and $y$ are
+identical modulo Agda's internal notion of equality (which is called
+\emph{definitional equality}).
+
+\aeq
+
+\noindent
+Since defined inductively, propositional equality is the smallest
+relation on $A$ which is reflexive.
+
+Proof of equality can be used by
+pattern matching.  For instance, we can prove symmetry of equality,
+\ie, $x \mathrel{\tequiv} y$ implies $ y \mathrel{\tequiv} x$ by
+pattern matching on the the proof of $x \mathrel{\tequiv} y$.
+
+\aeqsym
+
+\noindent
+The only matching constructor $\trefl$ forces $y$ to be identical to
+$x$.  This is indicated in Agda by the inaccessible pattern $.x$ which
+means that $y$ has been instantiated by the term $x$.  As a
+consequence, the goal becomes $x \mathrel{\tequiv} x$ which is simply
+proved by $\trefl$.
+
+In a similar fashion, we prove transitivity of propositional
+equality.  By matching both the proofs of $x \mathrel{\tequiv} y$ and $y
+\mathrel{\tequiv} z$ against $\trefl$, variables $y$ and $z$ become
+instantiated to $x$, and again, the goal becomes simply
+$x \mathrel{\tequiv} x$.
+
+\aeqtrans
+
+In general, inductively defined propositions are inhabited by proof
+trees in the same way that inductive types are inhabited by trees.
+% In Martin-L\"of Type Theory, these are the same thing.
+As an example, consider the proposition $\Any\,i\,P\,\vxs$ which
+states that predicate $P : A \to \Set$ holds on some element $x : A$
+of (unbounded) list $\vxs : \List\,\tinfty\,A$.
+Parameter $i : \Size$ is an upper bound
+on the tree height of a proof $p : \Any\,i\,P\,\vxs$ of this
+proposition.
+
+\aAny
+
+Constructor $\tHere$ establishes the proposition for a non-empty list
+$x \tcons \vxs$ given a proof $p : P x$ that predicate $P$ holds on
+the head $x$ of the list.  The resulting proof tree is a leaf, and any
+size $i$ is an upper bound on the height of this derivation.  Constructor
+$\tThere$ takes a derivation $p : \Any\,j\,P\,\vxs$ stating that $P$ holds on
+some element of list $\vxs$, and builds a proof of
+$\Any\,i\,P\,(x \tcons \vxs)$.  The tree height of $p$, ordinal $j$,
+is necessarily strictly smaller than $i$.
+
+Proofs in Type Theory naturally contain the necessary information to
+construct witnesses for existential propositions such as $\Any$.  In
+this case, a proof takes the form $\tThere^n\,(\tHere\,p)$ where $n$
+is the index of witnessing element $x$ that satisfies $P$, and $p : P\,x$ is
+the evidence for the latter fact.
+
+This concludes the short tutorial on Type Theory and Agda.  In the
+next section, we introduce coinductive types for the example of
+infinitely deep trees.  In the following, we will sometimes write
+$\List\,A$ for unbounded lists $\List\,\infty\,A$.
 
 \section{Decidable Languages, Coinductively}
 \label{sec:lang}
@@ -178,7 +413,7 @@ A set of words with decidable membership can also be
 represented as \emph{trie}.  For our purposes,
 a trie is an $A$-branching tree whose nodes are labelled by booleans.
 Any word $\vas$ is a path into the tree selecting a subtree.  The root label
-of that subtree indicates the status of the word $\vas$: label $\ttrue$
+of that subtree indicates the status of the word $\vas$.  Label $\ttrue$
 means the word is member of the set, label $\tfalse$ means it is not a
 member.  Even though each word is finite, the language might be
 infinite, thus, tries have infinite depth in general.
@@ -220,15 +455,17 @@ regular expression $a + b(a + b)^*a$.
 
 Figure~\ref{fig:trie} shows an initial part of the trie of language
 $E$, where double-circled nodes denote membership of the word leading
-to that node.  Observe that the subtree $ba$ has only accepting nodes
+to that node, and single-circled ones non-membership.
+Observe that the subtree $ba$ has only accepting nodes
 along its left-most path $a^*$, witnessing that $ba^*$ is a
 sublanguage of $E$ (representing $2^n$ for $n \geq 1$).
-A finite trie would be insufficient to represent $E$.
+Thus, a finite trie would be insufficient to represent $E$.
 
-The connection between
+Generalizing $\Bool$ to $B$,
+the connection between
 the type $T$ of $A$-branching $B$-labelled tries
 and the type $\List A \to B$ can also be derived by calculating type
-isomorphisms:
+isomorphisms \citep{hinze:ggtries,altenkirch:tlca01}:
 \[
 \begin{array}{lcl}
   \List A \to B
@@ -294,8 +531,8 @@ The name $\tdelta$ is inspired by its role as
 \emph{Brzozowski derivative}.
 Given a decidable language $f : \List A \to \Bool$, its $a$-derivative
 $\delta\,f\,a : \List A \to \Bool$ is defined as
-$(\delta\,f\,a)(\vas) = f\, (a :: \vas)$.  This means that
-$\delta\,f\,a$ accepts the words of $f$ that start with $a$ minus this
+$(\delta\,f\,a)(\vas) = f\, (a \tcons \vas)$.  This means that
+$\delta\,f\,a$ accepts the words of $f$ that start with $a$, minus this
 first letter.  In terms of tries $t$, we obtain the derivative
 $\tdelta\,t\,a$ simply by following the $a$-labelled edge from the
 root, thus, the derivation function is identical with the field
@@ -307,17 +544,19 @@ Agda's productivity checker, we equip the type of tries $\Lang\,i$
 with an index $i : \Size$.  Index $i$ denotes an ordinal $\leq \omega$
 corresponding to the \emph{definedness depth} of a trie
 $t : \Lang\,i$.  Ultimately, we are interested only in fully defined
-tries $t : \Lang\,\infty$, where $\infty$ is syntax for ordinal
+tries $t : \Lang\,\tinfty$, where $\tinfty$ is syntax for ordinal
 $\omega$.  This means we can query $t$'s nodes at arbitrary
 depth.  For a finite definedness level $i$ we can only inspect
 nodes up to depth $i$.  In particular $t : \Lang\,0$ allows us to look
 only at the root label $\tnu\,t$, its subtrees via $\tdelta\,t\,a$ are
 undefined and Agda's type checker will object to such an expression.
 
-If a trie $t : \Lang\,i$ can be defined by reference to tries of type
+If for an arbitrary ordinal $i$,
+a trie $t : \Lang\,i$ can be defined by reference to tries of type
 $\Lang\,j$ for $j<i$, written $j : \SizeLt i$, then
-$t : \forall\{i\} \to \Lang\,i$ by well-founded recursion on ordinals,
-which is our incarnation of a corecursive definition.
+$t$ can be assigned type $\forall\{i\} \to \Lang\,i$.
+We say $t$ is defined by well-founded recursion on ordinal $i$,
+which is our principle of corecursive definition.
 
 \aLang
 
@@ -338,11 +577,11 @@ to choose any $j$ strictly below $i$.  This expresses that if $t$ was
 only defined up to depth $i$, then its $a$-subtree is less
 defined; and we are allowed to waste information and chose a smaller
 $j$ than necessary.  Wasting is fine since $\Lang\,i$ is a subtype of
-$\Lang\,j$ whenever $i \geq j$, as we can always us a \emph{more} defined
+$\Lang\,j$ whenever $i \geq j$, as we can always use a \emph{more} defined
 value $t : \Lang\,i$ when a value of $\Lang\,j$ is demanded.  The
 antitone subtyping chain
 \[
-  \Lang\,\infty \leq \dots \leq \Lang\,(\uparrow i) \leq \Lang\,i \leq
+  \Lang\,\tinfty \leq \dots \leq \Lang\,(\uparrow i) \leq \Lang\,i \leq
   \dots \Lang\,0
 \]
 can be justified by the equation
@@ -350,14 +589,14 @@ $\Lang\,i \cong \Bool \times \bigcap_{j<i} (A \to \Lang\,j)$
 which holds semantically.
 
 The isomorphism $\Lang\,i \cong \List\,i\,A \to \Bool$ is witnessed by
-the following two functions. The first, $l \ni \vas$, checks membership
+the following two functions. The first, $l \tni \vas$, checks membership
 of word $\vas$ in language $l$ represented as a trie.  The empty word
-$[\,]$ is in the language if $\tnu\,l$, \ie, if the language is
+$\tnil$ is in the language if $\tnu\,l$, \ie, if the language is
 nullable.  The composite
-word $a :: \vas$ is accepted by $l$ if $\vas$ is accepted by the
+word $a \tcons \vas$ is accepted by $l$ if $\vas$ is accepted by the
 derivative $\tdelta\,l\,a$.
 \ani{}%
-Visually spoken, $l \ni \vas$ returns the root label of the subtree
+Visually spoken, $l \tni \vas$ returns the root label of the subtree
 selected by path $\vas$.
 
 The second function constructs a trie representation $\ttrie\,f$ from
@@ -366,13 +605,13 @@ is constructed corecursively by copattern matching
 \citep{abelPientkaThibodeauSetzer:popl13}.
 \alang{}%
 The root label $\tnu\,(\ttrie\,f)$
-is determined by whether $f$ accepts the empty word $[\,]$.
+is determined by whether $f$ accepts the empty word $\tnil$.
 The $a$-derivative $\tdelta\,(\ttrie\,f)\,a$ is constructed by
 corecursion on the $a$-derivative of $f$.  The justification of the
 recursive call to $\ttrie$ is apparent once we make the hidden size
 arguments visible:
 \[
-  \tdelta\;\{i\}\;(\ttrie\,\{i\}\,f)\;\{j\}\;a = \ttrie\;\{j\}\;\lambda \vas \to f\,(a :: \vas)
+  \tdelta\;\{i\}\;(\ttrie\,\{i\}\,f)\;\{j\}\;a = \ttrie\;\{j\}\;\lambda \vas \to f\,(a \tcons \vas)
 \]
 By typing of the projection $\tdelta$, we have $j : \SizeLt i$, thus,
 the definition of $\ttrie\,\{i\}$ only rests on $\ttrie\,\{j\}$ with a
@@ -380,7 +619,7 @@ smaller size index.  Well-founded induction on sizes guarantees that
 the equation system has a unique solution.
 
 The corecursive definition by copattern matching is sometimes likened
-to differential equations \citep{hansenKupkeRutten}.  In the definition of
+to differential equations \citep{hansenKupkeRutten:sde2016}.  In the definition of
 $\ttrie$, the second equation ($\tdelta$) is the differential equation, and the
 first equation ($\tnu$) determines the initial value.
 
@@ -398,12 +637,12 @@ The language $\teps$ accepting only the empty word has root label
 $\ttrue$ but all other labels are $\tfalse$.  Hence, any derivative is
 the empty language.
 \aeps%
-The language $\tchar\,a$ accepting the one-letter word $a :: [\,]$ is
+The language $\tchar\;a$ accepting the one-letter word $a \tcons \tnil$ is
 not nullable, its $a$-derivative is $\teps$ and all other derivatives
 are $\tempty$.
 \achar%
 We obtain the language complement $\tcompl\,l$ of a language $l$ by
-flipping all lables.  This is accomplished by recursing over the whole
+flipping all labels.  This is accomplished by recursing over the whole
 tree.
 \acompl%
 Complement $\tcompl$ is a special instance of mapping a function
@@ -426,7 +665,18 @@ With the non-recursive equation being $\tnu\,(g\,\vec y) = o$,
 this form is an instance of the commutative diagram for
 terminal coalgebras and sometimes called \emph{coiteration}
 \citep{geuvers:indtypes}.
-This is the diagram for a $(\Bool \times (A \to \_))$-coalgebra
+
+For a functor $F : \Set \to \Set$, an $F$-coalgebra is a pair $(S,t)$
+with $S : \Set$ and $t : S \to F\,S$.  An $F$-coalgebra morphism
+between coalgebras $(S_1,t_1)$ and $(S_2,t_2)$ is a function
+$f : S_1 \to S_2$ such that $t_2\,(f\, s_1)$ is equal to
+$F\,f\,(t\,s_1)$ for all $s_1 : S_1$.  An $F$-coalgebra is terminal
+if it is the target of a coalgebra morphism from every $F$-coalgebra.
+Besides establishing the connection between coiteration and
+coalgebras, we will not dwell on coalgebras in this article, thus, we
+do not go into more details here.
+
+Here is the diagram for a $(\Bool \times (A \to \_))$-coalgebra
 $(\Gamma, h)$ mapping into the terminal coalgebra $(\Lang, \langle \tnu, \tdelta \rangle)$:
 \[
 % \newcommand{\tnd}{\langle o,\; \lambda x \to \vec t \rangle}
@@ -485,37 +735,45 @@ alphabet \citep{traytel:fscd16}.  However, using sized types we can
 naturally define these operations by their derivative laws, using
 well-founded recursion on sizes.
 
-Language concatenation $k \cdot l$ is our first non-trivial operation on languages.
+Language concatenation $k \tdot l$ is our first non-trivial operation on languages.
 The intuition
-$(k \ni \vas) \wedge (l \ni \vbs) \imp (k \cdot l) \ni (\vas \oapp \vbs)$
-leads to a specification
-$(k \cdot l) \ni \vcs
-  = \exists n.\; k \ni (\ttake\,n\,\vcs) \wedge l \ni (\tdrop\,n\,\vcs)
-$
-that does not suggest a pretty implementation \citep{doczkalKaiserSmolka:cpp13}.
+$(k \tni \vas) \wedge (l \tni \vbs) \imp (k \tdot l) \tni (\vas \oapp \vbs)$
+leads to the specification
+$(k \tdot l) \tni \vcs
+  \iff \exists n \in \NN.\; k \tni (\ttake\,n\,\vcs) \wedge l \tni (\tdrop\,n\,\vcs)
+$.\footnote{
+We write $\vas \oapp \vbs$ for the concatenation of lists $\vas$ and
+$\vbs$; we write $\ttake\,n\,\vcs$ for the largest prefix of $\vcs$ of
+length $\leq n$, and $\tdrop\,n\,\vcs$ for the remainder. Note that
+$\vcs = \ttake\,n\,\vcs \oapp \tdrop\,n\,\vcs$ for any $n \in \NN$.
+}
+However, this specification
+does not directly suggest a pretty implementation of $k \tdot l$
+\citep{doczkalKaiserSmolka:cpp13}.
 
-We can try to understand language concatenation as an operation on the
-tries $k$ and $l$.  If we think about accepting a word $\vcs$ in $k \cdot l$
+We can instead try to understand language concatenation as an operation on the
+tries $k$ and $l$.  If we think about accepting a word $\vcs$ in $k \tdot l$
 by following pathes in $k$ and $l$, the following procedure applies:
 We start by following branches in $k$.  Whenever we reach an accepting
 node in $k$ we may decide that we have reached the boundary between
 the words $\vas$ in $k$ and $\vbs$ in $l$ that make up the word $\vcs
-= (\vas \oapp \vbs)$ in $k \cdot l$ and start following branches in
+= (\vas \oapp \vbs)$ in $k \tdot l$. Hence, we start following branches in
 $l$.  However, since we are not sure we already reached the boundary,
 we simultaneously continue to follow branches in $k$.  At each
 accepting node in $k$ we spawn off a run in $l$.  Thus, a trie for $k
-\cdot l$ may be constructed by the following operation on all
+\tdot l$ may be constructed by the following operation on all
 accepting nodes of $k$:  make the node non-accepting but then union the
 subtree starting here with $l$.  This transformation is achieved by
 the following corecursive definition of concatenation:
 \aconcat
 The concatenation of two languages is nullable iff both are nullable.
 For the $x$-derivative, we follow the $x$-branch in $k$
-via $\tdelta\,k\,x \cdot l$ in any case.  If the node is accepting $\tnu\,k$,
+via $\tdelta\,k\,x \tdot l$ in any case.  If the node is accepting,
+\ie, $\tnu\,k$ is $\ttrue$,
 we may in addition follow the $x$-branch in $l$ via $\tdelta\,l\,x$.
 As before, the equations for language concatenation correspond to the
-derivation laws of regular expressions, but we arrived there by the
-trie intuition.
+derivation laws of regular expressions \citep{brzozowski:jacm64},
+but we arrived there by the trie intuition.
 
 The above definition is not an instance of coiteration for two
 reasons:  First, the outermost call is to $\tifthenelse$ rather than
@@ -530,7 +788,7 @@ Crucial here is the sized typing of the union
 \[
   \_\tcup\_ : \forall\{i\} (k\, l : \Lang\,i) \to \Lang\,i
 \]
-which asserts that the argument are no deeper analyzed than the
+which asserts that the arguments are no deeper analyzed than the
 definedness depth of the result.  If we make all hidden size arguments
 visible---having to switch to prefix operators instead of infix ones---%
 we can see the propagation of definedness depth levels to the
@@ -538,7 +796,7 @@ recursive call $\kpl$.
 \aconcatexpl%
 Since the recursive call happens at smaller index $j < i$, it is justified.
 Note also that in the definition of $\kpl$, last letter, $l : \Lang\,i$ is
-casted to $\Lang\,j$ which is valid since $j < i$.
+cast to $\Lang\,j$ which is valid since $j < i$.
 
 The iteration $l^*$ of a language $l$, aka \emph{Kleene star}, can be
 informally described as ``zero or more repetitions of $l$''.  If for
@@ -551,16 +809,23 @@ accepting node we may ``jump back'' to the root.  The corecursive definition
 \astar%
 relies on the sized typing of concatenation to justify the recursive call.
 
+This concludes our set of language operations defined by well-founded
+corecursion.   These operations allow us to give an executable
+semantics for regular expressions (leaving aside efficiency questions).
+It may be remarked that, thanks to sized typing, all the definitions are concise
+and direct counterparts of the derivative laws for regular expressions
+\citep{brzozowski:jacm64}.
+
 \section{Proving the Kleene Algebra Laws}
 \label{sec:kleene}
 
 In this section, we prove that decidable languages as introduced in
 Section~\ref{sec:lang} form a \emph{Kleene algebra}.
 
-\subsection{A Family of Equivalence Relations over Languages}
+\subsection{A family of equivalence relations over languages}
 \label{sec:fameq}
 
-Equality of tries, sometimes called \emph{strong bisimilarity} is
+Equality of tries, sometimes called \emph{strong bisimilarity}, is
 defined coinductively as follows.  Two tries are strongly bisimilar if
 they have the same root and corresponding subtries are strongly
 bisimilar in turn.  In Agda, this amounts to the following coinductive
@@ -569,18 +834,18 @@ definition:
 For one, note that we are relating tries $l,k : \Lang\,\tinfty$ whose
 definedness depth is unbounded ($\tinfty$).  This means that any
 subtrie such as $\tdelta\,l\,a$ is defined and in turn has type
-$\Lang\,\infty$.
+$\Lang\,\tinfty$.
 
 However, the relation itself is indexed by a definedness depth $i$.
 In fact we are defining a family of types such that $\bisim l j k$
 is a subtype of $\bisim l i k$ whenever $i \leq j$.  The depth is a
 lower bound on how far the proof of equality of $l$ and $k$ is
-constructed.  In particular, we can only inspect the derivation
+constructed.  In particular, we can only inspect the derivative
 $\cdelta\,p\,a$ of a proof $p : \bisim l i k$ if $i > 0$.  As for
 coinductive types like $\Lang\,i$, the size index $i$ is just a tool
 for the corecursive construction of derivations.  Ultimately, we are
 only interested in fully defined equality proofs $p : \bisim l \tinfty k$.
-In particular, this is not to be confused with \emph{ordered families
+In particular, our size-index relation is not to be confused with \emph{ordered families
   of equivalences} (OFEs) \citep{gianantonioMiculan:types02} $l \equiv_n k$
 which refine the notion of equality itself.  (There, $l \equiv_0 k$
 would hold always and $l \equiv_{n+1} k$ would hold if $l$ and $k$
@@ -599,7 +864,7 @@ that the root $\tnu\,l$ is identical to itself, namely $\trefl :
 its second component, $\congdelta\,\tcongrefl\,a$ at depth $j < i$, it
 computes $\tcongrefl : \bisim l j l$ corecursively.
 
-Symmetry is similarly defined.  To compute a proof of $k \cong l$
+Symmetry is defined in a similar fashion.  To compute a proof of $k \cong l$
 up to depth $i$, we only need a derivation of $l \cong k$ up to depth
 $i$; thus, the type of $\tcongsym$ is $\bisim l i k \to \bisim k i l$.
 \asym
@@ -634,7 +899,7 @@ under $\tunioncong$ later.
 A derived law we require later is that union distributes over itself.
 Now that we have established that union fullfills the laws of an
 idempotent commutative monoid, we can use a solver to prove this law
-rather automatically by reflection.
+automatically by reflection.
 \aunionuniondistr
 Concretely, the solver checks that both sides of the equation have the
 same set of atoms, by normalizing both sides to the set $\{k,l,m\}$.
@@ -648,7 +913,7 @@ implements this solver.
 \label{sec:lawcat}
 
 Concatenation distributes over union, for instance,
-$k \cdot (l \tunion m) \cong (k \cdot l) \tunion (k \cdot m)$.
+$k \tdot (l \tunion m) \cong (k \tdot l) \tunion (k \tdot m)$.
 Naturally, we would like to prove this by coinduction.  The case for
 $\tnu$ follows by the boolean distributivity law
 $x \wedge (y \vee z) = (x \wedge y) \vee (x \wedge z)$.  In the case
@@ -659,24 +924,24 @@ expression has changed).
 \[
 \def\arraystretch{1.5}
 \begin{array}{cl@{\qquad}r}
-\derive{(k \cdot (l \tunion m))} a
+\derive{(k \tdot (l \tunion m))} a
   & \cong & \mbox{by definition} \\
-\derive k a \cdot (l \tunion m) \tunion {\derive{(l \tunion m)} a}
+\derive k a \tdot (l \tunion m) \tunion {\derive{(l \tunion m)} a}
   & \cong & \mbox{by definition} \\
-{\derive k a \cdot (l \tunion m)} \tunion \underline{(\derive l a \tunion \derive m a)}
+{\derive k a \tdot (l \tunion m)} \tunion \underline{(\derive l a \tunion \derive m a)}
   & \cong & \mbox{by coinduction hypothesis} \\
-\underline{(\derive k a \cdot l \tunion {\derive k a \cdot m})} \tunion ({\derive l a} \tunion \derive m a)
+\underline{(\derive k a \tdot l \tunion {\derive k a \tdot m})} \tunion ({\derive l a} \tunion \derive m a)
   & \cong & \mbox{by union laws} \\
-{(\derive k a \cdot l \tunion \underline{\derive l a})} \tunion {(\underline{\derive k a \cdot m} \tunion \derive m a)}
+{(\derive k a \tdot l \tunion \underline{\derive l a})} \tunion {(\underline{\derive k a \tdot m} \tunion \derive m a)}
   & \cong & \mbox{by definition} \\
-\underline{\derive{(k \cdot l)} a} \tunion \underline{\derive{(k \cdot m)} a}
+\underline{\derive{(k \tdot l)} a} \tunion \underline{\derive{(k \tdot m)} a}
   & \cong & \mbox{by definition} \\
-\derive{(k \cdot l \tunion k \cdot m)} a
+\derive{(k \tdot l \tunion k \tdot m)} a
 \end{array}
 \]
 This proof does not follow the scheme of (primitive) coinduction. The
 coinduction hypothesis is applied under uses of transitivity (for
-connecting the equalions) and under the congruence law for union.
+connecting the equations) and under the congruence law for union.
 This becomes especially clear if we fully write out the
 justifications as in the corresponding Agda proof in
 Figure~\ref{fig:concatuniondistribr}.  However, the continuity of
@@ -740,8 +1005,9 @@ The Kleene star obeys the following recursive equation:
 \astarrec
 
 \noindent
-Finally, we prove Arden's rule (which would allow us to solve linear
-equations over regular expressions).
+Finally, we prove Arden's rule \citeyearpar{arden:focs61},
+which would allow us to solve linear
+equations over regular expressions.
 %\astarconcat
 \astarfromrec
 
@@ -794,7 +1060,7 @@ accepted by an automaton $\vda$, which can be defined by simple coiteration:
 
 \aacclang
 
-\subsection{Simple Constructions on Automata}
+\subsection{Simple constructions on automata}
 \label{sec:simpleaut}
 
 An automaton for the empty language can be constructed with a single
@@ -860,7 +1126,7 @@ state.
 
 \aunionA
 
-\subsection{Automaton Composition for Language Concatenation}
+\subsection{Automaton composition for language concatenation}
 \label{sec:compaut}
 
 In preparation for automaton constructions for language concatenation
@@ -878,9 +1144,9 @@ First, if we start out in no states, the accepted language is empty.
 
 \apowAnil
 
-If we start in the non-empty list $s :: \vss$, we accept the union of
+If we start in the non-empty list $s \tcons \varss$, we accept the union of
 the accepted language of $\vda$ from $s$ and the accepted language of
-$\tpowA\,\vda$ from $\vss$.
+$\tpowA\,\vda$ from $\varss$.
 
 \apowAcons
 
@@ -888,7 +1154,7 @@ For language concatenation, given two automata $\vda_1$ and $\vda_2$,
 we will construct a composition automaton
 $\tcomposeA\,\vda_1\,s_2\,\vda_2$ such that its accepted language from
 state $s_1$ is the language concatenation
-$\tlang\,\vda_1\,s_1 \cdot \tlang\,\vda_2\,s_2$.
+$\tlang\,\vda_1\,s_1 \tdot \tlang\,\vda_2\,s_2$.
 The key insight is that whenever we reach a final state $s_f$ in $\vda_1$, we
 non-deterministically jump to the initial state $s_2$ of $\vda_2$.
 In some formulations of non-deterministic automata this would be an
@@ -920,17 +1186,17 @@ second automaton.
 
 \acomposeA
 
-A state $(s_1, \vss_2)$ of the composition automation is final if any
-of $\vss_2$ is final, or if $s_1$ is final and the initial state $s_2$
+A state $(s_1, \varss_2)$ of the composition automation is final if any
+of $\varss_2$ is final, or if $s_1$ is final and the initial state $s_2$
 of $\vda_2$ is also a final state.  (The latter means that the second
 language is nullable, so any word of the first language is contained
 in the composition.)
 
 \acomposeAnu
 
-To step from state $(s_1, \vss_2)$ we consider two cases.  First, if
+To step from state $(s_1, \varss_2)$ we consider two cases.  First, if
 $s_1$ is not final, we simply transition pointwise, from $s_1$ with
-$\tdelta\, \vda_1$, and from each state in $\vss_2$ with $\tdelta\,\vda_2$.
+$\tdelta\, \vda_1$, and from each state in $\varss_2$ with $\tdelta\,\vda_2$.
 However, if $s_1$ is final, we consider us to be also in the initial
 state $s_2$ of $\vda_2$, thus, we add to this the transition we can
 make from $s_2$ in the second automaton.
@@ -939,11 +1205,11 @@ make from $s_2$ in the second automaton.
 
 The composition automaton is a non-trivial construction, thus, it
 makes sense to look at its correctness proof.  We have to generalize
-the correctness statement to arbitrary initial states $(s_1, \vss)$ in
-the composition automaton.  If $\vss$ is not empty, the accepted
+the correctness statement to arbitrary initial states $(s_1, \varss)$ in
+the composition automaton.  If $\varss$ is not empty, the accepted
 language of the composition automaton
 contains the union of the accepted languages from each state
-in $\vss$ as well.
+in $\varss$ as well.
 
 \acomposeAgen
 
@@ -952,12 +1218,12 @@ final.
 
 \acomposeAgenproof
 
-As a corollary for empty $\vss$, we obtain the correctness of automaton composition:
+As a corollary for empty $\varss$, we obtain the correctness of automaton composition:
 
 \acomposeAcorrect
 
 
-\subsection{Automaton Construction for Language Iteration}
+\subsection{Automaton construction for language iteration}
 \label{sec:staraut}
 
 Finally, we construct from an automaton $\vda$ accepting language
@@ -1003,17 +1269,64 @@ The first step embeds states $s : S$ of $\vda$ as $\tjust\,s : \Maybe\,S$.
 \aaccinit
 
 \noindent
-It then adds the new accepting state $\tnothing : \Maybe\,S$ with the
+It adds the new accepting state $\tnothing : \Maybe\,S$ with the
 successors of $s_0$.
 
 \aaccinitnothing
 
+\noindent
+The second step constructs the power automaton and add transitions
+from the final states to the successors of the initial state.
+
 \afinalinit
+
+\noindent
+Composing these steps leads to the automaton for language iteration.
 
 \astarA
 
+To verify the construction, we first note some properties of the first
+step.  For one, embedding the states of $\vda$ via
+$\tjust : S \to \Maybe\,S$ does not change the accepted language.
+
+\aacceptingInitialjust
+
+\noindent
+This lemma is proven directly by coinduction.
+Further, is accepted language by the new state $\tnothing : \Maybe\,S$
+is the language accepted by $s_0$ enriched with the empty word.
+
+\aacceptingInitialnothing
+
+\noindent
+The proof by coinduction uses $\tacceptingInitialjust$.
+
+The main lemma characterizes the language accepted by
+$\tstarA\,s_0\,\vda$ from an arbitrary state $\varss$.
+
+\astarAlemma
+
+The proof by coinduction uses $\tpowAcons$, $\tacceptingInitialjust$,
+and some laws of decidable languages as proven in Section~\ref{sec:lang}.
+
+Finally, we prove correctness of the $\tstarA$-construction:  If we
+start in the new initial state $\tnothing$ (only), the recognized
+language is the Kleene star of the language recognized by $\vda$ from $s_0$.
+
+\astarAcorrect
+
+The proof is direct,
+instantiating the $\tstarAlemma$, using correctness of the
+$\tpowA$-construction, and lemma $\tacceptingInitialnothing$.
+
+
+
+
 \section{Conclusions}
 \label{sec:concl}
+
+In this article, we have demonstrated that
+
 
 \bibliographystyle{elsarticle-harv}
 \bibliography{auto-jlamp17}

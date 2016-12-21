@@ -49,7 +49,7 @@
 \newcommand{\substo}{\!\mapsto\!}
 \newcommand{\mapstot}{\mathrel{\dot\mapsto}}
 \newcommand{\condeq}{\doteq}
-\newcommand{\aeq}{=_\alpha}
+%\newcommand{\aeq}{=_\alpha}
 \newcommand{\beq}{=_{\beta}}
 \newcommand{\beeq}{=_{\beta\eta}}
 \newcommand{\enc}[1]{\ulcorner#1\urcorner}
@@ -201,7 +201,7 @@
 \newcommand{\Size}{\agda{Size}}
 \newcommand{\SizeLt}{\agda{Size\ensuremath{<}}\,}
 \newcommand{\bis}[3]{#2\mathrel{\cong^{#1}}#3}
-
+\newcommand{\Set}{\agda{Set}}
 \newcommand{\Lang}{\AgdaDatatype{Lang}\xspace}
 \newcommand{\tlang}{\AgdaFunction{lang}\xspace}
 \newcommand{\ttrie}{\AgdaFunction{trie}\xspace}
@@ -228,16 +228,22 @@
 \newcommand{\tinit}{\AgdaInductiveConstructor{init}}
 \newcommand{\tnothing}{\AgdaInductiveConstructor{nothing}}
 \newcommand{\tjust}{\AgdaInductiveConstructor{just}}
+\newcommand{\tnil}{\AgdaInductiveConstructor{\ensuremath{[\,]}}}
+\newcommand{\tcons}{\mathrel{\AgdaInductiveConstructor{\ensuremath{::}}}}
+\newcommand{\tconsu}{\AgdaInductiveConstructor{\ensuremath{\_::\_}}}
 \newcommand{\tcoit}{\agda{coit}}
 \newcommand{\tid}{\agda{id}}
 \newcommand{\thead}{\AgdaField{head}}
 \newcommand{\ttail}{\AgdaField{tail}}
+\newcommand{\tfst}{\AgdaField{fst}}
+\newcommand{\tsnd}{\AgdaField{snd}}
+\newcommand{\tswap}{\AgdaFunction{swap}}
 \newcommand{\ttake}{\AgdaFunction{take}}
 \newcommand{\tdrop}{\AgdaFunction{drop}}
 \newcommand{\vas}{\mathit{as}}
 \newcommand{\vbs}{\mathit{bs}}
 \newcommand{\vcs}{\mathit{cs}}
-\renewcommand{\vss}{\mathit{ss}}
+\newcommand{\varss}{\mathit{ss}}
 \newcommand{\vda}{\mathit{da}}
 \newcommand{\imp}{\Longrightarrow}
 \newcommand{\tcup}{\AgdaFunction{\ensuremath{\cup}}}
@@ -259,9 +265,23 @@
 \newcommand{\tpowAcons}{\agda{powA-cons}}
 \newcommand{\tcomposeA}{\agda{composeA}}
 \newcommand{\tstarA}{\agda{starA}}
+\newcommand{\tstarAlemma}{\agda{starA-lemma}}
 \newcommand{\tacceptingInitial}{\agda{acceptingInitial}}
+\newcommand{\tacceptingInitialnothing}{\agda{acceptingInitial-nothing}}
+\newcommand{\tacceptingInitialjust}{\agda{acceptingInitial-just}}
 \newcommand{\tfinalToInitial}{\agda{finalToInitial}}
 \newcommand{\Maybe}{\agda{Maybe}}
+\newcommand{\tfoldr}{\agda{foldr}}
+\newcommand{\tany}{\agda{any}}
+\newcommand{\ttimes}{\agda{\ensuremath{\,\times\,}}}
+\newcommand{\ttop}{\agda{\ensuremath{\top}}}
+\newcommand{\tbot}{\agda{\ensuremath{\bot}}}
+% \newcommand{\tequiv}{\,\agda{\ensuremath{\equiv}}\,}
+\newcommand{\Any}{\agda{Any}}
+\newcommand{\tHere}{\AgdaInductiveConstructor{here}}
+\newcommand{\tThere}{\AgdaInductiveConstructor{there}}
+\newcommand{\tni}{\mathrel{\ensuremath{\agda{\ensuremath{\ni}}}}}
+\newcommand{\tdot}{\mathrel{\ensuremath{\agda{\ensuremath{\cdot}}}}}
 
 % ICFP 13 talk
 \newcommand{\tbla}{\mathsf{bla}}
@@ -270,8 +290,9 @@
 \newcommand{\tnats}{\mathsf{nats}}
 \newcommand{\bound}[1]{{#1}^{\uparrow}}
 \newcommand{\esprime}{\vec e\,'}
-\newcommand{\oapp}{\mathrel{{+}\!{+}}}
-\newcommand{\kpl}{\AgdaFunction{k′l}}
+\newcommand{\oapp}{\mathrel{\agda{\ensuremath{{+}\!{+}}}}}
+%\newcommand{\kpl}{\AgdaFunction{k′l}}
+\newcommand{\kpl}{\mathit{k′l}}
 \newcommand{\tifthenelse}{\AgdaFunction{if\_then\_else\_}}
 
 
@@ -286,9 +307,9 @@
 % example for termination
 \newcommand{\codata}{\mathsf{codatatype}}
 \newcommand{\data}{\mathsf{datatype}}
-\newcommand{\tmap}{\mathsf{map}}
-\newcommand{\tnil}{\mathsf{nil}}
-\newcommand{\tcons}{\mathsf{cons}}
+\newcommand{\tmap}{\agda{map}}
+%\newcommand{\tnil}{\mathsf{nil}}
+%\newcommand{\tcons}{\mathsf{cons}}
 \newcommand{\vxs}{\mathit{xs}}
 \newcommand{\vmap}{\mathit{map}}
 \newcommand{\tfib}{\mathsf{fib}}
@@ -687,8 +708,6 @@
 \newcommand{\FVal}{\mathsf{FVal}}
 \newcommand{\PVal}{\mathsf{PVal}}
 \newcommand{\GVal}{\mathsf{GVal}}
-\newcommand{\tfst}{\mathsf{fst}}
-\newcommand{\tsnd}{\mathsf{snd}}
 \newcommand{\tS}{\mathsf{S}}
 \newcommand{\tK}{\mathsf{K}}
 \newcommand{\tI}{\mathsf{I}}

@@ -22,7 +22,7 @@ stdlib=$(HOME)/agda-master/std-lib/src
 agda=agda-2.5.2
 
 stylefile=src/latex/agda.sty
-files=$(bibliography) byhand.bib $(stylefile) macros.tex latex/Language.tex latex/Automaton.tex
+files=$(bibliography) byhand.bib $(stylefile) macros.tex latex/Agda.tex latex/Language.tex latex/Automaton.tex
 
 default : jlamp17.pdf
 

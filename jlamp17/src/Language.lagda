@@ -186,7 +186,7 @@ module ConcatExpl where
   δ (_·_{i} k l) {j} x =
     let  k′l : Lang j
          k′l = _·_{j} (δ k {j} x) l
-    in   if ν k then _∪_{j} k′l (δ l {j} x) else k′l
+    in   if  ν k  then  _∪_{j} k′l (δ l {j} x)  else  k′l
 
 \end{code}
 }
@@ -500,11 +500,12 @@ union-congʳ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → m ∪ l �
 
 union-cong : ∀{i}{k k′ l l′ : Lang ∞}
   (p : k ≅⟨ i ⟩≅ k′) (q : l ≅⟨ i ⟩≅ l′) → k ∪ l ≅⟨ i ⟩≅ k′ ∪ l′
-≅ν  (union-cong p q) rewrite ≅ν p | ≅ν q  =  refl
-≅δ  (union-cong p q) a  =  union-cong (≅δ p a) (≅δ q a)
+≅ν  (union-cong p q)    =  cong₂ _∨_   (≅ν p)    (≅ν q)
+≅δ  (union-cong p q) a  =  union-cong  (≅δ p a)  (≅δ q a)
 
 \end{code}
 }
+% ≅ν  (union-cong p q) rewrite ≅ν p | ≅ν q  =  refl
 
 
 \AgdaHide{
@@ -681,9 +682,9 @@ concat-union-distribʳ : ∀{i} (k {l m} : Lang ∞) →
 \newcommand{\aconcatcongl}{
 \begin{code}
 
-concat-congˡ : ∀{i}{m l k : Lang ∞}
-  → l ≅⟨ i ⟩≅ k
-  → l · m ≅⟨ i ⟩≅ k · m
+concat-congˡ : ∀{i} {m l k : Lang ∞}
+  → l        ≅⟨ i ⟩≅  k
+  → l  ·  m  ≅⟨ i ⟩≅  k  ·  m
 \end{code}
 }
 \AgdaHide{
@@ -699,9 +700,10 @@ concat-congˡ : ∀{i}{m l k : Lang ∞}
 }
 \newcommand{\aconcatcongr}{
 \begin{code}
-concat-congʳ : ∀{i}{m l k : Lang ∞}
-  → l ≅⟨ i ⟩≅ k
-  → m · l ≅⟨ i ⟩≅ m · k
+
+concat-congʳ : ∀{i} {m l k : Lang ∞}
+  →       l  ≅⟨ i ⟩≅        k
+  → m  ·  l  ≅⟨ i ⟩≅  m  ·  k
 
 \end{code}
 }
