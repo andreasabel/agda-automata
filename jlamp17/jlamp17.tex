@@ -124,29 +124,37 @@ the coinductive notion of equality of languages aka bisimilarity.  We
 formalize a coinductive type of languages and the coinductive type
 family of strong bisimilarity of languages in the proof assistant
 Agda using sized types.
-The sized typing enables us to do coinductive proofs of bisimilarity
-by equational reasoning as customary to establish algebraic
-properties.  In particular, after establishing that formal languages
+The sized typing enables us to establish algebraic
+properties of language operations through coinductive proofs of bisimilarity
+by equational reasoning.  In particular, after verifying that formal languages
 form a Kleene algebra, the laws of the Kleene algebra are sufficient
-to prove correctness of the usual automata constructions.
+to prove correctness of the usual constructions on automata.
 \end{abstract}
 
 \begin{keyword}
-Coalgebra
 %% keywords here, in the form: keyword \sep keyword
+Automaton \sep coalgebra \sep coinduction \sep copattern
+\sep formal~language \sep sized types \sep type theory.
 
 %% PACS codes here, in the form: \PACS code \sep code
 
 %% MSC codes here, in the form: \MSC code \sep code
 %% or \MSC[2008] code \sep code (2000 is the default)
+\MSC[2010]
+03B15 \sep % Higher-order logic and type theory
+68N18 \sep % Functional programming and lambda calculus
+68Q45 \sep % Formal languages and automata [See also 03D05, 68Q70, 94A45]
+68Q70      % Algebraic theory of languages and automata
 \end{keyword}
 
 \end{frontmatter}
 
 %\tnotetext{}
 \ccbyncnd{} This paper is published under a CC-BY-NC-ND license.
-
+\begin{center}
 It is recommended to print this article in color.
+\end{center}
+
 
 %% \linenumbers
 
@@ -158,14 +166,16 @@ many practical applications such as compiler construction, textual search, model
 checking, and decidability of certain logics.
 While the theory of formal languages and automata goes back to the
 1960s, its connection to the coalgebras of category theory is more
-recent.  This connection suggests that \emph{coinduction} should be
+recent.  This coalgebraic formulation suggests that \emph{coinduction} should be
 central for reasoning about formal languages and
 automata.  In particular, to show that two automata recognize the same
 language, one can find a bisimulation between these automata and then
-use the theorem of Knaster and Tarski \citeyearpar{tarski:fixpoint}
-for the greatest fixed point.  However, coming up with bisimulation is
-so far an act of creativity and has not been mechanized, although
-remedies like parametrized coinduction
+use coinduction in form of
+the theorem of Knaster and Tarski \citeyearpar{tarski:fixpoint}
+for the greatest fixed point.  However, coming up with a suitable
+bisimulation is
+so far an act of creativity and has not been automated, although
+remedies like parameterized coinduction
 \citep{hurNeisDreyerVafeiadis:popl13}
 have been suggested for a smoother experience of formal coinductive
 reasoning.   Further, a set of standard strategies to find a
@@ -191,12 +201,12 @@ the proof term for transitivity.  The latter is not possible in weaker
 formulations of coinduction such as the \emph{Calculus of
   (Co)inductive Constructions} underlying the Coq \citeyearpar{inria:coq86}
 proof assistant, which makes use of an untyped guardedness check
-\cite{coquand:infiniteobjects}.
+\citep{coquand:infiniteobjects}.
 As an alternative to sized types, well-founded coinduction could
-probably based on ordered families of equivalences
+probably be based on ordered families of equivalences
 \citep{gianantonioMiculan:types02}
 or ultrametric spaces.
-A type theory based on these approaches is emerging
+A type theory utilizing these approaches is emerging
 \citep{bizjakGrathwohlCloustonMogelbergBirkedal:fossacs16},
 but has not seen a mature implementation yet.
 
@@ -220,11 +230,11 @@ extended by \emph{friendly} coinductive definitions that bring part of
 the reasoning power of sized types, possibly sufficient to mimic the
 reasoning style employed in this article.
 
-\paradot{Overview}  In Section~\ref{sec:prelim} we briefly
-recaptitulate the bits and pieces of Type Theory and Agda relevant for
+\para{Overview}  In Section~\ref{sec:prelim} we briefly
+recapitulate the bits and pieces of Type Theory and Agda relevant for
 this article.  In Section~\ref{sec:lang} we define decidable languages
 as infinite tries and some operations on them in the style of
-Brzozowski derivatives.  In the following section, \ref{sec:kleene} we
+Brzozowski derivatives.  Subsequently, in Section~\ref{sec:kleene} we
 prove the Kleene algebras for these operations.  The final technical
 section, \ref{sec:aut}, is devoted to the corresponding constructions
 on automata and their correctness.
@@ -259,7 +269,7 @@ on automata and their correctness.
 
 \input{latex/Agda}
 
-The results definitions and theorems of this article are formulated in
+The definitions and theorems of this article are formulated in
 Dependent Type Theory \`a la \cite{martinlof:predicative75}, in
 particular, in the Agda \citeyearpar{agdawiki} language.  Agda is an
 implementation of Type Theory with several extensions; we will most
@@ -373,7 +383,7 @@ which is $\ttrue$ if $p\,x$ is $\ttrue$ for any element $x$ of $\vxs$.
 \aany
 
 Finally, data types with a single constructor can alternatively be defined as
-record types.  For instance, the cartesian product $A \ttimes B$ can be
+record types.  For instance, the Cartesian product $A \ttimes B$ can be
 implemented as record type with the projections
 % $\tfst : \forall\{A\,\B\} \to A \ttimes B \to A
 $\tfst : A \ttimes B \to A$ and
@@ -416,7 +426,7 @@ absurd pattern $()$ which matches anything of empty type.
 
 \abot
 
-Truth $\ttop$ is modelled as record type with no fields.  There is no
+Truth $\ttop$ is modeled as record type with no fields.  There is no
 information to extract from a proof of $\ttop$, a proof is simply an
 empty record.
 
@@ -515,7 +525,7 @@ the two-element data type with constructors $\ttrue$ and $\tfalse$.
 % A potentially infinite
 A set of words with decidable membership can also be
 represented as \emph{trie}.  For our purposes,
-a trie is an $A$-branching tree whose nodes are labelled by booleans.
+a trie is an $A$-branching tree whose nodes are labeled by booleans.
 Any word $\vas$ is a path into the tree selecting a subtree.  The root label
 of that subtree indicates the status of the word $\vas$.  Label $\ttrue$
 means the word is member of the set, label $\tfalse$ means it is not a
@@ -567,7 +577,7 @@ Thus, a finite trie would be insufficient to represent $E$.
 
 Generalizing $\Bool$ to $B$,
 the connection between
-the type $T$ of $A$-branching $B$-labelled tries
+the type $T$ of $A$-branching $B$-labeled tries
 and the type $\List A \to B$ can also be derived by calculating type
 isomorphisms \citep{hinze:ggtries,altenkirch:tlca01}:
 \[
@@ -638,7 +648,7 @@ $\delta\,f\,a : \List A \to \Bool$ is defined as
 $(\delta\,f\,a)(\vas) = f\, (a \tcons \vas)$.  This means that
 $\delta\,f\,a$ accepts the words of $f$ that start with $a$, minus this
 first letter.  In terms of tries $t$, we obtain the derivative
-$\tdelta\,t\,a$ simply by following the $a$-labelled edge from the
+$\tdelta\,t\,a$ simply by following the $a$-labeled edge from the
 root, thus, the derivation function is identical with the field
 $\tdelta$.
 
@@ -865,7 +875,7 @@ does not directly suggest a pretty implementation of $k \tdot l$
 
 We can instead try to understand language concatenation as an operation on the
 tries $k$ and $l$.  If we think about accepting a word $\vcs$ in $k \tdot l$
-by following pathes in $k$ and $l$, the following procedure applies:
+by following paths in $k$ and $l$, the following procedure applies:
 We start by following branches in $k$.  Whenever we reach an accepting
 node in $k$ we may decide that we have reached the boundary between
 the words $\vas$ in $k$ and $\vbs$ in $l$ that make up the word $\vcs
@@ -890,7 +900,7 @@ but we arrived there by the trie intuition.
 The above definition is not an instance of coiteration for two
 reasons:  First, the outermost call is to $\tifthenelse$ rather than
 the recursive call $\kpl$.  Even if we consider $\tifthenelse$ to be special
-(rather than just an arbitary Agda function), there is still a
+(rather than just an arbitrary Agda function), there is still a
 recursive call $\kpl$ in the then-branch which is not at top-level,
 but under the union-operator.  This
 problem is usually fixed by defining a scheme for corecursion up to
@@ -1030,7 +1040,7 @@ The sized typing will be crucial to apply a coinductive hypothesis
 under $\tunioncong$ later.
 \aunioncong
 A derived law we require later is that union distributes over itself.
-Now that we have established that union fullfills the laws of an
+Now that we have established that union fulfills the laws of an
 idempotent commutative monoid, we can use a solver to prove this law
 automatically by reflection.
 \aunionuniondistr
@@ -1517,7 +1527,7 @@ classic automata theory by
 restrict to \emph{finite} automata, using the support for finite types
 given by the SSReflect library \citep{gonthierMahboubi:ssreflect}.
 
-\paradot{Acknowledgments}.
+\para{Acknowledgments}
 The author acknowledges support from Vetenskapsr\aa{}det
 (Swedish Research Council) through project 621-2014-4864/E0486401
 \emph{Termination
@@ -1529,6 +1539,8 @@ He is grateful to Ichiro Hasuo and the program committee of the IFIP
 WG 1.3 International Workshop on Coalgebraic Methods in Computer
 Science, CMCS 2016, for an invitation to present his findings at this
 workshop.
+
+\section*{References}
 
 \bibliographystyle{elsarticle-harv}
 \bibliography{auto-jlamp17}
