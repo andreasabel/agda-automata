@@ -26,7 +26,7 @@ files=$(bibliography) byhand.bib $(stylefile) macros.tex latex/Agda.tex latex/Re
 
 default : jlamp17.pdf
 
-ship : $(destdir)/jlamp17.pdf  $(destdir)/jlamp17a.lagda
+ship : $(destdir)/jlamp17.pdf
 
 $(destdir)/jlamp17.pdf : jlamp17.pdf
 	cp -p $< $@
