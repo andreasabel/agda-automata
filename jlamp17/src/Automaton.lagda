@@ -308,7 +308,7 @@ finalToInitial : ∀{S} (da : DA (Maybe S)) → DA (List ∞ (Maybe S))
 ν  (finalToInitial da)  ss     =  νs da ss
 δ  (finalToInitial da)  ss  a  =
   let  ss′ = δs da ss a
-  in   if νs da ss then δ da nothing a ∷ ss′ else ss′
+  in   if  νs da ss  then  δ da nothing a ∷ ss′  else  ss′
 
 \end{code}
 }
@@ -321,7 +321,7 @@ starAopt : ∀{S} (s₀ : S) (da : DA S) → DA (List ∞ (Maybe S))
 δ (starAopt s₀ da) ss a =
   let  sₐ   =  just (δ da s₀ a)
        ss′  =  List.map (maybe′ (λ s → just (δ da s a)) sₐ) ss
-  in   if List.any (maybe′ (ν da) false) ss then sₐ ∷ ss′ else ss′
+  in   if  List.any (maybe′ (ν da) false) ss  then  sₐ ∷ ss′  else  ss′
 
 \end{code}
 }
@@ -485,7 +485,7 @@ composeA-gen : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) →
 \begin{code}
 
 ≅ν (composeA-gen da₁ da₂ s₁ s₂ ss) = refl
-≅δ (composeA-gen da₁ da₂ s₁ s₂ ss) a with ν da₁ s₁
+≅δ (composeA-gen da₁ da₂ s₁ s₂ ss) a  with  ν da₁ s₁
 ... | false = composeA-gen da₁ da₂ (δ da₁ s₁ a) s₂ (δs da₂ ss a)
 
 ... | true  = begin

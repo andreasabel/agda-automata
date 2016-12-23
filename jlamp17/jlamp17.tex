@@ -327,7 +327,7 @@ function space $(x : \_) \to A$.
 
 We can define our own proposition, predicates, and relation as
 inductive (or coinductive, see Section~\ref{sec:fameq}) families.  The
-prime example is \emph{propositional equality} $x \mathrel{\tequiv} y$ of
+prime example is \emph{propositional equality} $x \tequiv y$ of
 objects $x,y : A$, which is defined as a data type with a hidden
 parameter $A : \Set$, a visible parameter $x : A$, and an index $y :
 A$.  The only constructor $\trefl$---which has no arguments---fixes
@@ -343,8 +343,8 @@ relation on $A$ which is reflexive.
 
 Proof of equality can be used by
 pattern matching.  For instance, we can prove symmetry of equality,
-\ie, $x \mathrel{\tequiv} y$ implies $ y \mathrel{\tequiv} x$ by
-pattern matching on the the proof of $x \mathrel{\tequiv} y$.
+\ie, $x \tequiv y$ implies $ y \tequiv x$ by
+pattern matching on the the proof of $x \tequiv y$.
 
 \aeqsym
 
@@ -352,14 +352,14 @@ pattern matching on the the proof of $x \mathrel{\tequiv} y$.
 The only matching constructor $\trefl$ forces $y$ to be identical to
 $x$.  This is indicated in Agda by the inaccessible pattern $.x$ which
 means that $y$ has been instantiated by the term $x$.  As a
-consequence, the goal becomes $x \mathrel{\tequiv} x$ which is simply
+consequence, the goal becomes $x \tequiv x$ which is simply
 proved by $\trefl$.
 
 In a similar fashion, we prove transitivity of propositional
-equality.  By matching both the proofs of $x \mathrel{\tequiv} y$ and $y
-\mathrel{\tequiv} z$ against $\trefl$, variables $y$ and $z$ become
+equality.  By matching both the proofs of $x \tequiv y$ and $y
+\tequiv z$ against $\trefl$, variables $y$ and $z$ become
 instantiated to $x$, and again, the goal becomes simply
-$x \mathrel{\tequiv} x$.
+$x \tequiv x$.
 
 \aeqtrans
 
@@ -375,6 +375,7 @@ proposition.
 
 \aAny
 
+\noindent
 Constructor $\tHere$ establishes the proposition for a non-empty list
 $x \tcons \vxs$ given a proof $p : P x$ that predicate $P$ holds on
 the head $x$ of the list.  The resulting proof tree is a leaf, and any
@@ -389,6 +390,8 @@ construct witnesses for existential propositions such as $\Any$.  In
 this case, a proof takes the form $\tThere^n\,(\tHere\,p)$ where $n$
 is the index of witnessing element $x$ that satisfies $P$, and $p : P\,x$ is
 the evidence for the latter fact.
+
+
 
 This concludes the short tutorial on Type Theory and Agda.  In the
 next section, we introduce coinductive types for the example of
@@ -611,7 +614,7 @@ corecursion on the $a$-derivative of $f$.  The justification of the
 recursive call to $\ttrie$ is apparent once we make the hidden size
 arguments visible:
 \[
-  \tdelta\;\{i\}\;(\ttrie\,\{i\}\,f)\;\{j\}\;a = \ttrie\;\{j\}\;\lambda \vas \to f\,(a \tcons \vas)
+  \tdelta\;\{i\}\;(\ttrie\,\{i\}\,f)\;\{j\}\;a = \ttrie\;\{j\}\;(\lambda \vas \to f\,(a \tcons \vas))
 \]
 By typing of the projection $\tdelta$, we have $j : \SizeLt i$, thus,
 the definition of $\ttrie\,\{i\}$ only rests on $\ttrie\,\{j\}$ with a
@@ -629,6 +632,14 @@ first equation ($\tnu$) determines the initial value.
 In the following, we implement some standard constructions on formal
 languages by copattern matching.  These operations will allow us to
 compute the trie of any regular expression.
+Throughout the rest of this article, we assume a type $\tA$ of
+characters with a decidable equality
+$\tlfloor a \qeq b \trfloor : \Bool$ for $a, b : \tA$.
+% $\_{\qeq}\_ : (a\; b : \tA) \to \Dec\,(a \tequiv b)$.  Herein,
+% $\Dec\,P$ is a data type with two constructors: $\tyes$ carries a
+% proof of $P$, and $\tno$ a refutation.
+
+% \aDec
 
 The empty language $\tempty$ is the trie where each node label is
 $\tfalse$.  Naturally, each subtree of $\tempty$ is again $\tempty$.
@@ -860,7 +871,7 @@ is strongly bisimilar to itself $l$, up to arbitrary depth $i$.
 The proof $\tcongrefl$ of $\bisim l i l$ is constructed lazily.  If we
 are asking for its first component $\congnu\,\tcongrefl$ we get a proof
 that the root $\tnu\,l$ is identical to itself, namely $\trefl :
-\tnu\,l \,\tequiv\, \tnu\,l$.  If we are asking for the $a$-branch of
+\tnu\,l \tequiv \tnu\,l$.  If we are asking for the $a$-branch of
 its second component, $\congdelta\,\tcongrefl\,a$ at depth $j < i$, it
 computes $\tcongrefl : \bisim l j l$ corecursively.
 
@@ -876,6 +887,27 @@ Taken together, each $\bisim \_ i \_$ is an equivalence relation, and
 forms a setoid $\Bis\,i$ with carrier $\Lang\,\tinfty$.
 \asetoid
 Later, we will use these setoids to reason by equality chains.
+Equality chains are not a built-in feature of Agda, but a module of
+its standard library.  An equality chain allows to write down
+equational reasoning in a human-readable way, and is basically a nice
+interface to reasoning by transitivity.  In general, it works for any
+preorder, \ie, any reflexive-transitive relation.
+
+Just for the sake of demonstration, we prove transitivity of
+bisimilarity again, using the old transitivity proof in form of an
+equality chain.
+
+\atransp
+
+As a prerequisite, we bring the primitives of equality chains into
+scope by opening module $\EqR$ (short for $\EquationalReasoning$)
+instantiated to the setoid $\Bis\,i$.
+A chain then starts with $\tbegin$ followed with the first term of the
+chain ($k$).  Then follows a justification ($p : \bisim k i l$) for
+equality with the second term ($l$).  This may repeat for a while, in
+our case, there is only another justification ($q : \bisim l i m$) and
+a final term ($m$).  The chain closes with an end-of-proof maker ($\tqed$).
+
 
 \subsection{Laws of language union}
 \label{sec:lawunion}
@@ -911,6 +943,26 @@ implements this solver.
 
 \subsection{Laws of language concatenation}
 \label{sec:lawcat}
+
+In this section, we prove laws of language concatenation $k \cdot l$.
+Since it is defined by cases on whether $k$ is nullable, we will make
+the same case distinction in most proofs.  To this end, we use Agda's
+$\kwith$ construct, as for example in:
+\awith
+It can be roughly seen as a case distinction over $g\,x$, but it also
+abstracts $g\,x$ in the goal $P\,(g\,x)$ so that we can solve it by $p
+: P\,\ttrue$ in the first clause and $q : P\,\tfalse$ in the second clause.
+
+Further, we use Agda's $\krewrite$ construct, which can be applied on
+an equation $l \tequiv r$ to rewrite subterms $l$ in a goal to $r$.
+For example:
+
+\input{latex/RewriteExample}
+\arewrite
+
+Here, the goal is changed from $P\,(g\,x)$ to $P\,x$ using equation
+$e$, and subsequently solved by $p$.
+
 
 Concatenation distributes over union, for instance,
 $k \tdot (l \tunion m) \cong (k \tdot l) \tunion (k \tdot m)$.
@@ -1037,34 +1089,49 @@ the classic theory of formal languages.  Our message is that the
 corresponding correctness proofs can be carried out by the same means
 as in the last section: coinduction and equational reasoning.
 
-In out presentation of deterministic automata (DA) we follow
+In our presentation of deterministic automata (DA) we follow
 \cite{rutten:concur98}:  A not necessarily finite automaton over a
 state set $S$ is given by a transition function
 $\tdelta : S \to A \to S$ and a characteristic function
 $\tnu : S \to \Bool$ for the
 set of accepting (or final) states.  These two functions could also be
-bundled as $S \to \Bool \times (A \to S)$, making the coalgebra
-structure apparent.
-
-In anticipation of power automata we lift the coalgebra to lists of
-states $\List\,i\,S \to \Bool \times (A \to \List\,i\,S)$.  A lists of
-states is accepting if it contains at least one final state.  And we
-step to a new list of states by pointwise applying the transition function.
+bundled as $S \to \Bool \times (A \to S)$, making apparent that an
+automaton $(S : \Set,\ \vda : \DA\,S)$ is just a
+$\Bool \times (A \to \_)$-coalgebra.
 
 \aDA
 
+In anticipation of power automata we lift the coalgebra to lists of
+states $\List\,i\,S \to \Bool \times (A \to \List\,i\,S)$.  A lists of
+states is accepting ($\tnus$) if it contains at least one final state.  And we
+step ($\tdeltas$) to a new list of states by pointwise applying the transition function.
+
 The initial state is not
 contained in the automaton definition; each state $s$
-induces a language $\tlang\,\vda\,s$
+induces a language $\tlang\;\vda\,s$
 accepted by an automaton $\vda$, which can be defined by simple coiteration:
 
 \aacclang
+
+\noindent
+For each automaton $(S, \vda)$ the function
+$\tlang\;\vda : S \to \Lang\,\tinfty$ is the terminal morphism.
+\[
+\newcommand{\tnd}{\langle \DA.\tnu\,\vda,\ \DA.\tdelta\,\vda \rangle}
+\xymatrix@R=12ex@C=20ex{
+  S \ar[r]^(0.45)*{\tnd} \ar@{.>}[d]_*{%g\,\vec y \,:=\,
+    \tlang\;\vda}
+    & *!<-1.7ex,0ex>{~\Bool \times (A \to S)} \ar[d]^*{\tid \times (\tlang\;\vda\, \circ \_)}\\
+  \Lang\,\tinfty \ar[r]^(0.45)*{\langle \Lang.\tnu, \Lang.\tdelta \rangle}
+    & *!<-4.6ex,0ex>{~\Bool \times (A \to \Lang\,\tinfty)} \\
+}
+\]
 
 \subsection{Simple constructions on automata}
 \label{sec:simpleaut}
 
 An automaton for the empty language can be constructed with a single
-non-accepting state inhabiting Agda's unit type $\top$.
+non-accepting state inhabiting Agda's unit type $\ttop$.
 
 \begin{minipage}{0.5\linewidth}
 \aemptyA
@@ -1116,7 +1183,7 @@ for the complement language by switching accepting and non-accepting states.
 \acomplA
 
 Given an automaton $\vda_1$ over state set $S_1$ accepting language $\ell_1$ and an
-automaton $\vda_2$ over $S_2$ for $l_2$, we can recognize the union $\ell_1
+automaton $\vda_2$ over $S_2$ for $\ell_2$, we can recognize the union $\ell_1
 \tunion \ell_2$ by the following \emph{product} automaton $\vda_1
 \toplus \vda_2$ over state set $S_1 \times S_2$.  A state in the
 product automaton is a pair of states $(s_1, s_2)$, one from each
@@ -1157,17 +1224,20 @@ state $s_1$ is the language concatenation
 $\tlang\,\vda_1\,s_1 \tdot \tlang\,\vda_2\,s_2$.
 The key insight is that whenever we reach a final state $s_f$ in $\vda_1$, we
 non-deterministically jump to the initial state $s_2$ of $\vda_2$.
-In some formulations of non-deterministic automata this would be an
-$\varepsilon$-transition from $s_f$ to $s_2$, consuming no input.
+In some formulations of non-deterministic automata this would be
+an $\varepsilon$-transition
+% a silent transition
+from $s_f$ to $s_2$, consuming no input.
 We will instead add transitions from $s_f$ to the successor states of $s_2$.
 \[
 \xymatrix{
-\bullet & & & & \bullet \\
+& & \ar@{--}[dddd] & & \\
+\bullet & &  & & \bullet \\
 \vda_1 % \ar@{.>}[r]
 & *++[o][F=]{s_f}
    \ar[ul]_a
    \ar[dl]^b
-   \ar@{.>}[rr]^{\varepsilon}
+   \ar@{.>}[rr]^(0.4){\varepsilon}
    \ar@{.>}@/^/[rrru]^a
    \ar@{.>}@/_/[rrrd]_b
 &
@@ -1175,6 +1245,7 @@ We will instead add transitions from $s_f$ to the successor states of $s_2$.
 & \vda_2 % \ar@{.>}[l]
 \\
 \bullet & & & & \bullet \\
+& & & & \\
 }
 \]
 
@@ -1197,7 +1268,7 @@ in the composition.)
 To step from state $(s_1, \varss_2)$ we consider two cases.  First, if
 $s_1$ is not final, we simply transition pointwise, from $s_1$ with
 $\tdelta\, \vda_1$, and from each state in $\varss_2$ with $\tdelta\,\vda_2$.
-However, if $s_1$ is final, we consider us to be also in the initial
+However, if $s_1$ is final, we imagine us also in the initial
 state $s_2$ of $\vda_2$, thus, we add to this the transition we can
 make from $s_2$ in the second automaton.
 

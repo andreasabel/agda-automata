@@ -83,7 +83,7 @@ l  ∋  a ∷ as  =  δ l a ∋ as
 
 trie : ∀{i} (f : List i A → Bool) → Lang i
 ν (trie f)    =  f []
-δ (trie f) a  =  trie λ as → f (a ∷ as)
+δ (trie f) a  =  trie (λ as → f (a ∷ as))
 
 \end{code}
 }
@@ -118,15 +118,26 @@ trie : ∀{i} (f : List i A → Bool) → Lang i
 
 % language consisting of a single single-character word
 
+\newcommand{\acharp}{
+\begin{code}
+
+char′ : ∀{i} (a : A) → Lang i
+
+ν (char′ a)    =  false
+δ (char′ a) x  with a ≟ x
+... | yes _   =  ε
+... | no  _   =  ∅
+
+\end{code}
+}
+
 \newcommand{\achar}{
 \begin{code}
 
 char : ∀{i} (a : A) → Lang i
 
-ν (char a)    =  false
-δ (char a) x  with a ≟ x
-... | yes _   =  ε
-... | no  _   =  ∅
+ν  (char a)     =  false
+δ  (char a)  x  =  if  ⌊ a ≟ x ⌋  then  ε  else  ∅
 
 \end{code}
 }
@@ -364,6 +375,19 @@ Bis : ∀(i : Size) → Setoid _ _
 Setoid.Carrier        (Bis i)  =  Lang ∞
 Setoid._≈_            (Bis i)  =  λ l k → l ≅⟨ i ⟩≅ k
 Setoid.isEquivalence  (Bis i)  =  ≅isEquivalence i
+
+\end{code}
+}
+
+\newcommand{\atransp}{
+\begin{code}
+
+≅trans′ : ∀ i (k l m : Lang ∞)
+  (p : k ≅⟨ i ⟩≅ l) (q : l ≅⟨ i ⟩≅ m) → k ≅⟨ i ⟩≅ m
+≅trans′ i k l m p q = begin
+  k  ≈⟨ p ⟩
+  l  ≈⟨ q ⟩
+  m  ∎ where open EqR (Bis i)
 
 \end{code}
 }

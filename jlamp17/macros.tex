@@ -211,6 +211,8 @@
 \newcommand{\Bool}{\AgdaDatatype{Bool}\xspace}
 \newcommand{\tunion}{\ensuremath{\mathrel{\AgdaFunction{\ensuremath{\cup}}}}}
 \newcommand{\tforce}{\AgdaField{force}}
+\newcommand{\tnus}{\agda{\ensuremath{\nu}s}}
+\newcommand{\tdeltas}{\agda{\ensuremath{\delta}s}}
 \newcommand{\tnu}{\AgdaField{\ensuremath{\nu}}}
 \newcommand{\tdelta}{\AgdaField{\ensuremath{\delta}}}
 \newcommand{\nullable}{\AgdaField{\ensuremath{\nu}}\,}
@@ -255,7 +257,7 @@
 % \newcommand{\congrefl}{\AgdaField{\ensuremath{\cong}refl}}
 % \newcommand{\congsym}{\AgdaField{\ensuremath{\cong}sym}}
 % \newcommand{\congtrans}{\AgdaField{\ensuremath{\cong}trans}}
-\newcommand{\tequiv}{\AgdaDatatype{\ensuremath{\equiv}}}
+\newcommand{\tequiv}{\mathrel{\AgdaDatatype{\ensuremath{\equiv}}}}
 \newcommand{\Bis}{\agda{Bis}}
 \newcommand{\tunioncong}{\agda{union-cong}}
 \newcommand{\tunioncongl}{\agda{union-cong\ensuremath{^\mathsf{l}}}}
@@ -282,6 +284,21 @@
 \newcommand{\tThere}{\AgdaInductiveConstructor{there}}
 \newcommand{\tni}{\mathrel{\ensuremath{\agda{\ensuremath{\ni}}}}}
 \newcommand{\tdot}{\mathrel{\ensuremath{\agda{\ensuremath{\cdot}}}}}
+\newcommand{\DA}{\agda{DA}}
+\newcommand{\Dec}{\agda{Dec}}
+\newcommand{\tyes}{\AgdaInductiveConstructor{yes}}
+\newcommand{\tno}{\AgdaInductiveConstructor{no}}
+\newcommand{\tA}{\AgdaField{A}}
+\newcommand{\qeq}{\mathrel{\agda{\ensuremath{≟}}}}
+\newcommand{\tlfloor}{\mathrel{\agda{\ensuremath{⌊}}}}
+\newcommand{\trfloor}{\mathrel{\agda{\ensuremath{⌋}}}}
+\newcommand{\EqR}{\AgdaModule{EqR}}
+\newcommand{\EquationalReasoning}{\AgdaModule{EquationalReasoning}}
+\newcommand{\tbegin}{\agda{begin}}
+\newcommand{\tqed}{\mathrel{\agda{\ensuremath{∎}}}}
+\newcommand{\kwith}{\AgdaKeyword{with}}
+\newcommand{\krewrite}{\AgdaKeyword{rewrite}}
+
 
 % ICFP 13 talk
 \newcommand{\tbla}{\mathsf{bla}}
@@ -667,7 +684,7 @@
 \newcommand{\Prop}{\mathsf{Prop}}
 \newcommand{\Exp}{\mathsf{Exp}}
 \newcommand{\Prime}{\mathsf{Prime}}
-\newcommand{\Dec}{\mathsf{Dec}}
+%\newcommand{\Dec}{\mathsf{Dec}}
 %\newcommand{\Ann}{\mathsf{Ann}}
 \newcommand{\LamII}{\Lambda^{\downarrow\uparrow}}
 \newcommand{\Kind}{\mathsf{Kind}}

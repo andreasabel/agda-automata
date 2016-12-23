@@ -153,12 +153,71 @@ trans refl refl = refl
 
 \end{code}
 }
-\newcommand{\aAny}{
+\newcommand{\aAnyInf}{
 \begin{code}
+
+data AnyS (i : Size) {A} (P : A → Set) : List i A → Set where
+  here   :  ∀{j : Size< i} {x} {xs : List j A} (p : P x)          →  AnyS i P (x ∷ xs)
+  there  :  ∀{j : Size< i} {x} {xs : List j A} (p : AnyS j P xs)  →  AnyS i P (x ∷ xs)
+
+\end{code}
+}
+
+\newcommand{\aAny}{
+\begin {code}
 
 data Any (i : Size) {A} (P : A → Set) : List ∞ A → Set where
   here   :  ∀{x xs}                 (p : P x)         →  Any i P (x ∷ xs)
   there  :  ∀{x xs}  {j : Size< i}  (p : Any j P xs)  →  Any i P (x ∷ xs)
+
+\end {code}
+}
+
+\newcommand{\aDec}{
+\begin{code}
+
+data Dec (P : Set) : Set where
+  yes  :  ( p  :  P )     →  Dec P
+  no   :  (¬p  :  P → ⊥)  →  Dec P
+
+⌊_⌋ : ∀{P} → Dec P → Bool
+⌊ yes _ ⌋ = true
+⌊ no  _ ⌋ = false
+\end{code}
+}
+\newcommand{\aanyany}{
+\begin{code}
+
+True : Bool → Set
+True true   =  ⊤
+True false  =  ⊥
+
+-- any-Any : ∀{i A} (p : A → Bool) (xs : List i A)
+--   →  True (any p xs)
+--   →  Any i (λ x → True (p x)) xs
+-- any-Any {i} p [] ()
+-- any-Any {i} p (x ∷ xs) q with p x | here {i = i} {P = λ x → True (p x)} {x = x} {xs = xs}
+-- any-Any {i} p (x ∷ xs) q | true   | h = h _
+-- any-Any {i} p (x ∷ xs) q | false  | h = there (any-Any p xs q)
+
+any-Any : ∀{i A} {P : A → Set} (p : (a : A) → Dec (P a)) (xs : List i A)
+  →  True (any (λ x → ⌊ p x ⌋) xs)
+  →  AnyS i P xs
+any-Any p [] ()
+any-Any p (x ∷ xs) q with p x
+any-Any p (x ∷ xs) q | yes r  =  here r
+any-Any p (x ∷ xs) q | no _   =  there (any-Any p xs q)
+
+\end{code}
+}
+\newcommand{\awith}{
+\begin{code}
+
+withExample : (P : Bool → Set) (p : P true) (q : P false) →
+  {A : Set} (g : A → Bool) (x : A) → P (g x)
+withExample P p q g x with g x
+... | true   =  p
+... | false  =  q
 
 \end{code}
 }
