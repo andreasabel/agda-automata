@@ -164,13 +164,13 @@ data AnyS (i : Size) {A} (P : A → Set) : List i A → Set where
 }
 
 \newcommand{\aAny}{
-\begin {code}
+\begin{code}
 
 data Any (i : Size) {A} (P : A → Set) : List ∞ A → Set where
   here   :  ∀{x xs}                 (p : P x)         →  Any i P (x ∷ xs)
   there  :  ∀{x xs}  {j : Size< i}  (p : Any j P xs)  →  Any i P (x ∷ xs)
 
-\end {code}
+\end{code}
 }
 
 \newcommand{\aDec}{

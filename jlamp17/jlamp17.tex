@@ -109,6 +109,26 @@
 
 \begin{abstract}
 
+Formal languages and automata are a foundational topic of computer science, with
+many practical applications such as compiler construction, textual search, model
+checking, and decidability of certain logics.
+Automata are an instance of transitions systems which have the
+structure of a coalgebra,
+and coalgebraic and coinductive reasoning tools such as simulations,
+bisimulations, and up-to techniques have
+been successfully employed to study formal languages.
+
+In this paper, we show how routine reasoning about formal languages
+can be carried out with just
+the coinductive notion of equality of languages aka bisimilarity.  We
+formalize a coinductive type of languages and the coinductive type
+family of strong bisimilarity of languages in the proof assistant
+Agda using sized types.
+The sized typing enables us to do coinductive proofs of bisimilarity
+by equational reasoning as customary to establish algebraic
+properties.  In particular, after establishing that formal languages
+form a Kleene algebra, the laws of the Kleene algebra are sufficient
+to prove correctness of the usual automata constructions.
 \end{abstract}
 
 \begin{keyword}
@@ -126,6 +146,8 @@ Coalgebra
 %\tnotetext{}
 \ccbyncnd{} This paper is published under a CC-BY-NC-ND license.
 
+It is recommended to print this article in color.
+
 %% \linenumbers
 
 \section{Introduction}
@@ -134,23 +156,102 @@ Coalgebra
 Formal languages and automata are a foundational topic of computer science, with
 many practical applications such as compiler construction, textual search, model
 checking, and decidability of certain logics.
-Automata are an instance of transitions systems which have the
-structure of a coalgebra.
-Coalgebraic and coinductive reasoning tools such as simulations and bisimulations have
-been successfully employed to study formal languages. % \cite{}.
-Coinduction-up-to techniques have emerged as the state of the art to
-get coinductive proofs through. % \cite{sangiorgi}.
+While the theory of formal languages and automata goes back to the
+1960s, its connection to the coalgebras of category theory is more
+recent.  This connection suggests that \emph{coinduction} should be
+central for reasoning about formal languages and
+automata.  In particular, to show that two automata recognize the same
+language, one can find a bisimulation between these automata and then
+use the theorem of Knaster and Tarski \citeyearpar{tarski:fixpoint}
+for the greatest fixed point.  However, coming up with bisimulation is
+so far an act of creativity and has not been mechanized, although
+remedies like parametrized coinduction
+\citep{hurNeisDreyerVafeiadis:popl13}
+have been suggested for a smoother experience of formal coinductive
+reasoning.   Further, a set of standard strategies to find a
+bisimulation have become known as \emph{coinduction-up-to techniques}
+\citep{pousSangiorgi:book12}.
 
-This paper presents an anti-thesis to up-to techniques.  We show how
-much of the reasoning about formal languages can be carried out already with
-the coinductive notion of equality of languages aka bisimilarity.  We
-formalize a coinductive type of languages and the coinductive type
-family of strong bisimilarity of languages in Agda using sized types.
-The sized typing enables us to do coinductive proofs of bisimilarity
-by equational reasoning as customary to establish algebraic
-properties.  In particular, after establishing that formal languages
-form a Kleene algebra, the laws of the Kleene algebra are sufficient
-to prove correctness of the usual automata constructions.
+In this article, we demonstrate that a generalization of primitive
+coinduction to \emph{well-founded coinduction} as both a definition
+principle and a proof principle lets us carry through a substantial
+part of basic automata theory with just \emph{equational reasoning}
+over coinductive equality (bisimilarity).
+Technically, we rely on a formulation of coinduction with sized types
+\citep{hughesParetoSabry:popl96,amadio:guardcondition,gimenez:typebased,abel:lmcs07,sacchini:lics13,abelPientka:icfp13}
+in the context of Martin-Löf Type Theory~\citeyearpar{martinlof:predicative75}.
+This enables us to define the Kleene algebra operations of formal
+languages elegantly
+via their Brzozowski derivatives \citeyearpar{brzozowski:jacm64}.
+Further, we can define coinductive language equality in a way that
+gives us the ability to prove theorems by coinduction and equation
+chains.
+In particular, it allows us to apply the coinductive hypothesis under
+the proof term for transitivity.  The latter is not possible in weaker
+formulations of coinduction such as the \emph{Calculus of
+  (Co)inductive Constructions} underlying the Coq \citeyearpar{inria:coq86}
+proof assistant, which makes use of an untyped guardedness check
+\cite{coquand:infiniteobjects}.
+As an alternative to sized types, well-founded coinduction could
+probably based on ordered families of equivalences
+\citep{gianantonioMiculan:types02}
+or ultrametric spaces.
+A type theory based on these approaches is emerging
+\citep{bizjakGrathwohlCloustonMogelbergBirkedal:fossacs16},
+but has not seen a mature implementation yet.
+
+Agda \citeyearpar{agdawiki} is currently the only type-theoretic proof
+assistant with support for sized types.  Albeit still experimental,
+Agda's sized types let us formalize decidable languages and automata
+elegantly through definition by copattern matching
+\citep{abelPientkaThibodeauSetzer:popl13}.  All the definitions,
+theorems, and proofs of this paper have been extracted from Agda code
+via an Agda to LaTeX translation and are, thus, guaranteed to be
+correct (assuming the consistency of Agda itself).
+
+This article does not present any new or surprising results about
+formal languages or automata but is solely concerned about the
+techniques for formal definition and proof.  It should, thus, be seen
+as a tutorial.  It has been inspired by Rutten's tutorial on
+coalgebraic techniques for formal languages \citeyearpar{rutten:concur98}
+and Traytel's recent formalizations in Isabelle
+\citeyearpar{traytel:fscd16}.  Traytel reports that Isabelle is being
+extended by \emph{friendly} coinductive definitions that bring part of
+the reasoning power of sized types, possibly sufficient to mimic the
+reasoning style employed in this article.
+
+\paradot{Overview}  In Section~\ref{sec:prelim} we briefly
+recaptitulate the bits and pieces of Type Theory and Agda relevant for
+this article.  In Section~\ref{sec:lang} we define decidable languages
+as infinite tries and some operations on them in the style of
+Brzozowski derivatives.  In the following section, \ref{sec:kleene} we
+prove the Kleene algebras for these operations.  The final technical
+section, \ref{sec:aut}, is devoted to the corresponding constructions
+on automata and their correctness.
+
+% standard proof techniques,
+% such as:
+% \begin{enumerate}
+% \item Equational reasoning
+% \end{enumerate}
+
+% Automata are an instance of transitions systems which have the
+% structure of a coalgebra.
+% Coalgebraic and coinductive reasoning tools such as simulations and bisimulations have
+% been successfully employed to study formal languages. % \cite{}.
+% Coinduction-up-to techniques have emerged as the state of the art to
+% get coinductive proofs through. % \cite{sangiorgi}.
+
+% This paper presents an anti-thesis to up-to techniques.  We show how
+% much of the reasoning about formal languages can be carried out already with
+% the coinductive notion of equality of languages aka bisimilarity.  We
+% formalize a coinductive type of languages and the coinductive type
+% family of strong bisimilarity of languages in Agda using sized types.
+% The sized typing enables us to do coinductive proofs of bisimilarity
+% by equational reasoning as customary to establish algebraic
+% properties.  In particular, after establishing that formal languages
+% form a Kleene algebra, the laws of the Kleene algebra are sufficient
+% to prove correctness of the usual automata constructions.
 
 
 \section{Preliminaries: Type Theory and Agda}
@@ -160,7 +261,7 @@ to prove correctness of the usual automata constructions.
 
 The results definitions and theorems of this article are formulated in
 Dependent Type Theory \`a la \cite{martinlof:predicative75}, in
-particular, in the Agda \citep{agdawiki} language.  Agda is an
+particular, in the Agda \citeyearpar{agdawiki} language.  Agda is an
 implementation of Type Theory with several extensions; we will most
 notably make use of \emph{sized types}
 \citep{hughesParetoSabry:popl96,abelPientka:icfp13} to express
@@ -1393,11 +1494,41 @@ $\tpowA$-construction, and lemma $\tacceptingInitialnothing$.
 
 
 
-\section{Conclusions}
+\section{Conclusions and Too Much Related Work}
 \label{sec:concl}
 
-In this article, we have demonstrated that
+In this article, we have demonstrated that well-founded coinduction
+communicated by sized types and copattern matching allows for elegant
+definitions of decidable languages, language operations, and
+correctness proofs for automata constructions.  All definitions and
+proofs could be carried out formally in the Agda proof assistant,
+using standard tools like equation chains and a simple monoid solver.
 
+Beyond the material presented in this article, we have also formalized
+regular expressions and their equivalence to regular (Chomsky type~3)
+grammars, using the same proof techniques.
+
+Being one of the oldest topics of computer science and taught to every
+student, there is an abundance of related work we are not able to
+review here.  We just wish to mention a recent and comprehensive
+Coq formalization of
+classic automata theory by
+\cite{doczkalKaiserSmolka:cpp13}.  In contrast to us, they properly
+restrict to \emph{finite} automata, using the support for finite types
+given by the SSReflect library \citep{gonthierMahboubi:ssreflect}.
+
+\paradot{Acknowledgments}.
+The author acknowledges support from Vetenskapsr\aa{}det
+(Swedish Research Council) through project 621-2014-4864/E0486401
+\emph{Termination
+Certification for Dependently-Typed Programs and Proofs via Refinement
+Types} and from the
+COST Action CA15123 \emph{European research network on types for programming
+and verification} (EUTYPES).
+He is grateful to Ichiro Hasuo and the program committee of the IFIP
+WG 1.3 International Workshop on Coalgebraic Methods in Computer
+Science, CMCS 2016, for an invitation to present his findings at this
+workshop.
 
 \bibliographystyle{elsarticle-harv}
 \bibliography{auto-jlamp17}
