@@ -9,7 +9,8 @@ open import Data.Bool.Base public using (Bool; true; false; if_then_else_; not; 
 open import Data.Empty public using (⊥; ⊥-elim)
 open import Data.List.Base public using (List; []; _∷_; _++_) hiding (module List)
 
-open import Data.Maybe public using (Maybe; nothing; just)
+open import Data.Maybe public using (Maybe; nothing; just) hiding (module Maybe)
+module Maybe = Data.Maybe
 open import Data.Nat.Base public using (ℕ; zero; suc; _+_; pred)
 open import Data.Product public using (_×_; _,_; proj₁; proj₂)
 open import Data.Sum public using (_⊎_; inj₁; inj₂)
@@ -82,6 +83,9 @@ module List where
 
   open Data.List.Base public
 
+  catMaybes : ∀{A : Set} → List (Maybe A) → List A
+  catMaybes = concatMap fromMaybe
+
   foldl-map : ∀{A B C : Set} {f : A → B → A} {g : C → B} {a : A} (cs : List C) →
     foldl f a (map g cs) ≡ foldl (λ a c → f a (g c)) a cs
   foldl-map [] = refl
@@ -94,7 +98,7 @@ module List where
       (f a ∨ g a) ∨ any (λ a → f a ∨ g a) as
     ≡⟨ cong (λ z → (f a ∨ g a) ∨ z) (any-∨ f g as) ⟩
       (f a ∨ g a) ∨ (any f as ∨ any g as)
-    ≡⟨ ? ⟩
+    ≡⟨ {!!} ⟩
       (f a ∨ any f as) ∨ (g a ∨ any g as)
     ∎ where
       open ≡-Reasoning
