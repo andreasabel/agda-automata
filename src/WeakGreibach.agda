@@ -29,9 +29,9 @@ record LangF (S : Set) : Set where
 
 -- Context free grammar in weak Greibach Normal Form
 
-CFG = NT → LangF (Maybe (List Form))
-  -- the empty list means the empty word
-  -- nothing means cannot step
+CFG = NT → LangF (List Form)
+  -- the empty list means cannot step
+  -- the list of the empty list means empty word
 
 -- State of a recognizing automaton
 -- empty list is error state
@@ -51,17 +51,17 @@ module WGA (G : CFG) where
   nullForm : Form → Bool
   nullForm = List.all nullLetter
 
-  stepLetter : Letter → A → Maybe St
-  stepLetter (ter a) x = if ⌊ a ≟ x ⌋ then just [] else nothing
+  stepLetter : Letter → A → St
+  stepLetter (ter a) x = if ⌊ a ≟ x ⌋ then [] ∷ [] else []
   stepLetter (nt X)    = LangF.δ (G X)
 
-  stepForm : Form → A → Maybe St
-  stepForm []       a = nothing
-  stepForm (x ∷ xs) a = Maybe.map (List.map (_++ xs)) (stepLetter x a)
+  stepForm : Form → A → St
+  stepForm []       a = []
+  stepForm (x ∷ xs) a = List.map (_++ xs) (stepLetter x a)
 
   stepSt : St → A → St
-  stepSt xss a = List.concat (List.catMaybes (List.map (λ xs → stepForm xs a) xss))
+  stepSt xss a = List.concatMap (λ xs → stepForm xs a) xss
 
   aut : DAut St
   DAut.ν aut = List.any nullForm
-  DAut.δ aut s a = {!List.catMaybes (List.map (λ xs → stepForm xs a) s)!}
+  DAut.δ aut = stepSt
