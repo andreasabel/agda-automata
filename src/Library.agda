@@ -5,7 +5,7 @@ module Library where
 open import Level public using (Level) renaming (zero to lzero; suc to lsuc; _⊔_ to _l⊔_)
 open import Size  public
 
-open import Data.Bool.Base public using (Bool; true; false; if_then_else_; not; _∧_; _∨_)
+open import Data.Bool.Base public using (Bool; true; false; if_then_else_; not; _∧_; _∨_) renaming (T to True)
 open import Data.Empty public using (⊥; ⊥-elim)
 open import Data.List.Base public using (List; []; _∷_; _++_) hiding (module List)
 
