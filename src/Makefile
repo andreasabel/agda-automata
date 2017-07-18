@@ -80,6 +80,10 @@ endif
 # Templates
 ##################################################################
 
+talk% : talk%.pdf
+	cp -pr $< $(destdir)/
+	touch $@
+
 latex/%.tex : %.lagda
 	agda -i. -i$(agda_iolibnew) -i$(agda_stdlib) --latex $<
 
