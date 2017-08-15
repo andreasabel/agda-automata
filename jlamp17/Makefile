@@ -19,7 +19,7 @@ pdflatex=pdflatex
 bibliography=all.bib
 sedfile=postprocess.sed
 stdlib=$(HOME)/agda-master/std-lib/src
-agda=agda-2.5.2
+agda=agda-2.5.3
 
 stylefile=src/latex/agda.sty
 files=$(bibliography) byhand.bib $(stylefile) macros.tex latex/Agda.tex latex/RewriteExample.tex latex/Language.tex latex/Automaton.tex

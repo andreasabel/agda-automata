@@ -104,8 +104,8 @@ open _×_
 \begin{code}
 
 swap : ∀{A B} → A × B → B × A
-fst  (swap p)  =  snd p
-snd  (swap p)  =  fst p
+fst  (swap p)  =  snd  p
+snd  (swap p)  =  fst  p
 
 \end{code}
 }
@@ -132,7 +132,7 @@ triv = record {}
 \newcommand{\aeq}{
 \begin{code}
 
-data _≡_ {A : Set} (x : A) : (y : A) → Set where
+data _≡_ {A : Set} (x : A) : A → Set where
   refl : x ≡ x
 
 \end{code}

@@ -21,7 +21,7 @@
 \usepackage[usenames,dvipsnames]{color}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true, linkcolor=Red, citecolor=ForestGreen,
-  urlcolor=RoyalBlue}
+  urlcolor=MidnightBlue}
 \usepackage{natbib}
 \usepackage[postscript]{ucs}
 % Andreas: auto-generated not needed now
@@ -151,7 +151,23 @@ Automaton \sep coalgebra \sep coinduction \sep copattern
 %\tnotetext{}
 \ccbyncnd{} This paper is published under a CC-BY-NC-ND license.
 \begin{center}
-It is recommended to print this article in color.
+It is recommended to print this article in
+\definecolor{r1}{RGB}{0,129,188}%
+\definecolor{r2}{RGB}{252,177,49}%
+\definecolor{r3}{RGB}{35,34,35}%
+\definecolor{r4}{RGB}{0,157,87}%
+\definecolor{r5}{RGB}{238,50,78}%
+{\color{r1}c}%
+{\color{r2}o}%
+{\color{r3}l}%
+{\color{r4}o}%
+{\color{r5}r}%
+% {\color{Magenta}c}%
+% {\color{Brown}o}%
+% {\color{ForestGreen}l}%
+% {\color{BurntOrange}o}%
+% {\color{MidnightBlue}r}%
+.
 \end{center}
 
 
@@ -169,7 +185,7 @@ recent.  This coalgebraic formulation suggests that \emph{coinduction} should be
 central for reasoning about formal languages and
 automata.  In particular, to show that two automata recognize the same
 language, one can find a bisimulation between these automata and then
-use coinduction in form of
+use coinduction in then form of
 the theorem of Knaster and Tarski \citeyearpar{tarski:fixpoint}
 for the greatest fixed point.  However, coming up with a suitable
 bisimulation is
@@ -203,7 +219,7 @@ proof assistant, which makes use of an untyped guardedness check
 \citep{coquand:infiniteobjects}.
 As an alternative to sized types, well-founded coinduction could
 probably be based on ordered families of equivalences
-\citep{gianantonioMiculan:types02}
+\citep{matthews:tphols99,gianantonioMiculan:types02}
 or ultrametric spaces.
 A type theory utilizing these approaches is emerging
 \citep{bizjakGrathwohlCloustonMogelbergBirkedal:fossacs16},
@@ -234,7 +250,7 @@ recapitulate the bits and pieces of Type Theory and Agda relevant for
 this article.  In Section~\ref{sec:lang} we define decidable languages
 as infinite tries and some operations on them in the style of
 Brzozowski derivatives.  Subsequently, in Section~\ref{sec:kleene} we
-prove the Kleene algebras for these operations.  The final technical
+prove the Kleene algebra laws for these operations.  The final technical
 section, \ref{sec:aut}, is devoted to the corresponding constructions
 on automata and their correctness.
 
@@ -335,9 +351,9 @@ means unbounded length.
 \alist
 
 \noindent
-A list is either empty (constructor $\tnil$); then any size $i$ is an
+A list is can be empty (constructor $\tnil$); then any size $i$ is an
 upper bound on its length.  Or, the list is nonempty (\eg,
-$x \tcons \vxs$);  then, if $j$ is an upper bound on the length of
+$x \tcons \vxs$);  in this case, if $j$ is an upper bound on the length of
 its tail $\vxs$ and $j < i$, then $i$ is an upper bound on the length
 of $x \tcons \vxs$.  Strictly speaking, the constructor $\tconsu$
 takes three arguments: $j : \SizeLt i$ and $x : A$ and $\vxs :
@@ -393,7 +409,7 @@ constructor $\AgdaInductiveConstructor{\_,\_} : A \to B \to A \ttimes B$.
 
 Agda allows the projections also on the left hand sides of
 definitions by pattern matching.  In the following, we define for a
-pair $p : A \ttimes B$ is reversal $\tswap\,p : B \ttimes A$ by giving
+pair $p : A \ttimes B$ its reversal $\tswap\,p : B \ttimes A$ by giving
 its value for all valid projections.  This definition form is called
 \emph{definition by copattern matching}, since we are not matching on
 a function argument, but on the possible observations on the function
@@ -410,7 +426,7 @@ structures in Section~\ref{sec:lang}.
 
 \subsection{Agda as a proof assistant}
 
-Martin-L\"of Type Theory allows us to reason about program via the
+Martin-L\"of Type Theory allows us to reason about programs via the
 propositions-as-types paradigm.  A proposition is seen as the type of
 its proofs, for instance, the absurd proposition $\tbot$
 \emph{(Falsehood)} has no proof,
@@ -435,7 +451,7 @@ Implication $A \to B$ coincides with the ordinary function space, and
 universal quantification $\forall x \to A$ with the dependent
 function space $(x : \_) \to A$.
 
-We can define our own proposition, predicates, and relation as
+We can define our own propositions, predicates, and relations as
 inductive (or coinductive, see Section~\ref{sec:fameq}) families.  The
 prime example is \emph{propositional equality} $x \tequiv y$ of
 objects $x,y : A$, which is defined as a data type with a hidden
@@ -448,10 +464,10 @@ identical modulo Agda's internal notion of equality (which is called
 \aeq
 
 \noindent
-Since defined inductively, propositional equality is the smallest
-relation on $A$ which is reflexive.
+Since it is defined inductively, propositional equality is the smallest
+relation on $A$ that is reflexive.
 
-Proof of equality can be used by
+Proofs of equality can be used by
 pattern matching.  For instance, we can prove symmetry of equality,
 \ie, $x \tequiv y$ implies $ y \tequiv x$ by
 pattern matching on the the proof of $x \tequiv y$.
@@ -511,28 +527,31 @@ $\List\,A$ for unbounded lists $\List\,\infty\,A$.
 \section{Decidable Languages, Coinductively}
 \label{sec:lang}
 
-Given an alphabet $A$, a word $\vas \in \List\,A$ is a list of
+Given an alphabet $A$, a word $\vas : \List\,A$ is a list of
 characters.  A language over $A$ is usually described as set of words,
-and a decidable language is one whose characteristic function
-$\List\,A \to \Bool$
+and a decidable language as such a set whose characteristic function
+% $\List\,A \to \Bool$
 is computable.  We will work in the setting of Type Theory
 \citep{martinlof:predicative75}
-where each function is computable, thus, we can identify decidable
-languages with functions of type $\List\,A \to \Bool$ where $\Bool$ is
+where each function is computable, thus, we can identify a decidable
+languages with its characteristic
+function of type $\List\,A \to \Bool$ where $\Bool$ is
 the two-element data type with constructors $\ttrue$ and $\tfalse$.
 
 % A potentially infinite
 A set of words with decidable membership can also be
-represented as \emph{trie}.  For our purposes,
+represented as a \emph{trie}.  For our purposes,
 a trie is an $A$-branching tree whose nodes are labeled by booleans.
 Any word $\vas$ is a path into the tree selecting a subtree.  The root label
 of that subtree indicates the status of the word $\vas$.  Label $\ttrue$
 means the word is member of the set, label $\tfalse$ means it is not a
 member.  Even though each word is finite, the language might be
 infinite, thus, tries have infinite depth in general.
+In fact, the tries we use have \emph{only infinite} branches, regardless of
+whether we represent a finite language or not.
 
 For instance, let us consider the language $E$ of even natural numbers in
-binary representation.  Writing $0$ as $a$ and $1$ as $b$, our
+binary representation forbidding leading zeros.  Writing $0$ as $a$ and $1$ as $b$, our
 language contains the words $a$, $ba$, $baa$, $bba$, $baaa$, $baba$, etc.
 Given the alphabet $A = \{a,b\}$, the language can be concisely described by the
 regular expression $a + b(a + b)^*a$.
@@ -636,8 +655,8 @@ $\nu X.\, \Bool \times (A \to X)$ of tries
 as a coinductive record type $\Lang$
 with fields $\tnu : \Bool$ for the root label
 and $\tdelta : A \to \Lang$ for the family of subtrees.
-If field $\tnu$ is $\ttrue$ then the language contains the empty word,
-which is sometimes called a \emph{nullable} language, hence the field
+If field $\tnu$ is $\ttrue$ then the language contains the empty word
+and is sometimes called a \emph{nullable} language, hence the field
 name $\tnu$.
 
 The name $\tdelta$ is inspired by its role as
@@ -698,8 +717,7 @@ antitone subtyping chain
   \dots \Lang\,0
 \]
 can be justified by the equation
-$\Lang\,i \cong \Bool \times \bigcap_{j<i} (A \to \Lang\,j)$
-which holds semantically.
+$\Lang\,i \cong \Bool \times \bigcap_{j<i} (A \to \Lang\,j)$.
 
 The isomorphism $\Lang\,i \cong \List\,i\,A \to \Bool$ is witnessed by
 the following two functions. The first, $l \tni \vas$, checks membership
@@ -744,7 +762,7 @@ languages by copattern matching.  These operations will allow us to
 compute the trie of any regular expression.
 Throughout the rest of this article, we assume a type $\tA$ of
 characters with a decidable equality
-$\tlfloor a \qeq b \trfloor : \Bool$ for $a, b : \tA$.
+${\tlfloor a \qeq b \trfloor} : \Bool$ for $a, b : \tA$.
 % $\_{\qeq}\_ : (a\; b : \tA) \to \Dec\,(a \tequiv b)$.  Herein,
 % $\Dec\,P$ is a data type with two constructors: $\tyes$ carries a
 % proof of $P$, and $\tno$ a refutation.
@@ -763,7 +781,7 @@ not nullable, its $a$-derivative is $\teps$ and all other derivatives
 are $\tempty$.
 \achar%
 We obtain the language complement $\tcompl\,l$ of a language $l$ by
-flipping all labels.  This is accomplished by recursing over the whole
+flipping all labels.  This is accomplished by recursing (lazily) over the whole
 tree.
 \acompl%
 Complement $\tcompl$ is a special instance of mapping a function
