@@ -339,8 +339,8 @@ l ≅ k = l ≅⟨ ∞ ⟩≅ k
 \newcommand{\atrans}{
 \begin{code}
 
-≅trans : ∀{i} {k l m : Lang ∞}
-  (p : k ≅⟨ i ⟩≅ l) (q : l ≅⟨ i ⟩≅ m) → k ≅⟨ i ⟩≅ m
+≅trans  :  ∀{i} {k l m : Lang ∞}
+           (p : k ≅⟨ i ⟩≅ l) (q : l ≅⟨ i ⟩≅ m) → k ≅⟨ i ⟩≅ m
 ≅ν  (≅trans p q)    =  trans   (≅ν p)    (≅ν q)
 ≅δ  (≅trans p q) a  =  ≅trans  (≅δ p a)  (≅δ q a)
 
@@ -368,12 +368,12 @@ l ≅ k = l ≅⟨ ∞ ⟩≅ k
 \newcommand{\asetoid}{
 \begin{code}
 
-≅isEquivalence : ∀(i : Size) → IsEquivalence (λ l k → l ≅⟨ i ⟩≅ k)
+≅isEquivalence : ∀(i : Size) → IsEquivalence _≅⟨ i ⟩≅_
 ≅isEquivalence i = record { refl = ≅refl; sym = ≅sym; trans = ≅trans }
 
 Bis : ∀(i : Size) → Setoid _ _
 Setoid.Carrier        (Bis i)  =  Lang ∞
-Setoid._≈_            (Bis i)  =  λ l k → l ≅⟨ i ⟩≅ k
+Setoid._≈_            (Bis i)  =  _≅⟨ i ⟩≅_
 Setoid.isEquivalence  (Bis i)  =  ≅isEquivalence i
 
 \end{code}
@@ -382,8 +382,8 @@ Setoid.isEquivalence  (Bis i)  =  ≅isEquivalence i
 \newcommand{\atransp}{
 \begin{code}
 
-≅trans′ : ∀ i (k l m : Lang ∞)
-  (p : k ≅⟨ i ⟩≅ l) (q : l ≅⟨ i ⟩≅ m) → k ≅⟨ i ⟩≅ m
+≅trans′  :  ∀ i (k l m : Lang ∞)
+            (p : k ≅⟨ i ⟩≅ l) (q : l ≅⟨ i ⟩≅ m) → k ≅⟨ i ⟩≅ m
 ≅trans′ i k l m p q = begin
   k  ≈⟨ p ⟩
   l  ≈⟨ q ⟩
@@ -468,9 +468,9 @@ union-comm : ∀{i} (l k : Lang ∞) → l ∪ k ≅⟨ i ⟩≅ k ∪ l
 \newcommand{\aunionidem}{
 \begin{code}
 
-union-idem : ∀{i} {l : Lang ∞} → l ∪ l ≅⟨ i ⟩≅ l
-≅ν  union-idem    =  ∨-idempotent _
-≅δ  union-idem a  =  union-idem
+union-idem : ∀{i} (l : Lang ∞) → l ∪ l ≅⟨ i ⟩≅ l
+≅ν  (union-idem l)    =  ∨-idempotent _
+≅δ  (union-idem l) a  =  union-idem (δ l a)
 \end{code}
 }
 
@@ -554,7 +554,7 @@ union-icm i = record
       ; identityˡ  =  λ l → union-emptyˡ
       ; comm       =  union-comm
       }
-    ; idem  =  λ l → union-idem
+    ; idem  =  union-idem
     }
   }
 
@@ -910,7 +910,7 @@ star-concat-idem : ∀{i} (l : Lang ∞) → l * · l * ≅⟨ i ⟩≅ l *
     δ l a · (l * · l *) ∪ δ l a · l *
   ≈⟨ union-congˡ (concat-congʳ (star-concat-idem _)) ⟩
     δ l a · l * ∪ δ l a · l *
-  ≈⟨ union-idem ⟩
+  ≈⟨ union-idem _ ⟩
     δ l a · l *
   ∎ where open EqR (Bis _)
 
@@ -950,7 +950,7 @@ star-rec : ∀{i} (l : Lang ∞) → l * ≅⟨ i ⟩≅ ε ∪ (l · l *)
 ≅δ (star-rec l) a with ν l
 ... | true  = begin
     δ l a · l *
-  ≈⟨ ≅sym union-idem ⟩
+  ≈⟨ ≅sym (union-idem _) ⟩
     (δ l a · l * ∪ δ l a · l *)
   ≈⟨ ≅sym union-emptyˡ ⟩
     ∅ ∪ (δ l a · l * ∪ δ l a · l *)
@@ -1047,7 +1047,7 @@ concat-maybe-star : ∀{i} (l : Lang ∞) →  (ε ∪ l) · l * ≅⟨ i ⟩≅
     (∅ ∪ δ l a) · l * ∪ δ l a · l *
   ≈⟨ union-congˡ (concat-congˡ union-emptyˡ) ⟩
     δ l a · l * ∪ δ l a · l *
-  ≈⟨ union-idem ⟩
+  ≈⟨ union-idem _ ⟩
     δ l a · l *
   ∎ where open EqR (Bis _)
 \end{code}

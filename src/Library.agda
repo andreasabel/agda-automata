@@ -19,7 +19,7 @@ open import Data.Unit public using (⊤)
 open import Data.Fin public using (Fin; zero; suc)
 open import Data.Vec public using (Vec; []; _∷_) hiding (module Vec)
 
-open import Function public using (case_of_)
+open import Function public using (case_of_; _∘_; _∘′_)
 
 open import Relation.Nullary public using (¬_; Dec; yes; no)
 open import Relation.Nullary.Decidable public using (⌊_⌋)
@@ -32,7 +32,7 @@ module EqR = Relation.Binary.EqReasoning
 open import Function.Equality public using (module Π)
 open import Function.Inverse public using (_↔_; module _InverseOf_; module Inverse)
 
-open import Data.Bool.Properties public using (isBooleanAlgebra)
+open import Data.Bool.Properties public using () renaming (∨-∧-isBooleanAlgebra to isBooleanAlgebra)
 open import Algebra public using (IdempotentCommutativeMonoid)
 open import Algebra.Structures public using (module IsBooleanAlgebra; module IsDistributiveLattice; module IsLattice)
 open IsBooleanAlgebra isBooleanAlgebra public using (∧-cong; ∧-comm; ∧-assoc; ∨-cong; ∨-comm; ∨-assoc; ∨-∧-distribʳ; isDistributiveLattice; isLattice) -- renaming (∨-idempotent to ∨-idem)
@@ -40,8 +40,8 @@ open IsBooleanAlgebra isBooleanAlgebra public using (∧-cong; ∧-comm; ∧-ass
 open import Algebra.Properties.Lattice (record { isLattice = isLattice }) public using () renaming (∨-idempotent to ∨-idem)
 
 open import Algebra.Properties.DistributiveLattice (record { isDistributiveLattice = isDistributiveLattice }) public
-import Algebra.IdempotentCommutativeMonoidSolver
-module ICMSolver = Algebra.IdempotentCommutativeMonoidSolver
+import Algebra.Solver.IdempotentCommutativeMonoid
+module ICMSolver = Algebra.Solver.IdempotentCommutativeMonoid
 
 -- postulate TODO : ∀{a}{A : Set a} → A
 
@@ -49,10 +49,10 @@ module ICMSolver = Algebra.IdempotentCommutativeMonoidSolver
 show_proof_ : ∀{a} (A : Set a) → A → A
 show A proof x = x
 
--- These names are not exported from Algebra.Properties.DistributiveLattice
-∨-∧-distribˡ = proj₁ ∨-∧-distrib
-∧-∨-distribˡ = proj₁ ∧-∨-distrib
-∧-∨-distribʳ = proj₂ ∧-∨-distrib
+-- -- These names are not exported from Algebra.Properties.DistributiveLattice
+-- ∨-∧-distribˡ = proj₁ ∨-∧-distrib
+-- ∧-∨-distribˡ = proj₁ ∧-∨-distrib
+-- ∧-∨-distribʳ = proj₂ ∧-∨-distrib
 
 ∨-false : ∀ b → b ∨ false ≡ b
 ∨-false true  = refl
@@ -165,7 +165,7 @@ module Vec where
   -- Original, Haskell-like implementation.
 
   trues-Haskellish : ∀{n} → Vec Bool n → List (Fin n)
-  trues-Haskellish v = List.map proj₂ (List.filter proj₁ (toList (zip v (allFin _))))
+  trues-Haskellish v = List.map proj₂ (List.boolFilter proj₁ (toList (zip v (allFin _))))
 
   -- Set multiple elements of an array.
 

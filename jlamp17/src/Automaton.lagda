@@ -1,3 +1,4 @@
+
 \AgdaHide{
 \begin{code}
 \end{code}
@@ -505,8 +506,8 @@ composeA-gen : ∀{i S₁ S₂} (da₁ : DA S₁) (da₂ : DA S₂) →
 
   ≈⟨  ≅sym (union-assoc _) ⟩
 
-     lang da₁ (δ da₁ s₁ a) · lang da₂ s₂ ∪
-      lang da₂ (δ da₂ s₂ a) ∪ lang (powA da₂) (δs da₂ ss a)
+     (lang da₁ (δ da₁ s₁ a) · lang da₂ s₂ ∪ lang da₂ (δ da₂ s₂ a))
+       ∪ lang (powA da₂) (δs da₂ ss a)
 
   ∎ where open EqR (Bis _)
 
