@@ -547,9 +547,11 @@ union-icm i = record
   ; isIdempotentCommutativeMonoid = record
     { isCommutativeMonoid = record
       { isSemigroup = record
-        { isEquivalence  =  ≅isEquivalence i
+        { isMagma = record
+          { isEquivalence  =  ≅isEquivalence i
+          ; ∙-cong           =  union-cong
+          }
         ; assoc          =  λ x y z → union-assoc x
-        ; ∙-cong         =  union-cong
         }
       ; identityˡ  =  λ l → union-emptyˡ
       ; comm       =  union-comm
