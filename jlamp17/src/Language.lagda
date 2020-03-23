@@ -544,19 +544,21 @@ union-icm i = record
   ; _≈_      =  λ l l′ → l ≅⟨ i ⟩≅ l′
   ; _∙_      =  _∪_
   ; ε        =  ∅
-  ; isIdempotentCommutativeMonoid = record
-    { isCommutativeMonoid = record
-      { isSemigroup = record
-        { isMagma = record
-          { isEquivalence  =  ≅isEquivalence i
-          ; ∙-cong           =  union-cong
+  ; isIdempotentCommutativeMonoid  =  record
+    { isCommutativeMonoid          =  record
+      { isMonoid                   =  record
+        { isSemigroup              =  record
+          { isMagma                =  record
+            { isEquivalence        =  ≅isEquivalence i
+            ; ∙-cong               =  union-cong
+            }
+          ; assoc                  =  λ x y z → union-assoc x
           }
-        ; assoc          =  λ x y z → union-assoc x
+        ; identity                 =  (λ l → union-emptyˡ) , (λ l → union-emptyʳ)
         }
-      ; identityˡ  =  λ l → union-emptyˡ
-      ; comm       =  union-comm
+      ; comm                       =  union-comm
       }
-    ; idem  =  union-idem
+    ; idem                         =  union-idem
     }
   }
 

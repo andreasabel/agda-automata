@@ -25,8 +25,8 @@ open import Relation.Nullary.Decidable public using (⌊_⌋)
 open import Relation.Binary public
 open import Relation.Binary.PropositionalEquality public
   using (_≡_; _≢_; refl; sym; trans; cong; cong₂; module ≡-Reasoning)
-import Relation.Binary.EqReasoning
-module EqR = Relation.Binary.EqReasoning
+import Relation.Binary.Reasoning.Setoid
+module EqR = Relation.Binary.Reasoning.Setoid
 
 open import Function.Equality public using (module Π)
 open import Function.Inverse public using (_↔_; module _InverseOf_; module Inverse)
@@ -34,9 +34,12 @@ open import Function.Inverse public using (_↔_; module _InverseOf_; module Inv
 open import Data.Bool.Properties public using (∨-∧-isBooleanAlgebra)
 open import Algebra public using (IdempotentCommutativeMonoid)
 open import Algebra.Structures public using (module IsBooleanAlgebra; module IsDistributiveLattice; module IsLattice)
-open IsBooleanAlgebra ∨-∧-isBooleanAlgebra public using (∧-cong; ∧-comm; ∧-assoc; ∨-cong; ∨-comm; ∨-assoc; ∨-∧-distribʳ; isDistributiveLattice; isLattice) -- renaming (∨-idempotent to ∨-idem)
-
-open import Algebra.Properties.Lattice (record { isLattice = isLattice }) public using () renaming (∨-idempotent to ∨-idem)
+open IsBooleanAlgebra ∨-∧-isBooleanAlgebra public using
+  ( ∧-cong; ∧-comm; ∧-assoc
+  ; ∨-cong; ∨-comm; ∨-assoc
+  ; ∨-∧-distribʳ
+  ; isDistributiveLattice
+  )
 
 open import Algebra.Properties.DistributiveLattice (record { isDistributiveLattice = isDistributiveLattice }) public
 import Algebra.Solver.IdempotentCommutativeMonoid
