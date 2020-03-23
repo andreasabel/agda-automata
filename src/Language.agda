@@ -33,8 +33,8 @@ infixr 15 _*
 record Lang i : Set where
   coinductive
   field
-    ν : Bool -- nullable
-    δ : ∀{j : Size< i} → A → Lang j
+    ν : Bool                             -- nullable
+    δ : ∀{j : Size< i} (x : A) → Lang j -- derivative
 open Lang public
 
 -- Examples for sized typing:
@@ -112,6 +112,7 @@ _·_ : ∀{i} (k l : Lang i) → Lang i
 ν (k · l)   = ν k ∧ ν l
 δ (k · l) x = let k'l = δ k x · l in
   if ν k then k'l ∪ δ l x else k'l
+
 -- δ (k · l) x = if ν k then k'l ∪ δ l x else k'l
 --   where k'l = δ k x · l
 -- OR: δ (k · l) x = (δ k x · l) ∪ (if ν k then δ l x else ∅)
