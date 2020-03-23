@@ -1,7 +1,11 @@
 
 \AgdaHide{
 \begin{code}
+
+{-# OPTIONS --safe --sized-types #-}
+
 open import Relation.Binary.PropositionalEquality
+
 \end{code}
 }
 

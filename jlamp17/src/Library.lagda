@@ -1,39 +1,48 @@
 \AgdaHide{
 \begin{code}
+
+{-# OPTIONS --safe --sized-types #-}
+
 module Library where
 
-open import Level public using (Level) renaming (zero to lzero; suc to lsuc; _⊔_ to _l⊔_)
-open import Size  public
+open import Level  public using (Level) renaming (zero to lzero; suc to lsuc; _⊔_ to _l⊔_)
+open import Size   public
 
-open import Data.Bool.Base public using (Bool; true; false; if_then_else_; not; _∧_; _∨_)
-open import Data.Empty public using (⊥; ⊥-elim)
--- open import Data.List.Base public using (List; []; _∷_; _++_) hiding (module List)
+open import Data.Bool.Base   public using (Bool; true; false; if_then_else_; not; _∧_; _∨_)
+open import Data.Empty       public using (⊥; ⊥-elim)
 
-open import Data.Maybe.Base public using (Maybe; nothing; just; maybe′)
-open import Data.Nat.Base public using (ℕ; zero; suc; _+_; pred)
-open import Data.Product public using (_×_; _,_; proj₁; proj₂)
-open import Data.Sum public using (_⊎_; inj₁; inj₂)
-open import Data.Unit public using (⊤)
+open import Data.Maybe.Base  public using (Maybe; nothing; just; maybe′)
+open import Data.Nat.Base    public using (ℕ; zero; suc; _+_; pred)
+open import Data.Product     public using (_×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base    public using (_⊎_; inj₁; inj₂)
+open import Data.Unit.Base   public using (⊤)
 
-open import Data.Fin public using (Fin; zero; suc)
-open import Data.Vec public using (Vec; []; _∷_) hiding (module Vec)
+open import Data.Fin.Base    public using (Fin; zero; suc)
+open import Data.Vec.Base    public using (Vec; []; _∷_) hiding (module Vec)
 
-open import Function public using (case_of_)
+open import Function.Base    public using (case_of_)
 
-open import Relation.Nullary public using (¬_; Dec; yes; no)
-open import Relation.Nullary.Decidable public using (⌊_⌋)
-open import Relation.Binary public
+open import Relation.Nullary                 public using (¬_; Dec; yes; no)
+open import Relation.Nullary.Decidable.Core  public using (⌊_⌋)
+open import Relation.Binary.Structures       public using (IsEquivalence)
+open import Relation.Binary.Bundles          public using (DecSetoid; Setoid)
+
 open import Relation.Binary.PropositionalEquality public
   using (_≡_; _≢_; refl; sym; trans; cong; cong₂; module ≡-Reasoning)
+
 import Relation.Binary.Reasoning.Setoid
 module EqR = Relation.Binary.Reasoning.Setoid
 
 open import Function.Equality public using (module Π)
-open import Function.Inverse public using (_↔_; module _InverseOf_; module Inverse)
+open import Function.Inverse  public using (_↔_; module _InverseOf_; module Inverse)
 
-open import Data.Bool.Properties public using (∨-∧-isBooleanAlgebra)
-open import Algebra public using (IdempotentCommutativeMonoid)
-open import Algebra.Structures public using (module IsBooleanAlgebra; module IsDistributiveLattice; module IsLattice)
+open import Data.Bool.Properties  public using (∨-∧-isBooleanAlgebra)
+open import Algebra               public using (IdempotentCommutativeMonoid)
+open import Algebra.Structures    public using
+  ( module IsBooleanAlgebra
+  ; module IsDistributiveLattice
+  ; module IsLattice
+  )
 open IsBooleanAlgebra ∨-∧-isBooleanAlgebra public using
   ( ∧-cong; ∧-comm; ∧-assoc
   ; ∨-cong; ∨-comm; ∨-assoc
@@ -41,21 +50,17 @@ open IsBooleanAlgebra ∨-∧-isBooleanAlgebra public using
   ; isDistributiveLattice
   )
 
-open import Algebra.Properties.DistributiveLattice (record { isDistributiveLattice = isDistributiveLattice }) public
+open import Algebra.Properties.DistributiveLattice
+  record{ isDistributiveLattice = isDistributiveLattice } public
+
 import Algebra.Solver.IdempotentCommutativeMonoid
 module ICMSolver = Algebra.Solver.IdempotentCommutativeMonoid
 
-postulate TODO : ∀{a}{A : Set a} → A
+-- postulate TODO : ∀{a}{A : Set a} → A
 
 -- Goals
 show_proof_ : ∀{a} (A : Set a) → A → A
 show A proof x = x
-
--- Now exported:
--- -- These names are not exported from Algebra.Properties.DistributiveLattice
--- ∨-∧-distribˡ = proj₁ ∨-∧-distrib
--- ∧-∨-distribˡ = proj₁ ∧-∨-distrib
--- ∧-∨-distribʳ = proj₂ ∧-∨-distrib
 
 ∨-false : ∀ b → b ∨ false ≡ b
 ∨-false true  = refl
@@ -117,7 +122,7 @@ open List public using (List; []; _∷_) hiding (module List)
 
 module Vec where
 
-  open Data.Vec public hiding (map; zipWith; zip)
+  open Data.Vec.Base public hiding (map; zipWith; zip)
 
   -- Reimplementing some functions for nicer reduction behavior
 
@@ -137,12 +142,17 @@ module Vec where
 
   -- New lemma about zipWith fusion
 
-  vcong : ∀{a}{A : Set a}{n} {v v' : Vec A (suc n)} (p : head v ≡ head v') (q : tail v ≡ tail v') → v ≡ v'
+  vcong : ∀{a}{A : Set a}{n} {v v' : Vec A (suc n)}
+    (p : head v ≡ head v')
+    (q : tail v ≡ tail v')
+    → v ≡ v'
   vcong {v = _ ∷ _} {v' = _ ∷ _} p q = cong₂ _ p q
 
   zipWith-map-map :  ∀ {a b c n} {A A' : Set a} {B B' : Set b} {C : Set c} →
     (f : A' → B' → C) (g : A → A') (h : B → B') (xs : Vec A n) (ys : Vec B n) →
+
     zipWith f (map g xs) (map h ys) ≡ zipWith (λ x y → f (g x) (h y)) xs ys
+
   zipWith-map-map f g h [] [] = refl
   zipWith-map-map f g h (x ∷ xs) (y ∷ ys) = vcong refl (zipWith-map-map f g h xs ys)
 

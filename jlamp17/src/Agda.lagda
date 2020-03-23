@@ -2,6 +2,8 @@
 \AgdaHide{
 \begin{code}
 
+{-# OPTIONS --safe --sized-types #-}
+
 open import Size
 
 \end{code}

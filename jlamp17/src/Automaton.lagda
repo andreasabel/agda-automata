@@ -5,7 +5,10 @@
 }
 \AgdaHide{
 \begin{code}
-{-# OPTIONS --allow-unsolved-metas #-}
+
+{-# OPTIONS --safe --sized-types #-}
+
+-- {-# OPTIONS --allow-unsolved-metas #-}
 
 open import Library
 

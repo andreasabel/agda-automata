@@ -4,6 +4,8 @@
 \end{code}
 \begin{code}
 
+{-# OPTIONS --safe --sized-types #-}
+
 open import Library
 
 module Language
