@@ -38,7 +38,7 @@
 
 %\usepackage{myagda}
 \AgdaNoSpaceAroundCode{}
-\renewcommand{\AgdaSymbol}[1]{\AgdaNoSpaceMath{\AgdaFontStyle{\textcolor{AgdaSymbol}{\ensuremath{#1}}}}}
+%\renewcommand{\AgdaSymbol}[1]{\AgdaNoSpaceMath{\AgdaFontStyle{\textcolor{AgdaSymbol}{\ensuremath{#1}}}}}
 
 %\renewcommand{\AgdaIndentSpace}{\qquad\qquad} % NO EFFECT
 
@@ -66,31 +66,44 @@
 % \newunicodechar{▹}{\ensuremath{\vartriangleright}}
 
 %\newcommand{\DeclareUnicodeCharacter}{\newunicodechar}
-\DeclareUnicodeCharacter{"02E1}{\ensuremath{{}^{\mathsf{l}}}}
-\DeclareUnicodeCharacter{"02E2}{\ensuremath{{}^{\mathsf{s}}}}
-\DeclareUnicodeCharacter{"03B4}{\ensuremath{\delta}}
-\DeclareUnicodeCharacter{"03B5}{\ensuremath{\varepsilon}}
-\DeclareUnicodeCharacter{"03BB}{\ensuremath{\lambda}}
-\DeclareUnicodeCharacter{"03BD}{\ensuremath{\nu}}
-\DeclareUnicodeCharacter{"1D9C}{\ensuremath{{}^{\mathsf{c}}}}
-%\DeclareUnicodeCharacter{"1D52}{\ensuremath{{}^{\mathrm{o}}}} % UNUSED
-\DeclareUnicodeCharacter{"1D62}{\ensuremath{{}_i}}
-\DeclareUnicodeCharacter{"2032}{\kern0.07em\ensuremath{'}}
-\DeclareUnicodeCharacter{"2092}{\ensuremath{{}_o}}
+\DeclareUnicodeCharacter{02B3}{\ensuremath{{}^{\mathsf{r}}}}
+\DeclareUnicodeCharacter{02E1}{\ensuremath{{}^{\mathsf{l}}}}
+\DeclareUnicodeCharacter{02E2}{\ensuremath{{}^{\mathsf{s}}}}
+\DeclareUnicodeCharacter{03B4}{\ensuremath{\delta}}
+\DeclareUnicodeCharacter{03B5}{\ensuremath{\varepsilon}}
+\DeclareUnicodeCharacter{03BB}{\ensuremath{\lambda}}
+\DeclareUnicodeCharacter{03BD}{\ensuremath{\nu}}
+\DeclareUnicodeCharacter{1D9C}{\ensuremath{{}^{\mathsf{c}}}}
+%\DeclareUnicodeCharacter{1D52}{\ensuremath{{}^{\mathrm{o}}}} % UNUSED
+\DeclareUnicodeCharacter{1D62}{\ensuremath{{}_i}}
+\DeclareUnicodeCharacter{2032}{\kern0.07em\ensuremath{'}}
+\DeclareUnicodeCharacter{2080}{\ensuremath{\emptyset}}
+\DeclareUnicodeCharacter{2081}{\ensuremath{{}_1}}
+\DeclareUnicodeCharacter{2082}{\ensuremath{{}_2}}
+\DeclareUnicodeCharacter{2092}{\ensuremath{{}_o}}
 % ALT: rm variant (Andreas: I think italics looks better)
-%\DeclareUnicodeCharacter{"1D62}{\ensuremath{{}_{\mathrm{i}}}}
-%\DeclareUnicodeCharacter{"2092}{\ensuremath{{}_{\mathrm{o}}}}  % or italics?
-\DeclareUnicodeCharacter{"2099}{\ensuremath{{}_{n}}} % here we use italics
-\DeclareUnicodeCharacter{"2200}{\ensuremath{\forall}}
-\DeclareUnicodeCharacter{"2205}{\ensuremath{\emptyset}}
-\DeclareUnicodeCharacter{"220B}{\ensuremath{\ni}}
-\DeclareUnicodeCharacter{"220E}{\ensuremath{\scriptstyle{\blacksquare}}}
-\DeclareUnicodeCharacter{"2227}{\ensuremath{\wedge}}
-\DeclareUnicodeCharacter{"2228}{\ensuremath{\vee}}
-\DeclareUnicodeCharacter{"222A}{\ensuremath{\cup}}
-\DeclareUnicodeCharacter{"225F}{\ensuremath{\stackrel{?}{=}}}
-\DeclareUnicodeCharacter{"2237}{\ensuremath{::}}
-\DeclareUnicodeCharacter{"25B9}{\ensuremath{\vartriangleright}}
+%\DeclareUnicodeCharacter{1D62}{\ensuremath{{}_{\mathrm{i}}}}
+%\DeclareUnicodeCharacter{2092}{\ensuremath{{}_{\mathrm{o}}}}  % or italics?
+\DeclareUnicodeCharacter{2099}{\ensuremath{{}_{n}}} % here we use italics
+\DeclareUnicodeCharacter{2200}{\ensuremath{\forall}}
+\DeclareUnicodeCharacter{2205}{\ensuremath{\emptyset}}
+\DeclareUnicodeCharacter{220B}{\ensuremath{\ni}}
+\DeclareUnicodeCharacter{220E}{\ensuremath{\scriptstyle{\blacksquare}}}
+\DeclareUnicodeCharacter{221E}{\ensuremath{\infty}}
+\DeclareUnicodeCharacter{2227}{\ensuremath{\wedge}}
+\DeclareUnicodeCharacter{2228}{\ensuremath{\vee}}
+\DeclareUnicodeCharacter{222A}{\ensuremath{\cup}}
+\DeclareUnicodeCharacter{2237}{\ensuremath{::}}
+\DeclareUnicodeCharacter{225F}{\ensuremath{\stackrel{?}{=}}}
+\DeclareUnicodeCharacter{2245}{\ensuremath{\cong}}
+\DeclareUnicodeCharacter{2248}{\ensuremath{\approx}}
+\DeclareUnicodeCharacter{2261}{\ensuremath{\equiv}}
+\DeclareUnicodeCharacter{2295}{\ensuremath{\mathord{\oplus}}}
+\DeclareUnicodeCharacter{22A4}{\ensuremath{\mathord{\top}}}
+\DeclareUnicodeCharacter{22A5}{\ensuremath{\mathord{\perp}}}
+\DeclareUnicodeCharacter{230A}{\ensuremath{\lfloor}}
+\DeclareUnicodeCharacter{230B}{\ensuremath{\rfloor}}
+\DeclareUnicodeCharacter{25B9}{\ensuremath{\vartriangleright}}
 
 \usepackage[all]{xy}
 \input{macros}
