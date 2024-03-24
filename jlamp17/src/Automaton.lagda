@@ -6,7 +6,7 @@
 \AgdaHide{
 \begin{code}
 
-{-# OPTIONS --safe --sized-types #-}
+{-# OPTIONS --sized-types #-}
 
 -- {-# OPTIONS --allow-unsolved-metas #-}
 

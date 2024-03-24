@@ -1,7 +1,7 @@
 \AgdaHide{
 \begin{code}
 
-{-# OPTIONS --safe --sized-types #-}
+{-# OPTIONS --sized-types #-}
 
 module Library where
 
@@ -38,7 +38,7 @@ open import Function.Inverse  public using (_↔_; module _InverseOf_; module In
 
 open import Data.Bool.Properties  public using (∨-∧-isBooleanAlgebra)
 open import Algebra               public using (IdempotentCommutativeMonoid)
-open import Algebra.Structures    public using
+open import Algebra.Lattice.Structures public using
   ( module IsBooleanAlgebra
   ; module IsDistributiveLattice
   ; module IsLattice
@@ -46,12 +46,15 @@ open import Algebra.Structures    public using
 open IsBooleanAlgebra ∨-∧-isBooleanAlgebra public using
   ( ∧-cong; ∧-comm; ∧-assoc
   ; ∨-cong; ∨-comm; ∨-assoc
-  ; ∨-∧-distribʳ
   ; isDistributiveLattice
+  ) renaming
+  ( ∨-distribʳ-∧ to ∨-∧-distribʳ
+  ; ∧-distribˡ-∨ to ∧-∨-distribˡ
+  ; ∧-distribʳ-∨ to ∧-∨-distribʳ
   )
 
-open import Algebra.Properties.DistributiveLattice
-  record{ isDistributiveLattice = isDistributiveLattice } public
+open import Algebra.Lattice.Properties.DistributiveLattice
+  record{ isDistributiveLattice = isDistributiveLattice } public using (∨-idem; ∧-idem)
 
 import Algebra.Solver.IdempotentCommutativeMonoid
 module ICMSolver = Algebra.Solver.IdempotentCommutativeMonoid
@@ -196,7 +199,7 @@ module Vec where
   -- Get all elements of the list (as set represented by a bit vector).
   -- v[i] = (i ∈ l)
   elemSet : ∀{n} → List ∞ (Fin n) → Vec Bool n
-  elemSet = setTo true (replicate false)
+  elemSet = setTo true (replicate _ false)
 
   -- Apply a state transition to a set of states.
 

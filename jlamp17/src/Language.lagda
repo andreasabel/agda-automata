@@ -4,7 +4,7 @@
 \end{code}
 \begin{code}
 
-{-# OPTIONS --safe --sized-types #-}
+{-# OPTIONS --sized-types #-}
 
 open import Library
 
@@ -422,7 +422,7 @@ inter-comm : ∀{i} (l {k} : Lang ∞) → l ∩ k ≅⟨ i ⟩≅ k ∩ l
 ≅δ  (inter-comm l) a  =  inter-comm (δ l a)
 
 inter-idem : ∀{i} (l : Lang ∞) → l ∩ l ≅⟨ i ⟩≅ l
-≅ν  (inter-idem l)    =  ∧-idempotent (ν l)
+≅ν  (inter-idem l)    =  ∧-idem (ν l)
 ≅δ  (inter-idem l) a  =  inter-idem (δ l a)
 
 inter-empty : ∀{i} {l : Lang ∞} → ∅ ∩ l ≅⟨ i ⟩≅ ∅
@@ -471,7 +471,7 @@ union-comm : ∀{i} (l k : Lang ∞) → l ∪ k ≅⟨ i ⟩≅ k ∪ l
 \begin{code}
 
 union-idem : ∀{i} (l : Lang ∞) → l ∪ l ≅⟨ i ⟩≅ l
-≅ν  (union-idem l)    =  ∨-idempotent _
+≅ν  (union-idem l)    =  ∨-idem _
 ≅δ  (union-idem l) a  =  union-idem (δ l a)
 \end{code}
 }

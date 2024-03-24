@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --sized-types #-}
+{-# OPTIONS --sized-types #-}
 
 module Everything where
 
