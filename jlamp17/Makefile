@@ -23,7 +23,7 @@ stdlib=$(HOME)/agda-master/std-lib/src
 agda=agda
 
 stylefile=src/latex/agda.sty
-files=$(bibliography) byhand.bib Makefile macros.tex latex/Agda.tex latex/RewriteExample.tex latex/Language.tex latex/Automaton.tex $(stylefile)
+files=byhand.bib Makefile macros.tex latex/Agda.tex latex/RewriteExample.tex latex/Language.tex latex/Automaton.tex $(stylefile)
 
 default : jlamp17.pdf
 
@@ -45,6 +45,7 @@ jlamp17.zip : jlamp17.tex jlamp17.bbl latex/agda.sty textgreek.sty # auto-jlamp1
 ##################################################################
 
 latex/%.tex : src/latex/%.tex $(sedfile)
+	mkdir -p latex
 	sed -f $(sedfile) < $< > $@
 
 src/latex/%.tex : src/%.lagda

@@ -1,0 +1,103 @@
+name: Deploy jlamp17.pdf
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v4
+
+    - name: Setup Agda
+      uses: wenkokke/setup-agda@latest
+      with:
+        agda-version: '2.6.4.1'
+        agda-stdlib-version: '2.0'
+
+    - name: Setup TeX Live
+      uses: teatimeguest/setup-texlive-action@v3
+      with:
+        packages: >-
+          scheme-basic
+          elsarticle
+          ccicons
+          xkeyval
+          bbm-macros
+          etoolbox
+          xifthen
+          ifmtarg
+          xcolor
+          polytable
+          lazylist
+          environ
+          textgreek
+          ucs
+          xypic
+          babel-greek
+          greek-fontenc
+          cbfonts
+
+    - name: Install texliveonfly
+      run: tlmgr install texliveonfly
+
+    - name: Restore cache
+      uses: actions/cache/restore@v4
+      id: cache
+      with:
+        key: agda-${{ github.sha }}
+        restore-keys: agda-
+        path: |
+          jlamp17/_build
+          ~/.agda/libraries.d
+
+    - name: Build
+      working-directory: jlamp17
+      run: |
+        make pdflatex=texliveonfly jlamp17.pdf
+
+    - name: Save cache
+      if:   always()
+      uses: actions/cache/save@v4
+      with:
+        key: ${{ steps.cache.outputs.cache-primary-key }}
+        path: |
+          jlamp17/_build
+          ~/.agda/libraries.d
+
+    - run: cp jlamp17/jlamp17.pdf _deploy/
+
+    - uses: actions/upload-pages-artifact@v3
+      with:
+        path: _deploy
+
+
+  # Deploy job, see https://github.com/actions/deploy-pages/tree/f81ad71d2e78487340fb3a94726f2a6050466efd#readme
+  deploy:
+    if: github.ref == 'refs/heads/master'
+    # Add a dependency to the build job
+    needs: build
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages:    write   # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # Specify runner + deployment step
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Deploy to GitHub Pages
+      id:   deployment
+      uses: actions/deploy-pages@v4
