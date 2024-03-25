@@ -1,6 +1,6 @@
 -- Weak Greibach normal form of context-free grammars
 
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --sized-types --allow-unsolved-metas #-}
 
 open import Library
 

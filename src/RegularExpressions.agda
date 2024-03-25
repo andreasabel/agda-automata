@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --sized-types --allow-unsolved-metas #-}
 
 -- Regular expressions
 
@@ -81,8 +81,8 @@ Setoid.isEquivalence REq = ≅ʳisEquivalence
 0≠r (chⁿ a) p with a ≟ a | ≅ν (≅δ p a)
 0≠r (chⁿ a) p | yes p₁ | ()
 0≠r (chⁿ a) p | no ¬p | q = ¬p (DecSetoid.refl decA)
-0≠r (r +ⁿ r₁) p = ?  -- Follows from union=∅ ==> both are ∅
-0≠r (r ∙ⁿ r₁) p = ?  -- Follows from r∙s=∅ ==> both are ∅
+0≠r (r +ⁿ r₁) p = {!!}  -- Follows from union=∅ ==> both are ∅
+0≠r (r ∙ⁿ r₁) p = {!!}  -- Follows from r∙s=∅ ==> both are ∅
 0≠r (r *ⁿ) p with ≅ν p
 ... | ()
 
@@ -123,12 +123,16 @@ plus-icm =  record
   ; ε = 0ʳ
   ; isIdempotentCommutativeMonoid = record
     { isCommutativeMonoid = record
-      { isSemigroup = record
-        { isEquivalence = ≅ʳisEquivalence
-        ; assoc = plus-assoc
-        ; ∙-cong = λ {r r' s s'} → plus-cong {r} {r'} {s} {s'}
+      { isMonoid = record
+        { isSemigroup = record
+          { isMagma = record
+            { isEquivalence = ≅ʳisEquivalence
+            ; ∙-cong =  λ {r r' s s'} → plus-cong {r} {r'} {s} {s'}
+            }
+          ; assoc = plus-assoc
+          }
+        ; identity = (λ r → {! plus-empty !}), plus-empty
         }
-      ; identityˡ = λ _ → ≅refl
       ; comm = plus-comm
       }
     ; idem = plus-idem

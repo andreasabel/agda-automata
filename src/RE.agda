@@ -69,12 +69,16 @@ plus-icm =  record
   ; ε = 0ʳ
   ; isIdempotentCommutativeMonoid = record
     { isCommutativeMonoid = record
-      { isSemigroup = record
-        { isEquivalence = ≅ʳisEquivalence
-        ; assoc = plus-assoc
-        ; ∙-cong = union-cong
-        }
-      ; identityˡ = λ r → union-emptyˡ
+      { isMonoid = record
+        { isSemigroup = record
+          { isMagma = record
+            { isEquivalence = ≅ʳisEquivalence
+            ; ∙-cong = union-cong
+            }
+          ; assoc = plus-assoc
+          }
+        ; identity = (λ r → union-emptyˡ), (λ r → union-emptyʳ)
+      }
       ; comm = plus-comm
       }
     ; idem = plus-idem

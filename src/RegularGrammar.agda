@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --sized-types --allow-unsolved-metas #-}
 
 open import Library
 
@@ -117,7 +117,7 @@ _+ᵛ_ : ∀{n} (v w : LinComb n) → LinComb n
 -- Zero
 
 0ᵛ : ∀{n} → LinComb n
-0ᵛ = Vec.replicate 0ⁿ +ᶜ 0ʳ
+0ᵛ = Vec.replicate _ 0ⁿ +ᶜ 0ʳ
 
 {-
 -- Simplification if first coefficient is 0

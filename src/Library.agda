@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --sized-types --allow-unsolved-metas #-}
 
 module Library where
 
@@ -26,20 +26,33 @@ open import Relation.Nullary.Decidable public using (⌊_⌋)
 open import Relation.Binary public
 open import Relation.Binary.PropositionalEquality public
   using (_≡_; _≢_; refl; sym; trans; cong; cong₂; module ≡-Reasoning)
-import Relation.Binary.EqReasoning
-module EqR = Relation.Binary.EqReasoning
+
+import Relation.Binary.Reasoning.Setoid
+module EqR = Relation.Binary.Reasoning.Setoid
 
 open import Function.Equality public using (module Π)
-open import Function.Inverse public using (_↔_; module _InverseOf_; module Inverse)
+open import Function.Inverse  public using (_↔_; module _InverseOf_; module Inverse)
 
-open import Data.Bool.Properties public using () renaming (∨-∧-isBooleanAlgebra to isBooleanAlgebra)
-open import Algebra public using (IdempotentCommutativeMonoid)
-open import Algebra.Structures public using (module IsBooleanAlgebra; module IsDistributiveLattice; module IsLattice)
-open IsBooleanAlgebra isBooleanAlgebra public using (∧-cong; ∧-comm; ∧-assoc; ∨-cong; ∨-comm; ∨-assoc; ∨-∧-distribʳ; isDistributiveLattice; isLattice) -- renaming (∨-idempotent to ∨-idem)
+open import Data.Bool.Properties  public using (∨-∧-isBooleanAlgebra)
+open import Algebra               public using (IdempotentCommutativeMonoid)
+open import Algebra.Lattice.Structures public using
+  ( module IsBooleanAlgebra
+  ; module IsDistributiveLattice
+  ; module IsLattice
+  )
+open IsBooleanAlgebra ∨-∧-isBooleanAlgebra public using
+  ( ∧-cong; ∧-comm; ∧-assoc
+  ; ∨-cong; ∨-comm; ∨-assoc
+  ; isDistributiveLattice
+  ) renaming
+  ( ∨-distribʳ-∧ to ∨-∧-distribʳ
+  ; ∧-distribˡ-∨ to ∧-∨-distribˡ
+  ; ∧-distribʳ-∨ to ∧-∨-distribʳ
+  )
 
-open import Algebra.Properties.Lattice (record { isLattice = isLattice }) public using () renaming (∨-idempotent to ∨-idem)
+open import Algebra.Lattice.Properties.DistributiveLattice
+  record{ isDistributiveLattice = isDistributiveLattice } public using (∨-idem; ∧-idem)
 
-open import Algebra.Properties.DistributiveLattice (record { isDistributiveLattice = isDistributiveLattice }) public
 import Algebra.Solver.IdempotentCommutativeMonoid
 module ICMSolver = Algebra.Solver.IdempotentCommutativeMonoid
 
@@ -82,9 +95,6 @@ zero? (suc _) = false
 module List where
 
   open Data.List.Base public
-
-  catMaybes : ∀{A : Set} → List (Maybe A) → List A
-  catMaybes = concatMap fromMaybe
 
   foldl-map : ∀{A B C : Set} {f : A → B → A} {g : C → B} {a : A} (cs : List C) →
     foldl f a (map g cs) ≡ foldl (λ a c → f a (g c)) a cs
@@ -162,11 +172,6 @@ module Vec where
   trues (b ∷ v) = let l = List.map suc (trues v) in
     if b then zero ∷ l else l
 
-  -- Original, Haskell-like implementation.
-
-  trues-Haskellish : ∀{n} → Vec Bool n → List (Fin n)
-  trues-Haskellish v = List.map proj₂ (List.boolFilter proj₁ (toList (zip v (allFin _))))
-
   -- Set multiple elements of an array.
 
   setTo : ∀ {A : Set} (a : A) {n} (v : Vec A n) (l : List (Fin n)) → Vec A n
@@ -175,7 +180,7 @@ module Vec where
   -- Get all elements of the list (as set represented by a bit vector).
   -- v[i] = (i ∈ l)
   elemSet : ∀{n} → List (Fin n) → Vec Bool n
-  elemSet = setTo true (replicate false)
+  elemSet = setTo true (replicate _ false)
 
   -- Apply a state transition to a set of states.
 
@@ -206,11 +211,11 @@ module Vec where
   elemSet-trues : ∀ {n} (v : Vec Bool n) → elemSet (trues v) ≡ v
   elemSet-trues [] = refl
   elemSet-trues (false ∷ v)
-    rewrite [suc]' false true (replicate false) (trues v)
+    rewrite [suc]' false true (replicate _ false) (trues v)
           | elemSet-trues v
           = refl
   elemSet-trues (true ∷ v)
-    rewrite [suc]' true true (replicate false) (trues v)
+    rewrite [suc]' true true (replicate _ false) (trues v)
           | elemSet-trues v
           = refl
 

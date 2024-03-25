@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 -- Cut-down version of Language.agda
 
 open import Library
@@ -100,12 +102,16 @@ union-comm : ∀{i} (l k : Lang ∞) → l ∪ k ≅⟨ i ⟩≅ k ∪ l
 ≅δ (union-comm l k) a = union-comm (δ l a) (δ k a)
 
 union-idem : ∀{i} {l : Lang ∞} → l ∪ l ≅⟨ i ⟩≅ l
-≅ν union-idem = ∨-idempotent _
+≅ν union-idem = ∨-idem _
 ≅δ union-idem a = union-idem
 
 union-emptyˡ : ∀{i} {l : Lang ∞} → ∅ ∪ l ≅⟨ i ⟩≅ l
 ≅ν union-emptyˡ   = refl
 ≅δ union-emptyˡ a = union-emptyˡ
+
+union-emptyʳ : ∀{i} {l : Lang ∞} → l ∪ ∅ ≅⟨ i ⟩≅ l
+≅ν union-emptyʳ   = {! refl !}
+≅δ union-emptyʳ a = union-emptyʳ
 
 union-congˡ : ∀{i}{m l k : Lang ∞} (p : l ≅⟨ i ⟩≅ k) → l ∪ m ≅⟨ i ⟩≅ k ∪ m
 ≅ν (union-congˡ p) rewrite ≅ν p = refl
@@ -129,12 +135,16 @@ union-icm i = record
   ; ε = ∅
   ; isIdempotentCommutativeMonoid = record
     { isCommutativeMonoid = record
-      { isSemigroup = record
-        { isEquivalence = ≅isEquivalence i
-        ; assoc = λ x y z → union-assoc x
-        ; ∙-cong = union-cong
+      { isMonoid                   =  record
+        { isSemigroup              =  record
+          { isMagma                =  record
+            { isEquivalence        =  ≅isEquivalence i
+            ; ∙-cong               =  union-cong
+            }
+          ; assoc                  =  λ x y z → union-assoc x
+          }
+        ; identity                 =  (λ l → union-emptyˡ) , (λ l → union-emptyʳ)
         }
-      ; identityˡ = λ l → union-emptyˡ
       ; comm = union-comm
       }
     ; idem = λ l → union-idem

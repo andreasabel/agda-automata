@@ -1,4 +1,4 @@
-{-# OPTIONS --rewriting #-}
+{-# OPTIONS --sized-types --rewriting #-}
 
 -- Boehm trees
 

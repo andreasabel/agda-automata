@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --sized-types --allow-unsolved-metas #-}
 
 open import Library
 

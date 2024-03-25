@@ -1,3 +1,5 @@
+{-# OPTIONS --sized-types --guardedness #-}
+
 module Everything where
 
 import Library

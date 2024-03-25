@@ -1,4 +1,4 @@
-open import Library
+open import Library hiding (_∘_)
 
 module Membership (A : Set) where
 

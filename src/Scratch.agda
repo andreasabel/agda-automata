@@ -1,4 +1,4 @@
--- {-# OPTIONS --show-implicit #-}
+-- {-# OPTIONS --sized-types --show-implicit #-}
 
 module _ where
 

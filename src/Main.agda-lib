@@ -1,3 +1,5 @@
 name: Main
 include: .
-depend: standard-library
+depend: standard-library-2.0
+flags:
+  --sized-types

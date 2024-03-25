@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --sized-types --allow-unsolved-metas #-}
 
 open import Library
 
@@ -207,7 +207,7 @@ sound-subst (a ∷ b ∷ v') w ρ = begin
 -- psubst (wₙ-1 ∷ ... ∷ w₀ ∷ []) (aₙ-1 ∷ ... ∷ a₀ ∷ [])
 --   = aₙ-1 ∙ᵛ wₙ-1 +ᵛ ... +ᵛ a₀ ∙ᵛ w₀ +ᵛ 0ᵛ
 psubst : ∀{n m} → Vec (LinComb n) m → LinComb m → LinComb n
-psubst {n} M v = Vec.foldr (λ _ → LinComb n) (_+ᵛ_) (Vec.replicate 0ʳ)
+psubst {n} M v = Vec.foldr (λ _ → LinComb n) (_+ᵛ_) (Vec.replicate _ 0ʳ)
   (Vec.zipWith (_∙ᵛ_) v M)
 
 -- The semantics of m equations in n-1 variables:

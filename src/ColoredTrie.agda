@@ -1,8 +1,8 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --sized-types --allow-unsolved-metas #-}
 
 module ColoredTrie where
 
-open import Library
+open import Library hiding (yes; no)
 open import Trie
 
 -- Reverse word lookup
