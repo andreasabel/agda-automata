@@ -43,8 +43,8 @@ Setoid.Carrier       REq = RE
 Setoid._≈_           REq = _≅ʳ_
 Setoid.isEquivalence REq = ≅ʳisEquivalence
 
-plus-empty : ∀ r → (r +ʳ 0ʳ) ≅ʳ r
-plus-empty r = ≅trans (union-comm _ _) union-emptyˡ
+plusʳ-empty : ∀ r → (r +ʳ 0ʳ) ≅ʳ r
+plusʳ-empty r = ≅trans (union-comm _ _) union-emptyˡ
 
 plus-assoc : ∀ r s t → ((r +ʳ s) +ʳ t) ≅ʳ (r +ʳ (s +ʳ t))
 plus-assoc r s t = union-assoc _
@@ -55,8 +55,8 @@ plus-cong = union-cong
 plus-congˡ : ∀{r r' s } (p : r ≅ʳ r') → (r +ʳ s) ≅ʳ (r' +ʳ s)
 plus-congˡ = union-congˡ
 
-plus-idem : ∀ r → ⟦ r +ʳ r ⟧ ≅⟨ ∞ ⟩≅ ⟦ r ⟧
-plus-idem r = union-idem
+plusʳ-idem : ∀ r → ⟦ r +ʳ r ⟧ ≅⟨ ∞ ⟩≅ ⟦ r ⟧
+plusʳ-idem r = union-idem
 
 plus-comm : ∀ r s → ⟦ r +ʳ s ⟧ ≅⟨ ∞ ⟩≅ ⟦ s +ʳ r ⟧
 plus-comm r s = union-comm _ _
@@ -81,7 +81,7 @@ plus-icm =  record
       }
       ; comm = plus-comm
       }
-    ; idem = plus-idem
+    ; idem = plusʳ-idem
     }
   }
 

@@ -1,6 +1,6 @@
 {-# OPTIONS --sized-types #-}
 
-open import Library
+open import Library hiding (_+_)
 
 module Language
   (decA : DecSetoid lzero lzero)
@@ -13,6 +13,7 @@ infixl  5 _∩_
 infixl  6 _·_
 infixr 15 _^_
 infixr 15 _*
+infixr 15 _+
 
 -- Coalgebra L → Bool × (A → L)
 --
@@ -124,6 +125,12 @@ _·_ : ∀{i} (k l : Lang i) → Lang i
 _* : ∀{i} (l : Lang i) → Lang i
 ν (l *)   = true
 δ (l *) x = δ l x · (l *)
+
+-- Kleene plus
+
+_+ : ∀{i} (l : Lang i) → Lang i
+ν (l +)   = ν l
+δ (l +) x = δ l x · (l *)
 
 -- Exponentiation
 
@@ -621,3 +628,32 @@ star-from-rec : ∀{i} (k {l m} : Lang ∞)
   ≈⟨ union-congˡ (≅sym (concat-assoc (δ k a))) ⟩
      (δ k a · k * · m ∪ δ m a)
   ∎ where open EqR (Bis _)
+
+-- Laws of the Kleene plus
+
+plus-def : ∀{i} (l : Lang ∞) → l + ≅⟨ i ⟩≅ l · l *
+≅ν (plus-def l) = sym (∧-true _)
+≅δ (plus-def l) a with ν l
+... | false = ≅refl
+... | true  = ≅sym union-idem
+
+plus-empty : ∀{i} → ∅ + ≅⟨ i ⟩≅ ∅
+≅ν plus-empty = refl
+≅δ plus-empty a = concat-emptyˡ _
+
+plus-unit : ∀{i} → ε + ≅⟨ i ⟩≅ ε
+≅ν plus-unit = refl
+≅δ plus-unit a = concat-emptyˡ _
+
+plus-star : ∀{i} (l : Lang ∞) → l + * ≅⟨ i ⟩≅ l *
+≅ν (plus-star l) = refl
+≅δ (plus-star l) a = begin
+  δ l a · l * · l + *    ≈⟨ concat-congʳ (plus-star l) ⟩
+  δ l a · l * · l *      ≈⟨ concat-assoc (δ l a) ⟩
+  δ l a · (l * · l *)    ≈⟨ concat-congʳ (star-concat-idem l) ⟩
+  δ l a · l *
+  ∎  where open EqR (Bis _)
+
+plus-idem : ∀{i} (l : Lang ∞) → l + + ≅⟨ i ⟩≅ l +
+≅ν (plus-idem l) = refl
+≅δ (plus-idem l) a = ≅δ (plus-star l) a

@@ -86,9 +86,9 @@ Setoid.isEquivalence REq = ≅ʳisEquivalence
 0≠r (r *ⁿ) p with ≅ν p
 ... | ()
 
-plus-empty : ∀ r → (r +ʳ 0ʳ) ≅ʳ r
-plus-empty 0ʳ = ≅refl
-plus-empty ⌜ r ⌝ = ≅refl
+plusʳ-empty : ∀ r → (r +ʳ 0ʳ) ≅ʳ r
+plusʳ-empty 0ʳ = ≅refl
+plusʳ-empty ⌜ r ⌝ = ≅refl
 
 plus-assoc : ∀ r s t → ((r +ʳ s) +ʳ t) ≅ʳ (r +ʳ (s +ʳ t))
 plus-assoc 0ʳ s t = ≅refl
@@ -105,9 +105,9 @@ plus-cong {⌜ r ⌝} {⌜ r' ⌝} {0ʳ} {⌜ s ⌝} p q = ⊥-elim (0≠r s q)
 plus-cong {⌜ r ⌝} {⌜ r' ⌝} {⌜ s ⌝} {0ʳ} p q = ⊥-elim (0≠r s (≅sym q))
 plus-cong {⌜ r ⌝} {⌜ r' ⌝} {⌜ s ⌝} {⌜ s' ⌝} p q = union-cong p q
 
-plus-idem : ∀ r → ⟦ r +ʳ r ⟧ ≅⟨ ∞ ⟩≅ ⟦ r ⟧
-plus-idem 0ʳ = ≅refl
-plus-idem ⌜ r ⌝ = union-idem
+plusʳ-idem : ∀ r → ⟦ r +ʳ r ⟧ ≅⟨ ∞ ⟩≅ ⟦ r ⟧
+plusʳ-idem 0ʳ = ≅refl
+plusʳ-idem ⌜ r ⌝ = union-idem
 
 plus-comm : ∀ r s → ⟦ r +ʳ s ⟧ ≅⟨ ∞ ⟩≅ ⟦ s +ʳ r ⟧
 plus-comm 0ʳ 0ʳ = ≅refl
@@ -131,11 +131,11 @@ plus-icm =  record
             }
           ; assoc = plus-assoc
           }
-        ; identity = (λ r → {! plus-empty !}), plus-empty
+        ; identity = (λ r → {! plus-empty !}), plusʳ-empty
         }
       ; comm = plus-comm
       }
-    ; idem = plus-idem
+    ; idem = plusʳ-idem
     }
   }
 
@@ -151,7 +151,7 @@ comp-assoc ⌜ r ⌝ ⌜ s ⌝ ⌜ t ⌝ = concat-assoc ⟦ r ⟧ⁿ
 
 plus-comp-distr : ∀ r r' s → ((r +ʳ r') ∙ʳ s) ≅ʳ ((r ∙ʳ s) +ʳ (r' ∙ʳ s))
 plus-comp-distr 0ʳ r' s = ≅refl
-plus-comp-distr ⌜ r ⌝ 0ʳ s = ≅sym (plus-empty (⌜ r ⌝ ∙ʳ s))
+plus-comp-distr ⌜ r ⌝ 0ʳ s = ≅sym (plusʳ-empty (⌜ r ⌝ ∙ʳ s))
 plus-comp-distr ⌜ r ⌝ ⌜ r' ⌝ 0ʳ = ≅refl
 plus-comp-distr ⌜ r ⌝ ⌜ r' ⌝ ⌜ s ⌝ = concat-union-distribˡ ⟦ r ⟧ⁿ
 
