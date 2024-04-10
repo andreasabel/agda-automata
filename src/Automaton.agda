@@ -150,9 +150,8 @@ DAut.ν (plusA s₀ da) ss   = DAut.νs da ss
 DAut.δ (plusA s₀ da) ss a = applyWhen (DAut.νs da ss) (DAut.δ da s₀ a ∷_) (DAut.δs da ss a)
 
 -- Kleene star
-
--- 1. add initial state to the final states
--- 2. from each final state we can also make the transitions from the initial state
+--
+-- Add new final initial state to star automaton.
 
 -- Make a new initial state which is also final.
 -- The new accepting state is `nothing` and has the transitions from s₀.
@@ -161,27 +160,6 @@ DAut.ν (acceptingInitial s₀ da) nothing      =  true
 DAut.ν (acceptingInitial s₀ da) (just s)     =  DAut.ν da s
 DAut.δ (acceptingInitial s₀ da) nothing   a  =  just (DAut.δ da s₀ a)
 DAut.δ (acceptingInitial s₀ da) (just s)  a  =  just (DAut.δ da s a)
-
-module Star (decS : DecSetoid lzero lzero) where
-  open DecSetoid decS public using () renaming (Carrier to S) -- ; _≟_ to
-  open DecSetoid decS renaming (_≟_ to _==_; refl to reflS)
-
-  _≡ˢ_ : (s₁ s₂ : S) → Bool
-  s₁ ≡ˢ s₂ = ⌊  s₁ == s₂ ⌋
-
-  diag : ∀ s → (s ≡ˢ s) ≡ true
-  diag s with s == s
-  ... | yes q = refl
-  ... | no  q = ⊥-elim (q reflS)
-
-  finalToInitial : (da : DAut (Maybe S)) → DAut (List (Maybe S))
-  DAut.ν (finalToInitial da) ss   = DAut.νs da ss
-  DAut.δ (finalToInitial da) ss a =
-    let ss' = DAut.δs da ss a
-    in  if DAut.νs da ss then DAut.δ da nothing a ∷ ss' else ss'
-
-  starA : (s₀ : S) (da : DAut S) → DAut (List (Maybe S))
-  starA s₀ da = finalToInitial (acceptingInitial s₀ da)
 
 starA : ∀{S} (s₀ : S) (da : DAut S) → DAut (Maybe (List S))
 starA s₀ da = acceptingInitial (s₀ ∷ []) (plusA s₀ da)
@@ -393,110 +371,6 @@ starA-correct : ∀{i S} (da : DAut S) (s₀ : S) →
     open EqR (Bis _)
     ss = applyWhen (DAut.ν da s₀) (_∷_ (DAut.δ da s₀ a)) (DAut.δ da s₀ a ∷ [])
 
-{-
-module StarCorrect (decS : DecSetoid lzero lzero) where
-  open Star decS
-
-
-  acceptingInitial-nothing :  ∀{i} (s₀ : S) (da : DAut S) →
-
-    lang (acceptingInitial s₀ da) nothing ≅⟨ i ⟩≅ ε ∪ lang da s₀
-
-  ≅ν (acceptingInitial-nothing s₀ da)   = refl
-  ≅δ (acceptingInitial-nothing s₀ da) a = begin
-
-      lang (acceptingInitial s₀ da) (just (DAut.δ da s₀ a))
-
-    ≈⟨ acceptingInitial-just _ _ ⟩
-
-      lang da (DAut.δ da s₀ a)
-
-    ≈⟨ ≅sym union-emptyˡ ⟩
-
-      ∅ ∪ lang da (DAut.δ da s₀ a)
-
-    ∎ where open EqR (Bis _)
-
-  starA-lemma :  ∀{i} (da : DAut S) (s₀ : S) (ss : List (Maybe S)) →
-
-    lang (starA s₀ da) ss ≅⟨ i ⟩≅ lang (powA (acceptingInitial s₀ da)) ss · (lang da s₀) *
-
-  ≅ν (starA-lemma da s₀ ss) = sym (∧-true _)
-  ≅δ (starA-lemma da s₀ ss) a with DAut.νs (acceptingInitial s₀ da) ss
-  ≅δ (starA-lemma da s₀ ss) a | false = starA-lemma da s₀ (DAut.δs (acceptingInitial s₀ da) ss a)
-  ≅δ (starA-lemma da s₀ ss) a | true = begin
-
-        lang (starA s₀ da) ss'
-
-      ≈⟨ starA-lemma da s₀ ss' ⟩
-
-        lang (powA (acceptingInitial s₀ da)) ss' · lang da s₀ *
-
-      ≈⟨ concat-congˡ (begin
-
-          lang (powA (acceptingInitial s₀ da)) ss'
-
-        ≈⟨ powA-cons _ ⟩
-
-          lang (acceptingInitial s₀ da) (just (DAut.δ da s₀ a))
-            ∪
-          lang (powA (acceptingInitial s₀ da)) (δs (acceptingInitial s₀ da) ss a)
-
-        ≈⟨ union-congˡ (acceptingInitial-just _ _) ⟩
-
-          lang da (DAut.δ da s₀ a)
-            ∪
-          lang (powA (acceptingInitial s₀ da)) (δs (acceptingInitial s₀ da) ss a)
-
-        ≈⟨ union-comm _ _ ⟩
-
-          lang (powA (acceptingInitial s₀ da)) (δs (acceptingInitial s₀ da) ss a)
-            ∪
-          lang da (DAut.δ da s₀ a)
-
-        ∎ ) ⟩
-
-        (lang (powA (acceptingInitial s₀ da)) (DAut.δs (acceptingInitial s₀ da) ss a)
-          ∪ lang da (DAut.δ da s₀ a)) · lang da s₀ *
-
-      ≈⟨ concat-union-distribˡ _ ⟩
-
-        lang (powA (acceptingInitial s₀ da)) (DAut.δs (acceptingInitial s₀ da) ss a)
-          · lang da s₀ *
-        ∪ lang da (DAut.δ da s₀ a)
-          · lang da s₀ *
-
-      ∎ where
-        open EqR (Bis _)
-        ss' = (just (DAut.δ da s₀ a) ∷ DAut.δs (acceptingInitial s₀ da) ss a)
-
-  starA-correct : ∀{i} (da : DAut S) (s₀ : S) →
-    lang (starA s₀ da) (nothing ∷ []) ≅⟨ i ⟩≅ (lang da s₀) *
-
-  starA-correct da s₀ = begin
-
-      lang (starA s₀ da) (nothing ∷ [])
-
-    ≈⟨  starA-lemma da s₀ (nothing ∷ []) ⟩
-
-      lang (powA (acceptingInitial s₀ da)) (nothing ∷ [])
-        · lang da s₀ *
-
-    ≈⟨ concat-congˡ (powA-correct _ _) ⟩
-
-      lang (acceptingInitial s₀ da) nothing
-        · lang da s₀ *
-
-    ≈⟨ concat-congˡ (acceptingInitial-nothing _ _) ⟩
-
-      (ε ∪ lang da s₀) · lang da s₀ *
-
-    ≈⟨ concat-maybe-star _ ⟩
-
-      lang da s₀ *
-
-    ∎ where open EqR (Bis _)
-
 
 -- Conversion
 ------------------------------------------------------------------------
@@ -518,13 +392,3 @@ convA-correct : ∀{i S S'} (iso : S ↔ S') (da : DAut S) (let da' = convA iso 
   = refl
 ≅δ (convA-correct iso da s) a rewrite _InverseOf_.left-inverse-of (Inverse.inverse-of iso) s
   = convA-correct iso da (DAut.δ da s a)
-
--- -}
--- -}
--- -}
--- -}
--- -}
--- -}
--- -}
--- -}
--- -}
