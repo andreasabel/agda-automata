@@ -140,6 +140,14 @@ DAut.δ (composeA' da₁ s₀ da₂) (s₁ , ss₂) a = DAut.δ da₁ s₁ a , D
 -- DAut.δ (composeA' da₁ s₀ da₂) (inj₁ s₁) a = if DAut.ν da₁ s₁ then inj₂ (DAut.δ da₁ s₁ a , s₀) else inj₁ (DAut.δ da₁ s₁ a)
 -- DAut.δ (composeA' da₁ s₀ da₂) (inj₂ (s₁ , s₂)) a = inj₂ (DAut.δ da₁ s₁ a , DAut.δ da₂ s₂ a)
 
+-- Kleene plus
+
+-- Repetition is implemented as follows:
+-- from each final state we can also make the transitions from the initial state.
+
+plusA : ∀{S} (s₀ : S) (da : DAut S) → DAut (List S)
+DAut.ν (plusA s₀ da) ss   = DAut.νs da ss
+DAut.δ (plusA s₀ da) ss a = applyWhen (DAut.νs da ss) (DAut.δ da s₀ a ∷_) (DAut.δs da ss a)
 
 -- Kleene star
 
@@ -275,6 +283,67 @@ composeA-correct da₁ da₂ s₁ s₂ = begin
   lang da₁ s₁ · lang da₂ s₂ ∪ ∅                     ≈⟨ union-comm _ _ ⟩
   ∅ ∪ lang da₁ s₁ · lang da₂ s₂                     ≈⟨ union-emptyˡ ⟩
   lang da₁ s₁ · lang da₂ s₂
+  ∎ where open EqR (Bis _)
+
+-- Kleene plus
+
+plusA-lemma :  ∀{i S} (da : DAut S) (s₀ : S) (ss : List S) →
+
+  lang (plusA s₀ da) ss ≅⟨ i ⟩≅ lang (powA da) ss · (lang da s₀) *
+
+≅ν (plusA-lemma da s₀ ss) = sym (∧-true _)
+≅δ (plusA-lemma da s₀ ss) a with DAut.νs da ss
+... | false = plusA-lemma da s₀ (DAut.δs da ss a)
+... | true = begin
+
+      lang (plusA s₀ da) ss'
+
+    ≈⟨ plusA-lemma da s₀ ss' ⟩
+
+      lang (powA da) ss' · lang da s₀ *
+
+    ≈⟨ concat-congˡ (begin
+
+        lang (powA da) ss'
+
+      ≈⟨ powA-cons _ ⟩
+
+        lang da (DAut.δ da s₀ a)
+          ∪
+        lang (powA da) (δs da ss a)
+
+      ≈⟨ union-comm _ _ ⟩
+
+        lang (powA da) (δs da ss a)
+          ∪
+        lang da (DAut.δ da s₀ a)
+
+      ∎ ) ⟩
+
+      (lang (powA da) (DAut.δs da ss a)
+        ∪ lang da (DAut.δ da s₀ a)) · lang da s₀ *
+
+    ≈⟨ concat-union-distribˡ _ ⟩
+
+      lang (powA da) (DAut.δs da ss a)
+        · lang da s₀ *
+      ∪ lang da (DAut.δ da s₀ a)
+        · lang da s₀ *
+
+    ∎ where
+      open EqR (Bis _)
+      ss' = DAut.δ da s₀ a ∷ DAut.δs da ss a
+
+plusA-correct : ∀{i S} (da : DAut S) (s₀ : S) →
+  lang (plusA s₀ da) (s₀ ∷ []) ≅⟨ i ⟩≅ (lang da s₀) +
+
+plusA-correct da s₀ = begin
+
+    lang (plusA s₀ da) (s₀ ∷ [])             ≈⟨ plusA-lemma da s₀ (s₀ ∷ [])     ⟩
+    lang (powA da) (s₀ ∷ []) · lang da s₀ *  ≈⟨ concat-congˡ (powA-correct _ _) ⟩
+    lang da s₀ · lang da s₀ *                ≈⟨ ≅sym (plus-def (lang da s₀))    ⟩
+    lang da s₀ +
+
   ∎ where open EqR (Bis _)
 
 
