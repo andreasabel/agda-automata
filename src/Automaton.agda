@@ -154,6 +154,14 @@ DAut.δ (plusA s₀ da) ss a = applyWhen (DAut.νs da ss) (DAut.δ da s₀ a ∷
 -- 1. add initial state to the final states
 -- 2. from each final state we can also make the transitions from the initial state
 
+-- Make a new initial state which is also final.
+-- The new accepting state is `nothing` and has the transitions from s₀.
+acceptingInitial : ∀{S} (s₀ : S) (da : DAut S) → DAut (Maybe S)
+DAut.ν (acceptingInitial s₀ da) nothing      =  true
+DAut.ν (acceptingInitial s₀ da) (just s)     =  DAut.ν da s
+DAut.δ (acceptingInitial s₀ da) nothing   a  =  just (DAut.δ da s₀ a)
+DAut.δ (acceptingInitial s₀ da) (just s)  a  =  just (DAut.δ da s a)
+
 module Star (decS : DecSetoid lzero lzero) where
   open DecSetoid decS public using () renaming (Carrier to S) -- ; _≟_ to
   open DecSetoid decS renaming (_≟_ to _==_; refl to reflS)
@@ -166,14 +174,6 @@ module Star (decS : DecSetoid lzero lzero) where
   ... | yes q = refl
   ... | no  q = ⊥-elim (q reflS)
 
-  -- Make a new initial state which is also final.
-  -- The new accepting state is `nothing` and has the transitions from s₀.
-  acceptingInitial : (s₀ : S) (da : DAut S) → DAut (Maybe S)
-  DAut.ν (acceptingInitial s₀ da) nothing      =  true
-  DAut.ν (acceptingInitial s₀ da) (just s)     =  DAut.ν da s
-  DAut.δ (acceptingInitial s₀ da) nothing   a  =  just (DAut.δ da s₀ a)
-  DAut.δ (acceptingInitial s₀ da) (just s)  a  =  just (DAut.δ da s a)
-
   finalToInitial : (da : DAut (Maybe S)) → DAut (List (Maybe S))
   DAut.ν (finalToInitial da) ss   = DAut.νs da ss
   DAut.δ (finalToInitial da) ss a =
@@ -183,6 +183,8 @@ module Star (decS : DecSetoid lzero lzero) where
   starA : (s₀ : S) (da : DAut S) → DAut (List (Maybe S))
   starA s₀ da = finalToInitial (acceptingInitial s₀ da)
 
+starA : ∀{S} (s₀ : S) (da : DAut S) → DAut (Maybe (List S))
+starA s₀ da = acceptingInitial (s₀ ∷ []) (plusA s₀ da)
 
 ------------------------------------------------------------------------
 -- Proofs
@@ -233,6 +235,19 @@ powA-correct : ∀{i S} (da : DAut S) (s : S) → lang (powA da) (s ∷ []) ≅�
 ... | true = refl
 ... | false = refl
 ≅δ (powA-correct da s) a = powA-correct da (DAut.δ da s a)
+
+powA-correct₂ : ∀{i S} (da : DAut S) (s : S) → lang (powA da) (s ∷ s ∷ []) ≅⟨ i ⟩≅ lang da s
+powA-correct₂ da s = begin
+  lang (powA da) (s ∷ s ∷ [])          ≈⟨ powA-cons _ ⟩
+  lang da s ∪ lang (powA da) (s ∷ [])  ≈⟨ union-congʳ (powA-correct da s) ⟩
+  lang da s ∪ lang da s                ≈⟨ union-idem ⟩
+  lang da s
+  ∎ where open EqR (Bis _)
+
+powA-correct₁₂ : ∀{i S} (b : Bool) (da : DAut S) (s : S) → lang (powA da) (applyWhen b (s ∷_) (s ∷ [])) ≅⟨ i ⟩≅ lang da s
+powA-correct₁₂ true  = powA-correct₂
+powA-correct₁₂ false = powA-correct
+
 
 fact : ∀ a {b c} → (a ∧ (b ∨ c)) ∨ c ≡ (a ∧ b) ∨ c
 fact a {b} {c} = begin
@@ -346,17 +361,42 @@ plusA-correct da s₀ = begin
 
   ∎ where open EqR (Bis _)
 
+-- Kleene star
 
+acceptingInitial-just : ∀{i S} (s₀ : S) (da : DAut S) {s : S} →
+
+  lang (acceptingInitial s₀ da) (just s) ≅⟨ i ⟩≅ lang da s
+
+≅ν (acceptingInitial-just s₀ da) = refl
+≅δ (acceptingInitial-just s₀ da) a = acceptingInitial-just s₀ da
+
+starA-correct : ∀{i S} (da : DAut S) (s₀ : S) →
+  lang (starA s₀ da) nothing ≅⟨ i ⟩≅ (lang da s₀) *
+
+≅ν (starA-correct da s₀) = refl
+≅δ (starA-correct da s₀) a rewrite ∨-false (DAut.ν da s₀) = begin
+    lang (acceptingInitial (s₀ ∷ []) (plusA s₀ da)) (just ss)
+
+  ≈⟨  acceptingInitial-just (s₀ ∷ []) (plusA s₀ da) ⟩
+
+    lang (plusA s₀ da) ss
+
+  ≈⟨  plusA-lemma da s₀ ss ⟩
+
+    lang (powA da) ss · lang da s₀ *
+
+  ≈⟨  concat-congˡ (powA-correct₁₂ (DAut.ν da s₀) da _) ⟩
+
+    lang da (DAut.δ da s₀ a) · lang da s₀ *
+
+  ∎ where
+    open EqR (Bis _)
+    ss = applyWhen (DAut.ν da s₀) (_∷_ (DAut.δ da s₀ a)) (DAut.δ da s₀ a ∷ [])
+
+{-
 module StarCorrect (decS : DecSetoid lzero lzero) where
   open Star decS
 
-
-  acceptingInitial-just : ∀{i} (s₀ : S) (da : DAut S) {s : S} →
-
-    lang (acceptingInitial s₀ da) (just s) ≅⟨ i ⟩≅ lang da s
-
-  ≅ν (acceptingInitial-just s₀ da) = refl
-  ≅δ (acceptingInitial-just s₀ da) a = acceptingInitial-just s₀ da
 
   acceptingInitial-nothing :  ∀{i} (s₀ : S) (da : DAut S) →
 
@@ -478,3 +518,13 @@ convA-correct : ∀{i S S'} (iso : S ↔ S') (da : DAut S) (let da' = convA iso 
   = refl
 ≅δ (convA-correct iso da s) a rewrite _InverseOf_.left-inverse-of (Inverse.inverse-of iso) s
   = convA-correct iso da (DAut.δ da s a)
+
+-- -}
+-- -}
+-- -}
+-- -}
+-- -}
+-- -}
+-- -}
+-- -}
+-- -}
