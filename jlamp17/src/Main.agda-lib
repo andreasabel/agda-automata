@@ -1,4 +1,6 @@
 name: Main
 include: .
 depend : standard-library
-
+flags:
+  -WnoDuplicateInterfaceFiles
+  -WnoUserWarning
