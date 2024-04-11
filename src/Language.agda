@@ -14,6 +14,7 @@ infixl  6 _·_
 infixr 15 _^_
 infixr 15 _*
 infixr 15 _+
+infixr 15 _+ᵒ
 
 -- Coalgebra L → Bool × (A → L)
 --
@@ -129,8 +130,13 @@ _* : ∀{i} (l : Lang i) → Lang i
 -- Kleene plus
 
 _+ : ∀{i} (l : Lang i) → Lang i
-ν (l +)   = ν l
-δ (l +) x = δ l x · (l *)
+l + = l · l *
+
+-- Kleene plus (optimized definition)
+
+_+ᵒ : ∀{i} (l : Lang i) → Lang i
+ν (l +ᵒ)   = ν l
+δ (l +ᵒ) x = δ l x · (l *)
 
 -- Exponentiation
 
@@ -503,11 +509,30 @@ concat-emptyʳ : ∀{i} l → l · ∅ ≅⟨ i ⟩≅ ∅
     ∅
   ∎ where open EqR (Bis _)
 
--- Specialized laws for union and concat
+-- Specialized law for union and concat
 
 union-concat-empty : ∀{i l l'} → ∅ · l ∪ l' ≅⟨ i ⟩≅ l'
 ≅ν union-concat-empty = refl
 ≅δ union-concat-empty a = union-concat-empty
+
+union-concat-empty' : ∀{i l l'} → ∅ · l ∪ l' ≅⟨ i ⟩≅ l'
+union-concat-empty' {l = l} {l' = l'} = begin
+   ∅ · l ∪ l'  ≈⟨ union-congˡ (concat-emptyˡ _) ⟩
+   ∅ ∪ l'      ≈⟨ union-emptyˡ ⟩
+   l'
+   ∎ where open EqR (Bis _)
+
+-- Unit laws for concat
+
+concat-unitˡ : ∀{i} (l : Lang ∞) → ε · l ≅⟨ i ⟩≅ l
+≅ν (concat-unitˡ l) = refl
+≅δ (concat-unitˡ l) a = union-concat-empty
+
+concat-unitʳ : ∀{i} (l : Lang ∞) → l · ε ≅⟨ i ⟩≅ l
+≅ν (concat-unitʳ l) = ∧-true (ν l)
+≅δ (concat-unitʳ l) a with ν l
+... | false = concat-unitʳ (δ l a)
+... | true  = ≅trans union-emptyʳ (concat-unitʳ (δ l a))
 
 
 -- Laws of the Kleene star
@@ -629,31 +654,67 @@ star-from-rec : ∀{i} (k {l m} : Lang ∞)
      (δ k a · k * · m ∪ δ m a)
   ∎ where open EqR (Bis _)
 
--- Laws of the Kleene plus
+-- Laws of the optimized definition of plus
 
-plus-def : ∀{i} (l : Lang ∞) → l + ≅⟨ i ⟩≅ l · l *
-≅ν (plus-def l) = sym (∧-true _)
-≅δ (plus-def l) a with ν l
+plusᵒ-def : ∀{i} (l : Lang ∞) → l +ᵒ ≅⟨ i ⟩≅ l · l *
+≅ν (plusᵒ-def l) = sym (∧-true _)
+≅δ (plusᵒ-def l) a with ν l
 ... | false = ≅refl
 ... | true  = ≅sym union-idem
 
-plus-empty : ∀{i} → ∅ + ≅⟨ i ⟩≅ ∅
-≅ν plus-empty = refl
-≅δ plus-empty a = concat-emptyˡ _
+plusᵒ-empty : ∀{i} → ∅ +ᵒ ≅⟨ i ⟩≅ ∅
+≅ν plusᵒ-empty = refl
+≅δ plusᵒ-empty a = concat-emptyˡ _
 
-plus-unit : ∀{i} → ε + ≅⟨ i ⟩≅ ε
-≅ν plus-unit = refl
-≅δ plus-unit a = concat-emptyˡ _
+plusᵒ-unit : ∀{i} → ε +ᵒ ≅⟨ i ⟩≅ ε
+≅ν plusᵒ-unit = refl
+≅δ plusᵒ-unit a = concat-emptyˡ _
 
-plus-star : ∀{i} (l : Lang ∞) → l + * ≅⟨ i ⟩≅ l *
-≅ν (plus-star l) = refl
-≅δ (plus-star l) a = begin
-  δ l a · l * · l + *    ≈⟨ concat-congʳ (plus-star l) ⟩
+plusᵒ-star : ∀{i} (l : Lang ∞) → l +ᵒ * ≅⟨ i ⟩≅ l *
+≅ν (plusᵒ-star l) = refl
+≅δ (plusᵒ-star l) a = begin
+  δ l a · l * · l +ᵒ *    ≈⟨ concat-congʳ (plusᵒ-star l) ⟩
   δ l a · l * · l *      ≈⟨ concat-assoc (δ l a) ⟩
   δ l a · (l * · l *)    ≈⟨ concat-congʳ (star-concat-idem l) ⟩
   δ l a · l *
   ∎  where open EqR (Bis _)
 
+plusᵒ-idem : ∀{i} (l : Lang ∞) → l +ᵒ +ᵒ ≅⟨ i ⟩≅ l +ᵒ
+≅ν (plusᵒ-idem l) = refl
+≅δ (plusᵒ-idem l) a = ≅δ (plusᵒ-star l) a
+
+-- Laws of the Kleene plus
+
+plus-empty : ∀{i} → ∅ + ≅⟨ i ⟩≅ ∅
+plus-empty = concat-emptyˡ _
+
+plus-unit : ∀{i} → ε + ≅⟨ i ⟩≅ ε
+plus-unit = ≅trans (concat-unitˡ (ε *)) star-unit
+{-
+≅ν plus-unit = refl
+≅δ plus-unit a = ≅trans union-idem (concat-emptyˡ _)
+-}
+
+-- Maybe prove these via plus-def:
+
+{-
+
+plus-star : ∀{i} (l : Lang ∞) → l + * ≅⟨ i ⟩≅ l *
+≅ν (plus-star l) = refl
+≅δ (plus-star l) a = {!begin
+  δ l a · l * · l + *    ≈⟨ concat-congʳ (plus-star l) ⟩
+  δ l a · l * · l *      ≈⟨ concat-assoc (δ l a) ⟩
+  δ l a · (l * · l *)    ≈⟨ concat-congʳ (star-concat-idem l) ⟩
+  δ l a · l *
+  ∎  where open EqR (Bis _)!}
+
 plus-idem : ∀{i} (l : Lang ∞) → l + + ≅⟨ i ⟩≅ l +
-≅ν (plus-idem l) = refl
-≅δ (plus-idem l) a = ≅δ (plus-star l) a
+≅ν (plus-idem l) = ∧-true _
+≅δ (plus-idem l) a = {! ≅δ (plus-star l) a !}
+
+-- -}
+-- -}
+-- -}
+-- -}
+-- -}
+-- -}

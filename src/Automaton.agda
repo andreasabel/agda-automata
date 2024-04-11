@@ -334,7 +334,7 @@ plusA-correct da s₀ = begin
 
     lang (plusA s₀ da) (s₀ ∷ [])             ≈⟨ plusA-lemma da s₀ (s₀ ∷ [])     ⟩
     lang (powA da) (s₀ ∷ []) · lang da s₀ *  ≈⟨ concat-congˡ (powA-correct _ _) ⟩
-    lang da s₀ · lang da s₀ *                ≈⟨ ≅sym (plus-def (lang da s₀))    ⟩
+    lang da s₀ · lang da s₀ *                ≡⟨⟩
     lang da s₀ +
 
   ∎ where open EqR (Bis _)
