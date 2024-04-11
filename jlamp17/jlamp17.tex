@@ -78,7 +78,8 @@
 %\DeclareUnicodeCharacter{1D52}{\ensuremath{{}^{\mathrm{o}}}} % UNUSED
 \DeclareUnicodeCharacter{1D62}{\ensuremath{{}_i}}
 \DeclareUnicodeCharacter{2032}{\kern0.07em\ensuremath{'}}
-\DeclareUnicodeCharacter{2080}{\ensuremath{\emptyset}}
+\DeclareUnicodeCharacter{207A}{\ensuremath{{}^+}}
+\DeclareUnicodeCharacter{2080}{\ensuremath{{}_0}}
 \DeclareUnicodeCharacter{2081}{\ensuremath{{}_1}}
 \DeclareUnicodeCharacter{2082}{\ensuremath{{}_2}}
 \DeclareUnicodeCharacter{2092}{\ensuremath{{}_o}}
@@ -1026,6 +1027,11 @@ accepting node we may ``jump back'' to the root.  The corecursive definition
 \astar%
 relies on the sized typing of concatenation to justify the recursive call.
 
+A variant of the Kleene star is the \emph{Kleene plus} $l^+ = l \cdot l^*$ meaning
+``concatenation of one or more words from $l$''.
+% This language is only nullable if $l$ is, otherwise the definition is like star.
+% \aplus
+
 This concludes our set of language operations defined by well-founded
 corecursion.   These operations allow us to give an executable
 semantics for regular expressions (leaving aside efficiency questions).
@@ -1286,7 +1292,15 @@ equations over regular expressions.
 %\astarconcat
 \astarfromrec
 
-All the proofs about decidable languages in this section
+% \subsection{Laws of the Kleene plus}
+% \label{sec:lawplus}
+
+% The Kleene plus is definable from the star via $l^+ = l \cdot l^*$,
+% this is the only fact we require:
+
+% \aplusdef
+
+Looking back, all our proofs about decidable languages
 were performed rather mechanically using:
 \begin{enumerate}\setlength{\itemsep}{0ex}
 \item coinduction,
@@ -1522,18 +1536,8 @@ As a corollary for empty $\varss$, we obtain the correctness of automaton compos
 \subsection{Automaton construction for language iteration}
 \label{sec:staraut}
 
-Finally, from an automaton $\vda$ accepting language
-$\ell$ from state $s_0 : S$,  we construct an
-automaton $\tstarA\,\vda$ for the iterated language $\ell^*$.
-We do this in two steps:
-\begin{enumerate}
-\item $\tacceptingInitial$: Add a new final state $\tnothing : \Maybe\,S$ with the same successors as
-  $s_0$.  State $\tnothing$ will serve as the new initial state.  Its
-  finality guarantees that the empty word is accepted.
-\item $\tfinalToInitial$: Add the successors of $s_0$ to each final state.  This enables
-  iteration.  At this point, the automaton becomes
-  ``non-deterministic'', \ie, we switch to $\List\,\tinfty\,(\Maybe\,S)$.
-\end{enumerate}
+Constructing the Kleene star of an automaton $\vda$ with initial state
+$s_0 : S$ can be factored into two steps:
 \[
 \xymatrix{
 &&&& \bullet
@@ -1558,37 +1562,88 @@ We do this in two steps:
 \\
 }
 \]
+\begin{enumerate}
+\item $\tplusA$: Construct the \emph{Kleene plus} %$\tplusA\,vda$
+  by adding the
+  successors of $s_0$ to those of each final state.
+  This enables repetition after the first run.
+  At this point, the automaton becomes
+  ``non-deterministic'', \ie, we switch to $\List\,\tinfty\,S$.
+  \aplusA%
 
-\noindent
-The first step embeds states $s : S$ of $\vda$ as $\tjust\,s : \Maybe\,S$.
-
-\aaccinit
-
-\noindent
-It adds the new accepting state $\tnothing : \Maybe\,S$ with the
-successors of $s_0$.
-
-\aaccinitnothing
-
-\noindent
-The second step constructs the power automaton and adds transitions
-from the final states to the successors of the initial state.
-
-\afinalinit
-
-\noindent
-Composing these steps leads to the automaton for language iteration.
+\item $\tacceptingInitial$:
+  Add a new final state
+  $\tnothing : \Maybe\,S'$
+  (where $S' = \List\,\tinfty\,S$)
+   with the same successors as
+  $s_0$.  State $\tnothing$ will serve as the new initial state.  Its
+  finality guarantees that the empty word is accepted.
+  \aaccinitnothing%
+  Old states $s : S'$ are embedded as $\tjust\,s : \Maybe\,S'$.
+  \aaccinitjust
+\end{enumerate}
 
 \astarA
 
-To verify the construction, we first note some properties of the first
-step.  For one, embedding the states of $\vda$ via
-$\tjust : S \to \Maybe\,S$ does not change the accepted language.
+The main lemma characterizes the language accepted by
+$\tplusA\,s_0\,\vda$ from an arbitrary state $\varss$.
+
+\aplusAlemma
+
+The proof by coinduction uses $\tpowAcons$
+and some laws of decidable languages as proven in
+Section~\ref{sec:lang}.
+
+When we instantiate $\varss$ to the singleton $s_0$, we get the
+correctness of the $\tplusA$ construction:
+
+\aplusAcorrect
+
+% Finally, from an automaton $\vda$ accepting language
+% $\ell$ from state $s_0 : S$,  we construct an
+% automaton $\tstarA\,\vda$ for the iterated language $\ell^*$.
+% We do this in two steps:
+% \begin{enumerate}
+% \item $\tacceptingInitial$: Add a new final state $\tnothing : \Maybe\,S$ with the same successors as
+%   $s_0$.  State $\tnothing$ will serve as the new initial state.  Its
+%   finality guarantees that the empty word is accepted.
+% \item $\tfinalToInitial$: Add the successors of $s_0$ to each final state.  This enables
+%   iteration.  At this point, the automaton becomes
+%   ``non-deterministic'', \ie, we switch to $\List\,\tinfty\,(\Maybe\,S)$.
+% \end{enumerate}
+
+% \noindent
+% The first step embeds states $s : S$ of $\vda$ as $\tjust\,s : \Maybe\,S$.
+
+% \aaccinit
+
+% \noindent
+% It adds the new accepting state $\tnothing : \Maybe\,S$ with the
+% successors of $s_0$.
+
+% \aaccinitnothing
+
+% \noindent
+% The second step constructs the power automaton and adds transitions
+% from the final states to the successors of the initial state.
+
+% \afinalinit
+
+% \noindent
+% Composing these steps leads to the automaton for language iteration.
+
+% \astarA
+
+To verify the $\tstarA$ construction, we observe
+for  $\tacceptingInitial$
+that embedding the states via
+$\tjust : S' \to \Maybe\,S'$ does not change the accepted language.
 
 \aacceptingInitialjust
 
 \noindent
 This lemma is proven directly by coinduction.
+
 Further, the language accepted by the new state $\tnothing : \Maybe\,S$
 is the language accepted by $s_0$ enriched with the empty word.
 
@@ -1597,23 +1652,15 @@ is the language accepted by $s_0$ enriched with the empty word.
 \noindent
 The proof by coinduction uses $\tacceptingInitialjust$.
 
-The main lemma characterizes the language accepted by
-$\tstarA\,s_0\,\vda$ from an arbitrary state $\varss$.
-
-\astarAlemma
-
-The proof by coinduction uses $\tpowAcons$, $\tacceptingInitialjust$,
-and some laws of decidable languages as proven in Section~\ref{sec:lang}.
-
 Finally, we prove correctness of the $\tstarA$-construction:  If we
-start in the new initial state $\tnothing$ (only), the recognized
+start in the new initial state $\tnothing$, the recognized
 language is the Kleene star of the language recognized by $\vda$ from $s_0$.
 
 \astarAcorrect
 
-The proof is direct,
-instantiating the $\tstarAlemma$, using correctness of the
-$\tpowA$-construction, and lemma $\tacceptingInitialnothing$.
+The proof is direct by correctness $\tplusAcorrect$ of the Kleene plus
+construction, lemma $\tacceptingInitialnothing$,
+and the fact \tstarrec that $l^* = \Ge \cup l^+$.
 
 
 % TODO: Discuss related work

@@ -1,11 +1,11 @@
 # Named arguments
 s/\\AgdaSymbol{\\{}\([a-zA-Z?]\+\) \\AgdaSymbol{=}/\\AgdaSymbol{\\{}\\AgdaSymbol{\1} \\AgdaSymbol{=}/g
 
-# Equational reasoning
-# Only replace the eq-reasoning identifiers in code blocks,
-# hence the initial ']' which comes from polytable
-s/]\\AgdaFunction{≡⟨⟩}/]\\AgdaFunction{\\qquad≡⟨⟩}/g
-s/]\\AgdaFunction{∼⟨}/]\\AgdaFunction{\\qquad∼⟨}/g
+# # Equational reasoning
+# # Only replace the eq-reasoning identifiers in code blocks,
+# # hence the initial ']' which comes from polytable
+# s/]\\AgdaFunction{≡⟨⟩}/]\\AgdaFunction{\\qquad≡⟨⟩}/g
+# s/]\\AgdaFunction{∼⟨}/]\\AgdaFunction{\\qquad∼⟨}/g
 
 # Bound variable f needs extra spacing
 s:\\AgdaBound{f}:\\AgdaBound\{\\,f\\,\}:g

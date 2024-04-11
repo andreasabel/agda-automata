@@ -19,6 +19,7 @@ infixl  5 _∩_
 infixl  6 _·_
 infixr 15 _^_
 infixr 15 _*
+infixr 15 _⁺
 
 -- Coalgebra L → Bool × (A → L)
 --
@@ -283,6 +284,17 @@ _·_ : ∀{i} (k l : Lang i) → Lang i
 _* : ∀{i} (l : Lang i) → Lang i
 ν (l *)    =  true
 δ (l *) x  =  δ l x · (l *)
+
+\end{code}
+}
+
+% Kleene plus
+
+\newcommand{\aplus}{
+\begin{code}
+
+_⁺ : ∀{i} (l : Lang i) → Lang i
+l ⁺ = l · l *
 
 \end{code}
 }
@@ -990,7 +1002,7 @@ star-idem : ∀{i} (l : Lang ∞) → (l *) * ≅⟨ i ⟩≅ l *
 \newcommand{\astarrec}{
 \begin{code}
 
-star-rec : ∀{i} (l : Lang ∞) → l * ≅⟨ i ⟩≅ ε ∪ (l · l *)
+star-rec : ∀{i} (l : Lang ∞) → l * ≅⟨ i ⟩≅ ε ∪ l ⁺
 
 \end{code}
 }
@@ -1086,6 +1098,17 @@ star-from-rec : ∀{i} (k {l m} : Lang ∞)
 \end{code}
 }
 
+% \newcommand{\aplusdef}{
+% \begin{code}
+%
+% plus-def : ∀{i} (l : Lang ∞) → l ⁺ ≅⟨ i ⟩≅ l · l *
+% ≅ν (plus-def l) = sym (∧-true _)
+% ≅δ (plus-def l) a with ν l
+% ... | false  =  ≅refl
+% ... | true   =  ≅sym (union-idem _)
+%
+% \end{code}
+% }
 
 %  -- specialized law used for power automaton construction
 
@@ -1100,5 +1123,9 @@ concat-maybe-star : ∀{i} (l : Lang ∞) →  (ε ∪ l) · l * ≅⟨ i ⟩≅
   ≈⟨ union-idem _ ⟩
     δ l a · l *
   ∎ where open EqR (Bis _)
+
+-- -}
+-- -}
+-- -}
 \end{code}
 }

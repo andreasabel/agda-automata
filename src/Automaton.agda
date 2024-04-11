@@ -328,14 +328,14 @@ plusA-lemma :  ∀{i S} (da : DAut S) (s₀ : S) (ss : List S) →
       ss' = DAut.δ da s₀ a ∷ DAut.δs da ss a
 
 plusA-correct : ∀{i S} (da : DAut S) (s₀ : S) →
-  lang (plusA s₀ da) (s₀ ∷ []) ≅⟨ i ⟩≅ (lang da s₀) +
+  lang (plusA s₀ da) (s₀ ∷ []) ≅⟨ i ⟩≅ (lang da s₀) ⁺
 
 plusA-correct da s₀ = begin
 
-    lang (plusA s₀ da) (s₀ ∷ [])             ≈⟨ plusA-lemma da s₀ (s₀ ∷ [])     ⟩
-    lang (powA da) (s₀ ∷ []) · lang da s₀ *  ≈⟨ concat-congˡ (powA-correct _ _) ⟩
-    lang da s₀ · lang da s₀ *                ≡⟨⟩
-    lang da s₀ +
+    lang (plusA s₀ da) (s₀ ∷ [])              ≈⟨ plusA-lemma da s₀ (s₀ ∷ [])     ⟩
+    lang (powA da) (s₀ ∷ []) · lang da s₀ *   ≈⟨ concat-congˡ (powA-correct _ _) ⟩
+    lang da s₀ · lang da s₀ *                 ≡⟨⟩
+    lang da s₀ ⁺
 
   ∎ where open EqR (Bis _)
 
@@ -348,11 +348,39 @@ acceptingInitial-just : ∀{i S} (s₀ : S) (da : DAut S) {s : S} →
 ≅ν (acceptingInitial-just s₀ da) = refl
 ≅δ (acceptingInitial-just s₀ da) a = acceptingInitial-just s₀ da
 
+acceptingInitial-nothing :  ∀{i S} (s₀ : S) (da : DAut S) →
+
+  lang (acceptingInitial s₀ da) nothing ≅⟨ i ⟩≅ ε ∪ lang da s₀
+
+≅ν (acceptingInitial-nothing s₀ da)   = refl
+≅δ (acceptingInitial-nothing s₀ da) a = begin
+
+  lang (acceptingInitial s₀ da) (just (DAut.δ da s₀ a))  ≈⟨ acceptingInitial-just _ _ ⟩
+  lang da (DAut.δ da s₀ a)                               ≈⟨ ≅sym union-emptyˡ ⟩
+  ∅ ∪ lang da (DAut.δ da s₀ a)
+
+  ∎ where open EqR (Bis _)
+
 starA-correct : ∀{i S} (da : DAut S) (s₀ : S) →
   lang (starA s₀ da) nothing ≅⟨ i ⟩≅ (lang da s₀) *
+starA-correct da s₀ = begin
 
-≅ν (starA-correct da s₀) = refl
-≅δ (starA-correct da s₀) a rewrite ∨-false (DAut.ν da s₀) = begin
+  lang (starA s₀ da) nothing                               ≡⟨⟩
+  lang (acceptingInitial (s₀ ∷ []) (plusA s₀ da)) nothing  ≈⟨ acceptingInitial-nothing _ _ ⟩
+  ε ∪ lang (plusA s₀ da) (s₀ ∷ [])                         ≈⟨ union-congʳ (plusA-correct _ _) ⟩
+  ε ∪ (lang da s₀) ⁺                                       ≈⟨ ≅sym (star-rec _) ⟩
+  (lang da s₀) *
+
+  ∎ where open EqR (Bis _)
+
+
+-- Proof by induction not needed, more cumbersome:
+
+starA-correct' : ∀{i S} (da : DAut S) (s₀ : S) →
+  lang (starA s₀ da) nothing ≅⟨ i ⟩≅ (lang da s₀) *
+
+≅ν (starA-correct' da s₀) = refl
+≅δ (starA-correct' da s₀) a rewrite ∨-false (DAut.ν da s₀) = begin
     lang (acceptingInitial (s₀ ∷ []) (plusA s₀ da)) (just ss)
 
   ≈⟨  acceptingInitial-just (s₀ ∷ []) (plusA s₀ da) ⟩
@@ -370,7 +398,6 @@ starA-correct : ∀{i S} (da : DAut S) (s₀ : S) →
   ∎ where
     open EqR (Bis _)
     ss = applyWhen (DAut.ν da s₀) (_∷_ (DAut.δ da s₀ a)) (DAut.δ da s₀ a ∷ [])
-
 
 -- Conversion
 ------------------------------------------------------------------------
@@ -392,3 +419,8 @@ convA-correct : ∀{i S S'} (iso : S ↔ S') (da : DAut S) (let da' = convA iso 
   = refl
 ≅δ (convA-correct iso da s) a rewrite _InverseOf_.left-inverse-of (Inverse.inverse-of iso) s
   = convA-correct iso da (DAut.δ da s a)
+
+
+-- -}
+-- -}
+-- -}

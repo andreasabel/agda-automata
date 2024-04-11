@@ -1,6 +1,6 @@
 {-# OPTIONS --sized-types #-}
 
-open import Library hiding (_+_)
+open import Library
 
 module Language
   (decA : DecSetoid lzero lzero)
@@ -13,8 +13,8 @@ infixl  5 _∩_
 infixl  6 _·_
 infixr 15 _^_
 infixr 15 _*
-infixr 15 _+
-infixr 15 _+ᵒ
+infixr 15 _⁺
+infixr 15 _⁺ᵒ
 
 -- Coalgebra L → Bool × (A → L)
 --
@@ -129,14 +129,14 @@ _* : ∀{i} (l : Lang i) → Lang i
 
 -- Kleene plus
 
-_+ : ∀{i} (l : Lang i) → Lang i
-l + = l · l *
+_⁺ : ∀{i} (l : Lang i) → Lang i
+l ⁺ = l · l *
 
 -- Kleene plus (optimized definition)
 
-_+ᵒ : ∀{i} (l : Lang i) → Lang i
-ν (l +ᵒ)   = ν l
-δ (l +ᵒ) x = δ l x · (l *)
+_⁺ᵒ : ∀{i} (l : Lang i) → Lang i
+ν (l ⁺ᵒ)   = ν l
+δ (l ⁺ᵒ) x = δ l x · (l *)
 
 -- Exponentiation
 
@@ -570,7 +570,7 @@ star-idem : ∀{i} (l : Lang ∞) → (l *) * ≅⟨ i ⟩≅ l *
 
 -- Recursion equation for the Kleene star
 
-star-rec : ∀{i} (l : Lang ∞) → l * ≅⟨ i ⟩≅ ε ∪ (l · l *)
+star-rec : ∀{i} (l : Lang ∞) → l * ≅⟨ i ⟩≅ ε ∪ l ⁺
 ≅ν (star-rec l) = refl
 ≅δ (star-rec l) a with ν l
 ... | true  = begin
@@ -656,39 +656,39 @@ star-from-rec : ∀{i} (k {l m} : Lang ∞)
 
 -- Laws of the optimized definition of plus
 
-plusᵒ-def : ∀{i} (l : Lang ∞) → l +ᵒ ≅⟨ i ⟩≅ l · l *
+plusᵒ-def : ∀{i} (l : Lang ∞) → l ⁺ᵒ ≅⟨ i ⟩≅ l · l *
 ≅ν (plusᵒ-def l) = sym (∧-true _)
 ≅δ (plusᵒ-def l) a with ν l
 ... | false = ≅refl
 ... | true  = ≅sym union-idem
 
-plusᵒ-empty : ∀{i} → ∅ +ᵒ ≅⟨ i ⟩≅ ∅
+plusᵒ-empty : ∀{i} → ∅ ⁺ᵒ ≅⟨ i ⟩≅ ∅
 ≅ν plusᵒ-empty = refl
 ≅δ plusᵒ-empty a = concat-emptyˡ _
 
-plusᵒ-unit : ∀{i} → ε +ᵒ ≅⟨ i ⟩≅ ε
+plusᵒ-unit : ∀{i} → ε ⁺ᵒ ≅⟨ i ⟩≅ ε
 ≅ν plusᵒ-unit = refl
 ≅δ plusᵒ-unit a = concat-emptyˡ _
 
-plusᵒ-star : ∀{i} (l : Lang ∞) → l +ᵒ * ≅⟨ i ⟩≅ l *
+plusᵒ-star : ∀{i} (l : Lang ∞) → l ⁺ᵒ * ≅⟨ i ⟩≅ l *
 ≅ν (plusᵒ-star l) = refl
 ≅δ (plusᵒ-star l) a = begin
-  δ l a · l * · l +ᵒ *    ≈⟨ concat-congʳ (plusᵒ-star l) ⟩
+  δ l a · l * · l ⁺ᵒ *    ≈⟨ concat-congʳ (plusᵒ-star l) ⟩
   δ l a · l * · l *      ≈⟨ concat-assoc (δ l a) ⟩
   δ l a · (l * · l *)    ≈⟨ concat-congʳ (star-concat-idem l) ⟩
   δ l a · l *
   ∎  where open EqR (Bis _)
 
-plusᵒ-idem : ∀{i} (l : Lang ∞) → l +ᵒ +ᵒ ≅⟨ i ⟩≅ l +ᵒ
+plusᵒ-idem : ∀{i} (l : Lang ∞) → l ⁺ᵒ ⁺ᵒ ≅⟨ i ⟩≅ l ⁺ᵒ
 ≅ν (plusᵒ-idem l) = refl
 ≅δ (plusᵒ-idem l) a = ≅δ (plusᵒ-star l) a
 
 -- Laws of the Kleene plus
 
-plus-empty : ∀{i} → ∅ + ≅⟨ i ⟩≅ ∅
+plus-empty : ∀{i} → ∅ ⁺ ≅⟨ i ⟩≅ ∅
 plus-empty = concat-emptyˡ _
 
-plus-unit : ∀{i} → ε + ≅⟨ i ⟩≅ ε
+plus-unit : ∀{i} → ε ⁺ ≅⟨ i ⟩≅ ε
 plus-unit = ≅trans (concat-unitˡ (ε *)) star-unit
 {-
 ≅ν plus-unit = refl
@@ -699,16 +699,16 @@ plus-unit = ≅trans (concat-unitˡ (ε *)) star-unit
 
 {-
 
-plus-star : ∀{i} (l : Lang ∞) → l + * ≅⟨ i ⟩≅ l *
+plus-star : ∀{i} (l : Lang ∞) → l ⁺ * ≅⟨ i ⟩≅ l *
 ≅ν (plus-star l) = refl
 ≅δ (plus-star l) a = {!begin
-  δ l a · l * · l + *    ≈⟨ concat-congʳ (plus-star l) ⟩
+  δ l a · l * · l ⁺ *    ≈⟨ concat-congʳ (plus-star l) ⟩
   δ l a · l * · l *      ≈⟨ concat-assoc (δ l a) ⟩
   δ l a · (l * · l *)    ≈⟨ concat-congʳ (star-concat-idem l) ⟩
   δ l a · l *
   ∎  where open EqR (Bis _)!}
 
-plus-idem : ∀{i} (l : Lang ∞) → l + + ≅⟨ i ⟩≅ l +
+plus-idem : ∀{i} (l : Lang ∞) → l ⁺ ⁺ ≅⟨ i ⟩≅ l ⁺
 ≅ν (plus-idem l) = ∧-true _
 ≅δ (plus-idem l) a = {! ≅δ (plus-star l) a !}
 
