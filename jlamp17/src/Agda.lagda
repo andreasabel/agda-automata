@@ -35,6 +35,15 @@ false  ∨  b  =  b
 
 \end{code}
 }
+\newcommand{\aapplyWhen}{
+\begin{code}
+
+applyWhen : {A : Set} → Bool → (A → A) → A → A
+applyWhen  true   f  a  =  f a
+applyWhen  false  _  a  =  a
+
+\end{code}
+}
 \newcommand{\amaybe}{
 \begin{code}
 

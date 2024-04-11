@@ -24,6 +24,7 @@
 \hypersetup{colorlinks=true, linkcolor=Red, citecolor=ForestGreen,
   urlcolor=MidnightBlue}
 \usepackage{natbib}
+\usepackage{cleveref}
 
 %\usepackage[postscript,mathletters]{ucs}
 \usepackage{src/latex/agda}
@@ -356,7 +357,7 @@ The experienced Agda user can safely skip the remainder of this section.
 % - function computable
 
 \subsection{Agda as a dependently-typed functional language}
-\label{sec:agdafun}
+\label{sec:agda}
 
 The core features of Agda are inductive families
 \citep{dybjer:fac94} and functions defined by pattern
@@ -393,6 +394,12 @@ In this case, there is no actual dependency,
 since the bound variables $a$ and $b$ are not
 subsequently used in the type.
 
+A function can be made polymorphic by taking a type $A : \Set$ as
+input and having argument and result types depend on $A$.
+We typically want to omit the type argument, so we place it in braces,
+as in the following definition:
+
+\aapplyWhen
 
 Data types can be parameterized over other types $A$.  For instance
 $\Maybe\,A$ embeds an arbitrary type $A$ via $\tjust$ and extends it
@@ -970,15 +977,25 @@ For the $x$-derivative, we follow the $x$-branch in $k$
 via $\tdelta\,k\,x \tdot l$ in any case.  If the node is accepting,
 \ie, $\tnu\,k$ is $\ttrue$,
 we may in addition follow the $x$-branch in $l$ via $\tdelta\,l\,x$.
+These two cases are nicely combined with $\tapplyWhen$ from
+\Cref{sec:agda} and section ${\_\tcup}\;\tdelta\,l\,x$
+which is short for the function
+$\lambda \, \kpl \to \kpl \tcuprel \tdelta\,l\,x$.
 As before, the equations for language concatenation correspond to the
 derivation laws of regular expressions \citep{brzozowski:jacm64},
 but we arrived there by the trie intuition.
 
 The above definition is not an instance of coiteration for two
-reasons:  First, the outermost call is to $\tifthenelse$ rather than
-the recursive call $\kpl$.  Even if we consider $\tifthenelse$ to be special
-(rather than just an arbitrary Agda function), there is still a
-recursive call $\kpl$ in the then-branch which is not at top-level,
+reasons:  First, the outermost call is to $\tapplyWhen$
+% $\tifthenelse$
+rather than the recursive call %$\kpl$
+$\tdelta\,k\,x \tdot l$.
+%Even if we consider $\tifthenelse$ to be special
+%(rather than just an arbitrary Agda function),
+%there is still a
+%recursive call $\kpl$ in the then-branch which is not at top-level,
+Even when we inline $\tapplyWhen$,
+the recursive call is not at the top level
 but under the union-operator.  This
 problem is usually fixed by defining a scheme for corecursion up to
 union.  However, looking at the involved sizes we can accept the
@@ -988,10 +1005,11 @@ Crucial here is the sized typing of the union
   \_\tcup\_ : \forall\{i\} (k\, l : \Lang\,i) \to \Lang\,i
 \]
 which asserts that the arguments are no deeper analyzed than the
-definedness depth of the result.  If we make all hidden size arguments
+definedness depth of the result.  If we make all hidden %size
+arguments
 visible---having to switch to prefix operators instead of infix ones---%
 we can see the propagation of definedness depth levels to the
-recursive call $\kpl$.
+recursive call. % $\kpl$.
 \aconcatexpl%
 Since the recursive call happens at smaller index $j < i$, it is justified.
 Note also that in the definition of $\kpl$, last letter, $l : \Lang\,i$ is

@@ -90,6 +90,10 @@ zero? : ℕ → Bool
 zero? zero = true
 zero? (suc _) = false
 
+applyWhen : {A : Set} → Bool → (A → A) → A → A
+applyWhen true  f a = f a
+applyWhen false f a = a
+
 module List where
 
   data List (i : Size) (A : Set) : Set where

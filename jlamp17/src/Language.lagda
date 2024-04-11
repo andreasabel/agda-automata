@@ -187,11 +187,11 @@ _∪_ : ∀{i} (k l : Lang i) → Lang i
 
 \AgdaHide{
 \begin{code}
-module ConcatExpl where
+module ConcatExplIf where
 \end{code}
 }
 
-\newcommand{\aconcatexpl}{
+\newcommand{\aconcatexplif}{
 \begin{code}
 
   _·_ : ∀{i} (k l : Lang i) → Lang i
@@ -211,12 +211,55 @@ module ConcatExpl where
 
 % concatenation of languages
 
+\AgdaHide{
+\begin{code}
+module ConcatIf where
+\end{code}
+}
+
+\newcommand{\aconcatif}{
+\begin{code}
+
+  _·_ : ∀{i} (k l : Lang i) → Lang i
+  ν (k · l)    =  ν k ∧ ν l
+  δ (k · l) x  =  let  k′l = δ k x · l  in  if  ν k  then  k′l ∪ δ l x  else  k′l
+
+\end{code}
+}
+
+\AgdaHide{
+\begin{code}
+module ConcatExpl where
+\end{code}
+}
+
+\newcommand{\aconcatexpl}{
+\begin{code}
+
+  _·_ : ∀{i} (k l : Lang i) → Lang i
+
+  δ (_·_{i} k l) {j} x =
+    applyWhen {A = Lang j}
+      (ν k)
+      (λ (k′l : Lang j) →  _∪_{j} k′l (δ l {j} x))
+      (_·_{j} (δ k {j} x) l)
+
+\end{code}
+}
+\AgdaHide{
+\begin{code}
+  ν (_·_ {j} k l)        =  ν k ∧ ν l
+\end{code}
+}
+
+% concatenation of languages
+
 \newcommand{\aconcat}{
 \begin{code}
 
 _·_ : ∀{i} (k l : Lang i) → Lang i
 ν (k · l)    =  ν k ∧ ν l
-δ (k · l) x  =  let  k′l = δ k x · l  in  if  ν k  then  k′l ∪ δ l x  else  k′l
+δ (k · l) x  =  applyWhen (ν k) (_∪ δ l x) (δ k x · l)
 
 \end{code}
 }
