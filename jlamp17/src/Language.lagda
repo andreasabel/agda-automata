@@ -208,6 +208,7 @@ module ConcatExpl where
   ν (_·_ {j} k l)        =  ν k ∧ ν l
 \end{code}
 }
+
 % concatenation of languages
 
 \newcommand{\aconcat}{
@@ -1030,13 +1031,13 @@ star-from-rec : ∀{i} (k {l m} : Lang ∞)
 
 ≅δ (star-from-rec k {l} {m} n p) a with ≅δ p a
 ... | q rewrite n = begin
-     (δ l a)
+     δ l a
   ≈⟨ q ⟩
      δ k a · l ∪ δ m a
   ≈⟨ union-congˡ (concat-congʳ (star-from-rec k {l} {m} n p)) ⟩
-     (δ k a · (k * · m) ∪ δ m a)
+     δ k a · (k * · m) ∪ δ m a
   ≈⟨ union-congˡ (≅sym (concat-assoc (δ k a))) ⟩
-     (δ k a · k * · m ∪ δ m a)
+     δ k a · k * · m ∪ δ m a
   ∎ where open EqR (Bis _)
 
 \end{code}

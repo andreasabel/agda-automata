@@ -998,7 +998,7 @@ Note also that in the definition of $\kpl$, last letter, $l : \Lang\,i$ is
 cast to $\Lang\,j$ which is a valid cast since $j < i$.
 
 The iteration $l^*$ of a language $l$, aka \emph{Kleene star}, can be
-informally described as ``zero or more repetitions of $l$''.  If for
+informally described as ``zero or more words from $l$, concatenated''.  If for
 some $n \geq 0$ we have words $\vas_1, \vas_2, \dots \vas_n \in l$, then
 $(\vas_1 \oapp \vas_2 \oapp \dots \oapp \vas_n) \in l$.  In terms of tries, $l^*$
 is obtained from $l$ by making the root accepting and unioning $l$
@@ -1294,7 +1294,7 @@ the classic theory of formal languages.  Our message is that the
 corresponding correctness proofs can be carried out by the same means
 as in the last section: coinduction and equational reasoning.
 
-In our presentation of deterministic automata (DA) we follow
+In our presentation of deterministic automata (\DA) we follow
 \cite{rutten:concur98}:  A not necessarily finite automaton over a
 state set $S$ is given by a transition function
 $\tdelta : S \to A \to S$ and a characteristic function
